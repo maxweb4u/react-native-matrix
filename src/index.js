@@ -1,4 +1,5 @@
+import Matrix from './Matrix';
 import MatrixChats from './MatrixChats';
 
-export { MatrixChats }
+export { Matrix, MatrixChats }
 

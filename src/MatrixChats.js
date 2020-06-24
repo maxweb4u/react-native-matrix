@@ -4,22 +4,43 @@
  * This is component that shows all rooms for current user
  */
 
-import React from 'react';
+import React, { Component } from 'react';
 import { View, FlatList, Text } from 'react-native';
+import PropTypes from 'prop-types';
 
-class MatrixChats extends ParentScreen {
+class MatrixChats extends Component {
     constructor(props) {
         super(props);
         this.state = { loading: true };
     }
 
+    async componentDidMount() {
+        this.setState({ loading: false }, () => {
+            this.props.onLoaded();
+        });
+    }
+
     render() {
         return (
             <View style={this.props.style}>
-                <Text>test</Text>
+
             </View>
         );
     }
+}
+
+MatrixChats.defaultProps = {
+    accessToken: '',
+    userId: '',
+    style: {},
+    onLoaded: () => { },
+}
+
+MatrixChats.propTypes = {
+    accessToken: PropTypes.string,
+    userId: PropTypes.string,
+    style: PropTypes.object,
+    onLoaded: PropTypes.func,
 }
 
 export default MatrixChats;

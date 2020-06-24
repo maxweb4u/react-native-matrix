@@ -48,9 +48,10 @@
     "react-native": "0.60.6"
   },
   "dependencies": {
-    "prop-types": "^15.7.2",
+    "get-uid": "^1.0.1",
+    "matrix-js-sdk": "^7.0.0",
     "moment": "^2.24.0",
-    "get-uid": "^1.0.1"
+    "prop-types": "^15.7.2"
   },
   "peerDependencies": {
     "prop-types": "*",
