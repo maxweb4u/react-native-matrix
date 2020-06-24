@@ -1,0 +1,45 @@
+{
+  "plugins": [
+    "react",
+    "react-native"
+  ],
+  "extends": "airbnb",
+  "parser": "babel-eslint",
+  "rules": {
+    //offs
+    "no-prototype-builtins": "off",
+    "react/prop-types": "off",
+    "react/jsx-no-bind": "off",
+    "react/jsx-one-expression-per-line": "off",
+    "react/no-string-refs": "off",
+    "import/no-extraneous-dependencies": "off",
+    "jsx-a11y/href-no-hash": "off",
+    "jsx-a11y/img-has-alt": "off",
+
+    //warnings
+    "react/destructuring-assignment": "off",
+    "global-require": "off",
+    "no-restricted-syntax": "off",
+    "no-param-reassign": "off",
+    "array-callback-return": "off",
+    "no-return-assign": "off",
+    "no-useless-constructor": "off",
+    "import/extensions": "off",
+    "import/no-unresolved": "off",
+    "no-case-declarations": "off",
+    "react/no-array-index-key": "off",
+    "spaced-comment": "off",
+    "react/no-this-in-sfc": "off",
+    "no-nested-ternary": "off",
+    "import/no-cycle": "off",
+
+    //errors
+    "no-console": "error",
+    "max-len": [1, 410],
+    "react/jsx-filename-extension": ["error", { "extensions": [".js", ".jsx"] }],
+    "indent": ["error", 4, { "SwitchCase": 1 }],
+    "react/jsx-indent-props": ["error", 4],
+    "react/jsx-indent":["error", 4],
+    "object-curly-newline": ["error", { "multiline": true }]
+  }
+}
