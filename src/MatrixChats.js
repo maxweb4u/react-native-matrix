@@ -7,6 +7,7 @@
 import React, { Component } from 'react';
 import { View, FlatList, Text } from 'react-native';
 import PropTypes from 'prop-types';
+import Matrix from './Matrix';
 
 class MatrixChats extends Component {
     constructor(props) {
@@ -14,7 +15,8 @@ class MatrixChats extends Component {
         this.state = { loading: true };
     }
 
-    async componentDidMount() {
+    componentDidMount() {
+        const rooms = Matrix.getRooms();
         this.setState({ loading: false }, () => {
             this.props.onLoaded();
         });

@@ -28,13 +28,13 @@
     "eslint": "eslint --ext .js src"
   },
   "devDependencies": {
-    "@types/react": "^16.8.6",
-    "@types/react-native": "^0.60.6",
     "@babel/core": "^7.6.2",
     "@babel/plugin-proposal-class-properties": "^7.6.2",
     "@babel/plugin-proposal-decorators": "^7.4.4",
     "@babel/runtime": "^7.5.5",
     "@react-native-community/eslint-config": "^0.0.5",
+    "@types/react": "^16.8.6",
+    "@types/react-native": "^0.60.6",
     "babel-eslint": "^10.0.1",
     "babel-jest": "^24.9.0",
     "babel-plugin-transform-flow-strip-types": "^6.22.0",
@@ -48,10 +48,16 @@
     "react-native": "0.60.6"
   },
   "dependencies": {
+    "buffer": "^5.6.0",
+    "events": "^3.1.0",
+    "fbemitter": "^2.1.1",
     "get-uid": "^1.0.1",
     "matrix-js-sdk": "^7.0.0",
     "moment": "^2.24.0",
-    "prop-types": "^15.7.2"
+    "prop-types": "^15.7.2",
+    "rxjs": "^6.5.4",
+    "unorm": "^1.6.0",
+    "url": "^0.11.0"
   },
   "peerDependencies": {
     "prop-types": "*",
