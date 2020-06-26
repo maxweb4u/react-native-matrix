@@ -4,7 +4,8 @@
  * This is a library for Matrix logic
  */
 import './lib/poly.js';
-import * as sdk from "matrix-js-sdk";
+import * as sdk from 'matrix-js-sdk';
+import Room from './models/Room';
 
 class Matrix {
     static instance;
@@ -20,6 +21,13 @@ class Matrix {
         return Matrix.instance;
     }
 
+    get userId() {
+        if (this.client) {
+            return this.client.getUserId();
+        }
+        return '';
+    }
+
     initClient(baseUrl, accessToken, userId) {
         this.client = sdk.createClient({ baseUrl, accessToken, userId });
     }
@@ -30,7 +38,6 @@ class Matrix {
 
     sync() {
         this.client.once('sync', (state, prevState, res) => {
-            console.log("SYNC", state, prevState, res);
             if(state === 'PREPARED') {
                 if (this.syncCallback) {
                     this.syncCallback(res);
@@ -40,9 +47,12 @@ class Matrix {
     }
 
     getRooms() {
-        const rooms = this.client.getRooms()
-        console.log("-------------------------ROOMS", rooms);
-        return rooms;
+        const arr = this.client.getRooms()
+        const rooms = [];
+        arr.forEach(room => {
+            rooms.push(new Room(room.roomId, room.name, room));
+        })
+        return ret;
     }
 }
 

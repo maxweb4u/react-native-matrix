@@ -1,7 +1,7 @@
 /**
  * Created by Max Gor on 6/20/20
  *
- * This is help file that matrix-sdk-js works with react native
+ * This is help class that allows matrix-sdk-js module works with react native
  */
 
 import { EventEmitter } from 'fbemitter';
