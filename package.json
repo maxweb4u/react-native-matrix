@@ -25,7 +25,7 @@
   },
   "homepage": "https://github.com/maxweb4u/react-native-matrix#readme",
   "scripts": {
-    "eslint": "eslint --ext .js src"
+    "fix": "../.bin/eslint -c .eslintrc --ext .js src --fix"
   },
   "devDependencies": {
     "@babel/core": "^7.6.2",

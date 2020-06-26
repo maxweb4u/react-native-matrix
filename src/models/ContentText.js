@@ -1,6 +1,6 @@
 import Content from './Content';
 
-class ContentText extends Content{
+class ContentText extends Content {
     body = '';
 
     msgtype = 'm.text';

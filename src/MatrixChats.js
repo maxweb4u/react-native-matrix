@@ -15,7 +15,7 @@ class MatrixChats extends Component {
         super(props);
         this.state = {
             rooms: [],
-            loading: true
+            loading: true,
         };
     }
 
@@ -33,10 +33,8 @@ class MatrixChats extends Component {
             return this.props.renderItem(room);
         }
         return (
-            <View>
-
-            </View>
-        )
+            <View />
+        );
     }
 
     keyExtractor = (room, index) => index;
@@ -60,13 +58,13 @@ MatrixChats.defaultProps = {
     onLoaded: () => { },
     renderItem: null,
     formatDate: 'DD.MM.YYYY',
-}
+};
 
 MatrixChats.propTypes = {
     style: PropTypes.object,
     onLoaded: PropTypes.func,
     renderItem: PropTypes.func,
     formatDate: PropTypes.string,
-}
+};
 
 export default MatrixChats;

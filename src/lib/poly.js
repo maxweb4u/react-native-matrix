@@ -5,9 +5,9 @@
  */
 
 import { EventEmitter } from 'fbemitter';
-import unorm from 'unorm'
+import unorm from 'unorm';
 
-String.prototype.normalize = function(form) { return require('unorm')[String(form).toLowerCase()](this); }
+String.prototype.normalize = function (form) { return require('unorm')[String(form).toLowerCase()](this); };
 
 class Document {
     constructor() {
@@ -23,8 +23,8 @@ class Document {
 
     _checkEmitter() {
         if (
-            !this.emitter ||
-            !(this.emitter.on || this.emitter.addEventListener || this.emitter.addListener)
+            !this.emitter
+            || !(this.emitter.on || this.emitter.addEventListener || this.emitter.addListener)
         ) {
             this.emitter = new EventEmitter();
         }

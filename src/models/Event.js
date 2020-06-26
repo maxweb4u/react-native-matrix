@@ -4,10 +4,12 @@
  * This is model for matrix event
  */
 
-import * as sdk from 'matrix-js-sdk';
+import Content from './Content';
+import ContentText from './ContentText';
 
 class Event {
     matrixEvent = null;
+
     contentObj = null;
 
     constructor(matrixEvent) {

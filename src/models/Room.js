@@ -9,19 +9,22 @@ import utils from '../lib/utils';
 
 class Room {
     id = 0;
+
     title = '';
+
     matrixRoom = null;
+
     isDirect = false;
 
     constructor(id, title, matrixRoom, isDirect) {
         this.id = id || 0;
         this.matrixRoom = matrixRoom || null;
         const alias = this.matrixRoom.getCanonicalAlias();
-        this.title = alias ? alias : title;
+        this.title = alias || title;
         this.isDirect = isDirect || false;
     }
 
-    get avatar(){
+    get avatar() {
         const noPhoto = require('../assets/nophoto.png');
         return noPhoto;
     }
@@ -47,11 +50,11 @@ class Room {
             return null;
         }
         const roomId = this.id;
-        const avatar = this.avatar;
-        const title = this.title;
-        const lastEvent = this.lastEvent;
+        const { avatar } = this;
+        const { title } = this;
+        const { lastEvent } = this;
         const lastMessage = utils.addDotsToString(lastEvent.message);
-        const ts = this.lastEvent.ts;
+        const { ts } = this.lastEvent;
         const unread = this.matrixRoom.getUnreadNotificationCount();
         return { roomId, avatar, title, lastMessage, ts, unread };
     }
