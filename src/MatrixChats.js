@@ -5,7 +5,7 @@
  */
 
 import React, { Component } from 'react';
-import { View, FlatList, Text } from 'react-native';
+import { View, FlatList } from 'react-native';
 import { timer } from 'rxjs';
 import PropTypes from 'prop-types';
 import Matrix from './Matrix';
@@ -13,16 +13,13 @@ import Matrix from './Matrix';
 class MatrixChats extends Component {
     constructor(props) {
         super(props);
-        this.state = {
-            rooms: [],
-            loading: true,
-        };
+        this.state = { rooms: [] };
     }
 
     componentDidMount() {
         this.subscription = timer(1000).subscribe(() => {
             const rooms = Matrix.getRooms();
-            this.setState({ rooms, loading: false }, () => {
+            this.setState({ rooms }, () => {
                 this.props.onLoaded();
             });
         });
@@ -30,14 +27,14 @@ class MatrixChats extends Component {
 
     renderItem = (room) => {
         if (this.props.renderItem) {
-            return this.props.renderItem(room);
+            return this.props.renderItem(room.item);
         }
         return (
             <View />
         );
     }
 
-    keyExtractor = (room, index) => index;
+    keyExtractor = (room, index) => index.toString();
 
     render() {
         return (
@@ -54,17 +51,15 @@ class MatrixChats extends Component {
 }
 
 MatrixChats.defaultProps = {
-    style: {},
+    style: { flex: 1 },
     onLoaded: () => { },
     renderItem: null,
-    formatDate: 'DD.MM.YYYY',
 };
 
 MatrixChats.propTypes = {
     style: PropTypes.object,
     onLoaded: PropTypes.func,
     renderItem: PropTypes.func,
-    formatDate: PropTypes.string,
 };
 
 export default MatrixChats;

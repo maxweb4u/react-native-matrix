@@ -15,7 +15,7 @@ class Event {
     constructor(matrixEvent) {
         if (matrixEvent) {
             this.matrixEvent = matrixEvent;
-            switch (this.matrixEvent.type) {
+            switch (this.matrixEvent.getType()) {
                 case 'm.room.message':
                     const content = this.matrixEvent.getContent();
                     switch (content.msgtype) {
@@ -37,9 +37,16 @@ class Event {
         return this.contentObj.message;
     }
 
+    get messageOnly() {
+        if (!this.contentObj) {
+            return '';
+        }
+        return this.contentObj.messageOnly;
+    }
+
     get ts() {
         if (!this.matrixEvent) {
-            return 0;
+            return Number.MIN_SAFE_INTEGER;
         }
         return this.matrixEvent.getTs();
     }

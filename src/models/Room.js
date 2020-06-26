@@ -5,7 +5,6 @@
  */
 
 import Event from './Event';
-import utils from '../lib/utils';
 
 class Room {
     id = 0;
@@ -45,18 +44,17 @@ class Room {
         return new Event();
     }
 
-    get roomListInfoObj() {
+    get roomListObj() {
         if (!this.id) {
             return null;
         }
-        const roomId = this.id;
-        const { avatar } = this;
-        const { title } = this;
-        const { lastEvent } = this;
-        const lastMessage = utils.addDotsToString(lastEvent.message);
-        const { ts } = this.lastEvent;
-        const unread = this.matrixRoom.getUnreadNotificationCount();
-        return { roomId, avatar, title, lastMessage, ts, unread };
+        const { id, avatar, title, lastEvent } = this;
+        const { messageOnly, ts } = lastEvent;
+        let unread = this.matrixRoom.getUnreadNotificationCount();
+        if (unread > 99) {
+            unread = 99;
+        }
+        return { id, avatar, title, message: messageOnly, ts, unread };
     }
 }
 

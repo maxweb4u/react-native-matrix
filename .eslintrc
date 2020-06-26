@@ -19,6 +19,10 @@
     "no-return-assign": "off",
     "react/forbid-prop-types": "off",
 
+    //warnings
+    "class-methods-use-this": "warn",
+    "array-callback-return": "warn",
+
     //errors
     "no-console": "error",
     "max-len": [1, 410],

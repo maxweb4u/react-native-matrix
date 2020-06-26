@@ -28,6 +28,10 @@ class Matrix {
         return '';
     }
 
+    get constCustomHTML() {
+        return 'org.matrix.custom.html';
+    }
+
     initClient(baseUrl, accessToken, userId) {
         this.client = sdk.createClient({ baseUrl, accessToken, userId });
     }
