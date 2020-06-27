@@ -6,6 +6,8 @@
 
 import Content from './Content';
 import ContentText from './ContentText';
+import EventTypes from '../consts/EventTypes';
+import MsgTypes from '../consts/MsgTypes';
 
 class Event {
     matrixEvent = null;
@@ -16,10 +18,10 @@ class Event {
         if (matrixEvent) {
             this.matrixEvent = matrixEvent;
             switch (this.matrixEvent.getType()) {
-                case 'm.room.message':
+                case EventTypes.mRoomMessage:
                     const content = this.matrixEvent.getContent();
                     switch (content.msgtype) {
-                        case 'm.text': this.contentObj = new ContentText(content); break;
+                        case MsgTypes.mText: this.contentObj = new ContentText(content); break;
                         default: this.contentObj = new Content(content); break;
                     }
                     break;

@@ -1,7 +1,8 @@
 import Content from './Content';
+import MsgTypes from '../consts/MsgTypes';
 
 class ContentText extends Content {
-    msgtype = 'm.text';
+    msgtype = MsgTypes.mText;
 
     constructor(contentObj) {
         super(contentObj);

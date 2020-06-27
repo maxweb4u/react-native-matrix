@@ -38,7 +38,21 @@ class Matrix {
 
     async startClient(syncTime) {
         await this.client.startClient({ initialSyncLimit: syncTime });
+        this.client.on('Room.timeline', (event, room, toStartOfTimeline) => {
+            if (this.syncCallback) {
+                this.syncCallback(event, room, toStartOfTimeline);
+            }
+        });
     }
+
+    stopClient() {
+        this.removeSyncCallback();
+        this.client.stopClient();
+    }
+
+    setSyncCallback = syncCallback => this.syncCallback = syncCallback;
+
+    removeSyncCallback = () => this.setSyncCallback(null);
 
     sync() {
         this.client.once('sync', (state, prevState, res) => {
@@ -51,10 +65,10 @@ class Matrix {
     }
 
     getRooms() {
-        const arr = this.client.getRooms();
-        const rooms = [];
+        const arr = this.client.getVisibleRooms();
+        const rooms = {};
         arr.forEach((room) => {
-            rooms.push(new Room(room.roomId, room.name, room));
+            rooms[room.roomId] = new Room(room);
         });
         return rooms;
     }

@@ -5,11 +5,12 @@
  */
 
 import Matrix from '../Matrix';
+import MsgTypes from '../consts/MsgTypes';
 
 class Content {
     body = '';
 
-    msgtype = 'm.general';
+    msgtype = MsgTypes.mGeneral;
 
     isQuote = false;
 
