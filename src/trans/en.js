@@ -12,4 +12,9 @@ export default {
         textChooseFromLibraryButtonTitle: 'Choose',
         textUploadPDF: 'Upload PDF File',
     },
+    createGroupChat: {
+        changeGroupImage: 'Change group image',
+        inputPlaceholder: 'Change Group Title',
+        buttonTitle: 'Create',
+    },
 };
