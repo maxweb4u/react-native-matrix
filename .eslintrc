@@ -18,6 +18,8 @@
     "global-require": "off",
     "no-return-assign": "off",
     "react/forbid-prop-types": "off",
+    "react/jsx-no-bind": "off",
+    "no-param-reassign": "off",
 
     //warnings
     "class-methods-use-this": "warn",
