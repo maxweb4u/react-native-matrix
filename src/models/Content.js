@@ -50,6 +50,10 @@ class Content {
         }
         return this.message;
     }
+
+    get type() {
+        return this.msgtype;
+    }
 }
 
 export default Content;

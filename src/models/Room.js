@@ -5,8 +5,8 @@
  */
 
 import Event from './Event';
-import EventTypes from '../consts/EventTypes';
 import MsgTypes from '../consts/MsgTypes';
+import { PossibleChatEventsTypes, PossibleChatContentTypes } from '../consts/ChatPossibleTypes';
 
 class Room {
     id = 0;
@@ -15,37 +15,22 @@ class Room {
 
     matrixRoom = null;
 
+    events = [];
+
     messagesForSearch = [];
 
     lastEvent = null;
 
     isDirect = false;
 
-    constructor(matrixRoom, isDirect) {
+    constructor({ matrixRoom, isDirect, possibleEventsTypes, possibleContentTypes }) {
         if (matrixRoom) {
             this.id = matrixRoom.roomId || 0;
             this.matrixRoom = matrixRoom || null;
             const alias = this.matrixRoom.getCanonicalAlias();
             this.title = alias || matrixRoom.name;
             this.isDirect = isDirect || false;
-            const timeline = this.matrixRoom.getLiveTimeline();
-            const events = timeline.getEvents();
-            if (events.length) {
-                const lastEvent = events[events.length - 1];
-                this.lastEvent = new Event(lastEvent);
-            } else {
-                this.lastEvent = new Event();
-            }
-            const messagesForSearch = [];
-            events.forEach((event) => {
-                if (event.getType() === EventTypes.mRoomMessage) {
-                    const content = event.getContent();
-                    if (content.body && content.msgtype && content.msgtype === MsgTypes.mText) {
-                        messagesForSearch.push(content.body.toLowerCase());
-                    }
-                }
-            });
-            this.messagesForSearch = messagesForSearch;
+            this.setEvents(possibleEventsTypes, possibleContentTypes);
         }
     }
 
@@ -71,6 +56,15 @@ class Room {
         return { id, avatar, title, message: messageOnly, ts, unread };
     }
 
+    get lastEvent() {
+        if (this.events.length) {
+            const lastEvent = this.events[this.events.length - 1];
+            return lastEvent;
+        }
+        const lastEvent = new Event();
+        return lastEvent;
+    }
+
     isFound(searchText) {
         if (this.title.toLowerCase().indexOf(searchText.toLowerCase()) !== -1) {
             return true;
@@ -79,6 +73,35 @@ class Room {
             return true;
         }
         return false;
+    }
+
+    setEvents(possibleEventsTypes, possibleContentTypes) {
+        const timeline = this.matrixRoom.getLiveTimeline();
+        const matrixEvents = timeline.getEvents();
+        if (!possibleEventsTypes) {
+            possibleEventsTypes = PossibleChatEventsTypes;
+        }
+        if (!possibleContentTypes) {
+            possibleContentTypes = PossibleChatContentTypes;
+        }
+        const events = [];
+        const messagesForSearch = [];
+        matrixEvents.forEach((matrixEvent) => {
+            if (possibleEventsTypes.indexOf(matrixEvent.getType()) !== -1) {
+                const content = matrixEvent.getContent();
+                if (content.body && content.msgtype) {
+                    if (content.msgtype === MsgTypes.mText) {
+                        messagesForSearch.push(content.body.toLowerCase());
+                    }
+                    if (possibleContentTypes.indexOf(content.msgtype) !== -1) {
+                        const event = new Event(matrixEvent);
+                        events.push(event);
+                    }
+                }
+            }
+        });
+        this.messagesForSearch = messagesForSearch;
+        this.events = events;
     }
 }
 

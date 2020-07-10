@@ -30,10 +30,14 @@ class MatrixChats extends Component {
         });
     }
 
+    componentWillUnmount() {
+        if (this.subscription && this.subscription.unsubscribe) this.subscription.unsubscribe();
+    }
+
     syncCallback = (event, room) => {
         if (room.roomId) {
             const { rooms } = this.state;
-            rooms[room.roomId] = new Room(room);
+            rooms[room.roomId] = new Room({ matrixRoom: room });
             this.setState({ rooms });
         }
     }

@@ -4,6 +4,7 @@
  * This is model for matrix event
  */
 
+import getUid from 'get-uid';
 import Content from './Content';
 import ContentText from './ContentText';
 import EventTypes from '../consts/EventTypes';
@@ -32,6 +33,14 @@ class Event {
         }
     }
 
+    get id() {
+        return this.matrixEvent.getId() || getUid();
+    }
+
+    get userId() {
+        return this.matrixEvent.getSender() || '';
+    }
+
     get message() {
         if (!this.contentObj) {
             return '';
@@ -51,6 +60,22 @@ class Event {
             return Number.MIN_SAFE_INTEGER;
         }
         return this.matrixEvent.getTs();
+    }
+
+    get content() {
+        if (!this.contentObj) {
+            return new Content();
+        }
+        return this.contentObj;
+    }
+
+    get senderAvatarURI() {
+        const noPhoto = require('../assets/nophoto.png');
+        return noPhoto;
+    }
+
+    get senderDisplayName() {
+        return 'SenderDisplayName';
     }
 }
 

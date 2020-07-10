@@ -9,7 +9,7 @@ import { View, TextInput, Image, Text, StyleSheet, TouchableOpacity } from 'reac
 import PropTypes from 'prop-types';
 import fileUtils from './lib/fileUtils';
 import trans from './trans';
-import Matrix from './Matrix';
+// import Matrix from './Matrix';
 
 const styles = StyleSheet.create({
     containerImage: { flexDirection: 'row', alignItems: 'center', justifyContent: 'flex-start', width: '100%', padding: 16 },
@@ -48,8 +48,8 @@ class MatrixCreateGroupChat extends Component {
 
     changeContacts = userIdsToInvite => this.setState({ userIdsToInvite });
 
-    createGroup = () => {
-
+    createGroup = async () => {
+        // console.log(this.state.userIdsToInvite);
     }
 
     renderUploadRoomImage = () => {

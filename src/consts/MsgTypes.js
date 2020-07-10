@@ -6,5 +6,12 @@
 
 export default {
     mText: 'm.text',
+    mImage: 'm.image',
+    mFile: 'm.file',
+    mAudio: 'm.audio',
+    mLocation: 'm.location',
+    mVideo: 'm.video',
+    mNotice: 'm.notice',
+    mEmote: 'm.emote',
     mGeneral: 'm.general',
 };

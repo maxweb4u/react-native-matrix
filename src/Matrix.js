@@ -67,10 +67,23 @@ class Matrix {
     getRooms() {
         const arr = this.client.getVisibleRooms();
         const rooms = {};
-        arr.forEach((room) => {
-            rooms[room.roomId] = new Room(room);
+        arr.forEach((matrixRoom) => {
+            rooms[matrixRoom.roomId] = new Room({ matrixRoom });
         });
         return rooms;
+    }
+
+    getRoom(roomId, possibleEventsTypes, possibleContentTypes) {
+        const matrixRoom = this.client.getRoom(roomId);
+        if (matrixRoom) {
+            const room = new Room({ matrixRoom, possibleEventsTypes, possibleContentTypes });
+            return room;
+        }
+        return null;
+    }
+
+    getIsOwn(userId) {
+        return this.userId === userId;
     }
 }
 
