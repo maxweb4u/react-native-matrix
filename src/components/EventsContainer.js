@@ -33,15 +33,18 @@ class EventsContainer extends PureComponent {
         this.detachKeyboardListeners();
     }
 
-    getDerivedStateFromProps(nextProps, prevState) {
-        const { prevProps } = prevState;
-        if (prevProps.events && prevProps.events.length === 0 && nextProps.events && nextProps.events.length > 0) {
-            this.detachKeyboardListeners();
-        } else if (prevProps.messages && nextProps.events && this.props.events.length > 0 && nextProps.events.length === 0) {
-            this.attachKeyboardListeners();
-        }
-        return { prevProps: nextProps };
-    }
+    // static getDerivedStateFromProps(nextProps, prevState) {
+    //     if (prevState) {
+    //         const { prevProps } = prevState;
+    //         if (prevProps && prevProps.events && prevProps.events.length === 0 && nextProps.events && nextProps.events.length > 0) {
+    //             this.detachKeyboardListeners();
+    //         } else if (prevProps && prevProps.messages && nextProps.events && this.props.events.length > 0 && nextProps.events.length === 0) {
+    //             this.attachKeyboardListeners();
+    //         }
+    //     }
+    //
+    //     return { prevProps: nextProps };
+    // }
 
     attachKeyboardListeners = () => {
         const { keyboardListeners } = this.props;
@@ -66,7 +69,10 @@ class EventsContainer extends PureComponent {
     renderEvent = ({ item, index }) => {
         const { events } = this.props;
         const prevEvent = index - 1 >= 0 ? events && events[index - 1] : null;
-        const event = item.item;
+        const event = item;
+        if (prevEvent) {
+            console.log(event.ts, prevEvent.ts, Utils.isNewDay(event.ts, prevEvent.ts))
+        }
         const eventProps = {
             event,
             isOwn: Matrix.getIsOwn(event.userId),

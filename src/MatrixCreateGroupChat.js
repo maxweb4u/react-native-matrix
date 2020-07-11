@@ -9,7 +9,7 @@ import { View, TextInput, Image, Text, StyleSheet, TouchableOpacity } from 'reac
 import PropTypes from 'prop-types';
 import fileUtils from './lib/fileUtils';
 import trans from './trans';
-// import Matrix from './Matrix';
+import Matrix from './Matrix';
 
 const styles = StyleSheet.create({
     containerImage: { flexDirection: 'row', alignItems: 'center', justifyContent: 'flex-start', width: '100%', padding: 16 },
@@ -48,8 +48,14 @@ class MatrixCreateGroupChat extends Component {
 
     changeContacts = userIdsToInvite => this.setState({ userIdsToInvite });
 
-    createGroup = async () => {
-        // console.log(this.state.userIdsToInvite);
+    createRoom = async () => {
+        const { userIdsToInvite, title } = this.state;
+        const { callbackErrors, callbackCreateRoom, callbackStartCreating } = this.state;
+        if (!userIdsToInvite.length) {
+            return { status: false, msg: 'usersNotSelected' };
+        }
+        const res = await Matrix.createRoom(userIdsToInvite, title);
+        return res;
     }
 
     renderUploadRoomImage = () => {
@@ -96,11 +102,11 @@ class MatrixCreateGroupChat extends Component {
 
     renderActions = () => {
         if (this.props.renderActions) {
-            return this.props.renderActions(this.createGroup.bind(this));
+            return this.props.renderActions(this.createRoom.bind(this));
         }
         return (
             <View style={styles.containerButton}>
-                <TouchableOpacity style={styles.button} onPress={this.createGroup.bind(this)}>
+                <TouchableOpacity style={styles.button} onPress={this.createRoom.bind(this)}>
                     <Text>{trans.t('createGroupChat', 'buttonTitle')}</Text>
                 </TouchableOpacity>
             </View>

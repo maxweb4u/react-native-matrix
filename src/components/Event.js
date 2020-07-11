@@ -16,17 +16,19 @@ import ContentText from './ContentText';
 
 const styles = StyleSheet.create({
     container: { width: '100%' },
-    containerMyEvent: { marginTop: 20, paddingRight: 10, paddingBottom: 0, flexDirection: 'row', alignItems: 'center', justifyContent: 'flex-start' },
-    containerNotMyEvent: { marginTop: 20, paddingLeft: 10, flexDirection: 'row', alignItems: 'center', justifyContent: 'flex-end' },
+    containerMyEvent: { marginTop: 20, paddingRight: 10, paddingBottom: 0, flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'flex-end' },
+    containerNotMyEvent: { marginTop: 28, paddingLeft: 10, flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'flex-start' },
     chatDay: { width: '100%', padding: 16, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
     chatDayLine: { width: '33%', height: 1, backgroundColor: Colors.grey },
     chatDayText: { color: Colors.blue },
     avatarPhoto: { width: 40, height: 40, borderRadius: 20, marginRight: 10 },
     containerMyMessage: {},
     containerNotMyMessage: { position: 'relative' },
-    containerMyMessageContent: { padding: 16, paddingBottom: 2, backgroundColor: Colors.blue, borderRadius: 20, borderTopLeftRadius: 0 },
-    containerNotMyMessageContent: { padding: 16, paddingBottom: 2, borderRadius: 20, borderTopRightRadius: 0, borderWidth: 0.5, borderColor: Colors.grey },
-    containerSenderDisplayName: { position: 'absolute', top: -10 },
+    containerMyMessageContent: { padding: 10, paddingBottom: 2, backgroundColor: Colors.blue, borderRadius: 20, borderTopRightRadius: 0 },
+    containerNotMyMessageContent: { padding: 10, paddingBottom: 2, borderRadius: 20, borderTopLeftRadius: 0, borderWidth: 0.5, borderColor: Colors.grey, minWidth: '70%' },
+    containerMyMessageContentInner: {paddingBottom: 10},
+    containerNotMyMessageContentInner: {paddingBottom: 10},
+    containerSenderDisplayName: { position: 'absolute', top: -12 },
     senderDisplayNameText: { color: Colors.blueDark, fontSize: 10 },
     containerMyContentBottom: { flexDirection: 'row', alignItems: 'center', justifyContent: 'flex-end' },
     messageMyTimeText: { color: Colors.white, fontSize: 10 },
@@ -39,8 +41,8 @@ const styles = StyleSheet.create({
 
 class Event extends PureComponent {
     getPropsStyle = (style) => {
-        if (!Object.prototype.hasOwnProperty.call(this.eventStyles, style)) {
-            return this.eventStyles[style];
+        if (!Object.prototype.hasOwnProperty.call(this.props.eventStyles, style)) {
+            return this.props.eventStyles[style];
         }
         return null;
     }
@@ -114,7 +116,7 @@ class Event extends PureComponent {
         return (
             <View style={[styles.containerMyMessage, this.getPropsStyle('containerMyMessage')]}>
                 <View style={[styles.containerMyMessageContent, this.getPropsStyle('containerMyMessageContent')]}>
-                    {this.renderMessageContent({ isOwn: true })}
+                    <View style={[styles.containerMyMessageContentInner, this.getPropsStyle('containerMyMessageContentInner')]}>{this.renderMessageContent({ isOwn: true })}</View>
                     {this.renderMyContentBottom()}
                 </View>
             </View>
@@ -129,7 +131,7 @@ class Event extends PureComponent {
             <View style={[styles.containerNotMyMessage, this.getPropsStyle('containerNotMyMessage')]}>
                 {this.renderSenderName()}
                 <View style={[styles.containerNotMyMessageContent, this.getPropsStyle('containerNotMyMessageContent')]}>
-                    {this.renderMessageContent({ isOwn: false })}
+                    <View style={[styles.containerNotMyMessageContentInner, this.getPropsStyle('containerNotMyMessageContentInner')]}>{this.renderMessageContent({ isOwn: false })}</View>
                     {this.renderNotMyContentBottom()}
                 </View>
             </View>

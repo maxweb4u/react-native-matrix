@@ -16,7 +16,7 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         justifyContent: 'flex-start',
         shadowColor: Colors.shadowColor,
-        shadowOffset: { width: 0, height: -2 },
+        shadowOffset: { width: 0, height: -5 },
         shadowRadius: 5,
         shadowOpacity: 0.2,
         backgroundColor: Colors.white,
@@ -27,18 +27,19 @@ const styles = StyleSheet.create({
         paddingTop: 5,
         paddingBottom: 5,
     },
-    containerAddFiles: { alignItems: 'center', justifyContent: 'center', width: 36, height: 36 },
-    containerAddSmiles: { alignItems: 'center', justifyContent: 'center', width: 36, height: 36 },
-    containerAddAudio: { alignItems: 'center', justifyContent: 'center', width: 36, height: 36 },
-    containerAddImage: { alignItems: 'center', justifyContent: 'center', width: 36, height: 36 },
-    containerSend: { alignItems: 'center', justifyContent: 'center', width: 36, height: 36 },
+    containerAddActions: {flexDirection: 'row', alignItems: 'center', justifyContent: 'flex-start'},
+    containerAddFiles: { alignItems: 'center', justifyContent: 'center', width: 40, height: 40 },
+    containerAddSmiles: { alignItems: 'center', justifyContent: 'center', width: 40, height: 36 },
+    containerAddAudio: { alignItems: 'center', justifyContent: 'center', width: 40, height: 40 },
+    containerAddImage: { alignItems: 'center', justifyContent: 'center', width: 40, height: 40 },
+    containerSend: { alignItems: 'center', justifyContent: 'center', width: 40, height: 40 },
     iconActionsAddFiles: { width: 24, height: 24 },
     iconActionsAddSmiles: { width: 24, height: 24 },
     iconActionsAddAudio: { width: 24, height: 24 },
     iconActionsAddImage: { width: 24, height: 24 },
     iconActionsSend: { width: 24, height: 24 },
-    containerTextInput: { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'flex-start', borderRadius: 15, backgroundColor: Colors.grey, padding: 5 },
-    textInput: { flex: 1, marginRight: 10, borderRadius: 15, color: Colors.black },
+    containerTextInput: { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'flex-start', borderRadius: 25, backgroundColor: Colors.grey, padding: 5 },
+    textInput: { flex: 1, marginRight: 10, marginLeft: 10, color: Colors.black },
 });
 
 class InputToolbar extends PureComponent {
@@ -75,8 +76,8 @@ class InputToolbar extends PureComponent {
     }
 
     getPropsStyle = (style) => {
-        if (!Object.prototype.hasOwnProperty.call(this.inputToolbarStyles, style)) {
-            return this.inputToolbarStyles[style];
+        if (!Object.prototype.hasOwnProperty.call(this.props.inputToolbarStyles, style)) {
+            return this.props.inputToolbarStyles[style];
         }
         return null;
     }

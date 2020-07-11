@@ -103,6 +103,13 @@ class Room {
         this.messagesForSearch = messagesForSearch;
         this.events = events;
     }
+
+    getMembers(membership) {
+        if (!membership) {
+            membership = 'invite';
+        }
+        return this.matrixRoom.getMembersWithMembership(membership);
+    }
 }
 
 

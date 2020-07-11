@@ -5,6 +5,7 @@
  */
 import './lib/poly.js';
 import * as sdk from 'matrix-js-sdk';
+import api from './api';
 import Room from './models/Room';
 
 class Matrix {
@@ -32,8 +33,13 @@ class Matrix {
         return 'org.matrix.custom.html';
     }
 
-    initClient(baseUrl, accessToken, userId) {
+    initClient(baseUrl, accessToken, userId, displayName) {
         this.client = sdk.createClient({ baseUrl, accessToken, userId });
+        api.auth.setBaseURL(baseUrl);
+        api.auth.setAccessToken(accessToken);
+        if (displayName) {
+            this.updateDisplayName(displayName);
+        }
     }
 
     async startClient(syncTime) {
@@ -48,6 +54,7 @@ class Matrix {
     stopClient() {
         this.removeSyncCallback();
         this.client.stopClient();
+        api.auth.removeAccessToken();
     }
 
     setSyncCallback = syncCallback => this.syncCallback = syncCallback;
@@ -84,6 +91,18 @@ class Matrix {
 
     getIsOwn(userId) {
         return this.userId === userId;
+    }
+
+    async createRoom(inviteIds, name, isDirect, preset) {
+        isDirect = isDirect || false;
+        preset = preset || 'private_chat';
+        const res = await api.room.create({ invite: inviteIds, name, preset, is_direct: isDirect });
+        return res;
+    }
+
+    async updateDisplayName(displayName) {
+        const res = await api.profile.updateDisplayName(this.userId, displayName);
+        return res;
     }
 }
 

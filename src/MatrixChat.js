@@ -86,6 +86,7 @@ class MatrixChat extends Component {
             this.setState({
                 composerHeight: newComposerHeight,
                 messagesContainerHeight: this.prepareMessagesContainerHeight(newMessagesContainerHeight),
+                isLoading: false,
             });
         };
         this.onSend = () => {
@@ -98,7 +99,7 @@ class MatrixChat extends Component {
             const room = Matrix.getRoom(this.props.roomId, this.props.possibleChatEvents, this.props.possibleChatContentTypes);
             if (room) {
                 this.room = room;
-                this.setState({ events: room.events, members: room.getMembersWithMembership('invite'), isLoading: false }, () => {
+                this.setState({ events: room.events, members: room.getMembers() }, () => {
                     this.props.onLoaded({ roomTitle: room.title });
                 });
             }
@@ -180,10 +181,10 @@ class MatrixChat extends Component {
     }
 
     renderEvents = () => {
-        const { events } = this.state;
+        const { events, messagesContainerHeight } = this.state;
         const AnimatedView = this.props.isAnimated ? Animated.View : View;
         return (
-            <AnimatedView style={{ height: this.state.messagesContainerHeight }}>
+            <AnimatedView style={{ height: messagesContainerHeight }}>
                 <EventsContainer {...this.props} events={events} ref={this.messageContainerRef} />
             </AnimatedView>
         );
@@ -208,6 +209,7 @@ class MatrixChat extends Component {
         if (this.props.renderBottom) {
             return this.props.renderBottom(this.getBottomOffsetIphoneX);
         }
+        return null;
         return (
             <View style={{ height: this.getBottomOffsetIphoneX }} />
         );
@@ -230,14 +232,14 @@ MatrixChat.defaultProps = {
     render: null,
     renderContainer: null,
     locale: 'en',
-    roomId: 0,
+    roomId: '',
     possibleChatEvents: PossibleChatEventsTypes,
     possibleChatContentTypes: PossibleChatContentTypes,
     bottomOffset: 0,
     minComposerHeight: Platform.select({ ios: 33, android: 41 }),
     maxComposerHeight: 200,
-    onInputTextChanged: null,
-    onLoaded: null,
+    onInputTextChanged: () => {},
+    onLoaded: () => {},
     isAnimated: Platform.select({ ios: true, android: false }),
     renderWithSafeArea: false,
     maxInputLength: null,
@@ -253,7 +255,7 @@ MatrixChat.propTypes = {
     render: PropTypes.func,
     renderContainer: PropTypes.func,
     locale: PropTypes.string,
-    roomId: PropTypes.number,
+    roomId: PropTypes.string,
     possibleChatEvents: PropTypes.array,
     possibleChatContentTypes: PropTypes.array,
     bottomOffset: PropTypes.number,
