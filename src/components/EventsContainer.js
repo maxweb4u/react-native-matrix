@@ -38,19 +38,20 @@ class EventsContainer extends Component {
     }
 
     renderEvent = ({ item, index }) => {
-        const { events } = this.props;
+        const { events, eventProps } = this.props;
         const prevEvent = index - 1 >= 0 ? events && events[index - 1] : null;
         const event = item;
-        const eventProps = {
+        const props = {
+            ...eventProps,
             event,
             isOwn: Matrix.getIsOwn(event.userId),
             isNewDay: !prevEvent || (prevEvent && Utils.isNewDay(event.ts, prevEvent.ts)),
             isPrevUserTheSame: prevEvent && prevEvent.userId === event.userId,
         };
         if (this.props.renderEvent) {
-            return this.props.renderEvent(eventProps);
+            return this.props.renderEvent(props);
         }
-        return <Event {...eventProps} {...this.props.eventProps} />;
+        return <Event {...props} />;
     };
 
     keyExtractor = item => `${item.id}`;

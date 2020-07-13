@@ -97,7 +97,7 @@ class InputToolbar extends PureComponent {
     }
 
     getPropsStyle = (style) => {
-        if (!Object.prototype.hasOwnProperty.call(this.props.inputToolbarStyles, style)) {
+        if (Object.prototype.hasOwnProperty.call(this.props.inputToolbarStyles, style)) {
             return this.props.inputToolbarStyles[style];
         }
         return null;

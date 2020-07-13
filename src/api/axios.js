@@ -7,7 +7,7 @@ instance.interceptors.response.use((response) => {
     // console.log("response ::: ", response)
     return response;
 }, function (error) {
-    // console.log("error ::: ", error.response)
+    // console.log("error ::: ", error)
     return Promise.reject(error.response);
 });
 /* eslint-enable */

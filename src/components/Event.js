@@ -13,6 +13,7 @@ import Colors from '../lib/colors';
 import MsgTypes from '../consts/MsgTypes';
 import ContentText from './ContentText';
 import ContentImage from './ContentImage';
+import EventAvatar from './EventAvatar';
 
 const styles = StyleSheet.create({
     container: { width: '100%' },
@@ -24,15 +25,15 @@ const styles = StyleSheet.create({
     avatarPhoto: { width: 40, height: 40, borderRadius: 20, marginRight: 10 },
     containerMyMessage: {},
     containerNotMyMessage: { position: 'relative' },
-    containerMyMessageContent: { padding: 10, paddingBottom: 2, backgroundColor: Colors.blue, borderRadius: 20, borderTopRightRadius: 0, minWidth: '40%' },
-    containerNotMyMessageContent: { padding: 10, paddingBottom: 2, borderRadius: 20, borderTopLeftRadius: 0, borderWidth: 0.5, borderColor: Colors.grey, minWidth: '40%' },
+    containerMyMessageContent: { paddingBottom: 2, backgroundColor: Colors.blue, borderRadius: 20, borderTopRightRadius: 0, minWidth: '40%' },
+    containerNotMyMessageContent: { paddingBottom: 2, borderRadius: 20, borderTopLeftRadius: 0, borderWidth: 0.5, borderColor: Colors.grey, minWidth: '40%' },
     containerMyMessageContentInner: { paddingBottom: 10, alignItems: 'flex-end' },
     containerNotMyMessageContentInner: { paddingBottom: 10 },
     containerSenderDisplayName: { position: 'absolute', top: -12 },
     senderDisplayNameText: { color: Colors.blueDark, fontSize: 10 },
-    containerMyContentBottom: { flexDirection: 'row', alignItems: 'center', justifyContent: 'flex-end', paddingBottom: 3 },
+    containerMyContentBottom: { flexDirection: 'row', alignItems: 'center', justifyContent: 'flex-end', paddingBottom: 3, paddingLeft: 10, paddingRight: 10 },
     messageMyTimeText: { color: Colors.white, fontSize: 10 },
-    containerNotMyContentBottom: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingBottom: 3 },
+    containerNotMyContentBottom: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingBottom: 3, paddingLeft: 10, paddingRight: 10 },
     messageNotMyTimeText: { color: Colors.grey, fontSize: 10 },
     containerLike: {},
     containerMessageActions: { alignItems: 'center', justifyContent: 'center', width: 36, height: 36 },
@@ -41,7 +42,7 @@ const styles = StyleSheet.create({
 
 class Event extends PureComponent {
     getPropsStyle = (style) => {
-        if (!Object.prototype.hasOwnProperty.call(this.props.eventStyles, style)) {
+        if (Object.prototype.hasOwnProperty.call(this.props.eventStyles, style)) {
             return this.props.eventStyles[style];
         }
         return null;
@@ -101,39 +102,46 @@ class Event extends PureComponent {
 
     renderMessageAvatar = () => {
         if (this.props.renderMessageAvatar) {
-            return this.props.renderMessageAvatar(this.props.event.senderAvatarURI, this.props.isPrevUserTheSame);
+            return this.props.renderMessageAvatar(this.props.event.senderAvatarObj, this.props.isPrevUserTheSame);
         }
         if (!this.props.isPrevUserTheSame) {
-            return <Image source={this.props.event.senderAvatarURI} style={[styles.avatarPhoto, this.getPropsStyle('avatarPhoto')]} />;
+            //return <Image source={this.props.event.senderAvatarURI} style={[styles.avatarPhoto, this.getPropsStyle('avatarPhoto')]} />;
+            return <EventAvatar avatarObj={this.props.event.senderAvatarObj} style={[styles.avatarPhoto, this.getPropsStyle('avatarPhoto')]} noPhotoSource={this.props.noEventPhotoSource} />
         }
         return <View style={[styles.avatarPhoto, this.getPropsStyle('avatarPhoto')]} />;
     }
 
     renderMyMessageContent = () => {
         if (this.props.renderMyMessageContent) {
-            return this.props.renderMyMessageContent(this.props.event, this.renderMessageContent.bind(this), this.renderMyContentBottom.bind(this), this.props.isPrevUserTheSame);
+            return this.props.renderMyMessageContent(this.renderMessageContent.bind(this), this.renderMyContentBottom.bind(this));
         }
+        const contentInner =  (
+            <View>
+                <View style={[styles.containerMyMessageContentInner, this.getPropsStyle('containerMyMessageContentInner')]}>{this.renderMessageContent({ isOwn: true })}</View>
+                {this.renderMyContentBottom()}
+            </View>
+        )
         return (
             <View style={[styles.containerMyMessage, this.getPropsStyle('containerMyMessage')]}>
-                <View style={[styles.containerMyMessageContent, this.getPropsStyle('containerMyMessageContent')]}>
-                    <View style={[styles.containerMyMessageContentInner, this.getPropsStyle('containerMyMessageContentInner')]}>{this.renderMessageContent({ isOwn: true })}</View>
-                    {this.renderMyContentBottom()}
-                </View>
+                {this.props.renderContentInner ? this.props.renderContentInner(contentInner, true) : (<View style={[styles.containerMyMessageContent, this.getPropsStyle('containerMyMessageContent')]}>{contentInner}</View>)}
             </View>
         );
     }
 
     renderNotMyMessageContent = () => {
         if (this.props.renderNotMyMessageContent) {
-            return this.props.renderNotMyMessageContent(this.props.event, this.renderSenderName.bind(this), this.renderMessageContent.bind(this), this.renderNotMyContentBottom.bind(this), this.props.isPrevUserTheSame);
+            return this.props.renderNotMyMessageContent(this.renderSenderName.bind(this), this.renderMessageContent.bind(this), this.renderNotMyContentBottom.bind(this));
         }
+        const contentInner = (
+            <View>
+                <View style={[styles.containerNotMyMessageContentInner, this.getPropsStyle('containerNotMyMessageContentInner')]}>{this.renderMessageContent({ isOwn: false })}</View>
+                {this.renderNotMyContentBottom()}
+            </View>
+        )
         return (
             <View style={[styles.containerNotMyMessage, this.getPropsStyle('containerNotMyMessage')]}>
                 {this.renderSenderName()}
-                <View style={[styles.containerNotMyMessageContent, this.getPropsStyle('containerNotMyMessageContent')]}>
-                    <View style={[styles.containerNotMyMessageContentInner, this.getPropsStyle('containerNotMyMessageContentInner')]}>{this.renderMessageContent({ isOwn: false })}</View>
-                    {this.renderNotMyContentBottom()}
-                </View>
+                {this.props.renderContentInner ? this.props.renderContentInner(contentInner, false) : (<View style={[styles.containerNotMyMessageContent, this.getPropsStyle('containerNotMyMessageContent')]}>{contentInner}</View>)}
             </View>
         );
     }
@@ -230,6 +238,8 @@ Event.defaultProps = {
     renderNotMyContentBottom: null,
     renderMessageContent: null,
     renderMessageActions: null,
+    renderContentInner: null,
+    noEventPhotoSource: null,
 };
 Event.propTypes = {
     event: PropTypes.object,
@@ -254,6 +264,8 @@ Event.propTypes = {
     renderNotMyContentBottom: PropTypes.func,
     renderMessageContent: PropTypes.func,
     renderMessageActions: PropTypes.func,
+    renderContentInner: PropTypes.func,
+    noEventPhotoSource: PropTypes.object,
 };
 
 export default Event;

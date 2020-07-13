@@ -12,14 +12,14 @@ import ContentImageModel from '../models/ContentImage';
 const styles = StyleSheet.create({
     imagePreviewNotMy: {
         borderTopLeftRadius: Platform.OS === 'ios' ? 0 : 20,
-        borderRadius: 20,
+        borderTopRightRadius: 20,
         width: 150,
         height: 150,
     },
     imagePreviewMy: {
         width: 150,
         height: 150,
-        borderRadius: 20,
+        borderTopLeftRadius: 20,
         borderTopRightRadius: Platform.OS === 'ios' ? 0 : 20,
     },
 });

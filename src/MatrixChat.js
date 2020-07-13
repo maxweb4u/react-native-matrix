@@ -143,9 +143,7 @@ class MatrixChat extends Component {
 
     sendFile = async (msgtype, filename, uri, mimetype, base64, size) => {
         const eventObj = Event.getEventObjFile(Matrix.userId, msgtype, filename, uri, mimetype, base64, size);
-        // console.log("eventObj", eventObj)
         const event = new Event(null, eventObj);
-        // console.log("event", event)
         this.addEvent({event});
         const res = await event.contentObj.uploadFile();
         if (res.status) {
@@ -218,11 +216,11 @@ class MatrixChat extends Component {
     }
 
     renderEvents = () => {
-        const { events, messagesContainerHeight } = this.state;
+        const { events, members, messagesContainerHeight } = this.state;
         const AnimatedView = this.props.isAnimated ? Animated.View : View;
         return (
             <AnimatedView style={{ height: messagesContainerHeight }}>
-                <EventsContainer {...this.props} events={events} ref={this.messageContainerRef} />
+                <EventsContainer eventProps={this.props.eventProps} events={events} ref={this.messageContainerRef} />
             </AnimatedView>
         );
     }
@@ -276,7 +274,8 @@ MatrixChat.defaultProps = {
     forceGetKeyboardHeight: false,
     inputToolbarPaddingTop: 10,
     renderInputToolbar: null,
-    errorCallback: () => {}
+    errorCallback: () => {},
+    eventProps: {},
 };
 
 MatrixChat.propTypes = {
@@ -300,6 +299,7 @@ MatrixChat.propTypes = {
     inputToolbarPaddingTop: PropTypes.number,
     renderInputToolbar: PropTypes.func,
     errorCallback: PropTypes.func,
+    eventProps: PropTypes.object,
 };
 
 export default MatrixChat;

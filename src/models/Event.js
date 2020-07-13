@@ -75,13 +75,25 @@ class Event {
         return this.contentObj;
     }
 
-    get senderAvatarURI() {
+    get senderAvatarObj() {
         const noPhoto = require('../assets/nophoto.png');
-        return noPhoto;
+        if (!this.matrixEvent || !this.matrixEvent.sender || !this.matrixEvent.sender.events || !this.matrixEvent.sender.events.member || !this.matrixEvent.sender.events.member.event || !this.matrixEvent.sender.events.member.event.content || !this.matrixEvent.sender.events.member.event.content.avatar_url) {
+            return {noPhoto};
+        }
+
+        const { serverName, mediaId } = Utils.parseMXCURI(this.matrixEvent.sender.events.member.event.content.avatar_url);
+        if (!serverName || !mediaId) {
+            return {noPhoto};
+        }
+
+        return {serverName, mediaId, noPhoto};
     }
 
     get senderDisplayName() {
-        return 'SenderDisplayName';
+        if (!this.matrixEvent || !this.matrixEvent.sender) {
+            return '';
+        }
+        return this.matrixEvent.sender.rawDisplayName || this.matrixEvent.sender.name;
     }
 
     get matrixContentObj() {
