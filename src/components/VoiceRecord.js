@@ -5,16 +5,15 @@
  */
 
 import React, { PureComponent } from 'react';
+import PropTypes from 'prop-types';
 import { View, Text, TouchableOpacity } from 'react-native';
 import { timer } from 'rxjs';
 import Utils from '../lib/utils';
 import Colors from '../lib/colors';
-import trans from '../trans';
 
-
-const styles = {
-    voiceContainer: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
-    actionContainer: { height: 36 },
+const stylesObj = {
+    voiceContainer: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', width: '100%', paddingLeft: 16, paddingRight: 16 },
+    actionContainer: { height: 36, alignItems: 'center', justifyContent: 'center' },
     voiceCancelText: { color: Colors.blueDark, fontSize: 14 },
     voiceSendText: { color: Colors.blue, fontSize: 14 },
     voiceTimerContainer: { flexDirection: 'row', alignItems: 'center', justifyContent: 'flex-start' },
@@ -57,23 +56,23 @@ class VoiceRecord extends PureComponent {
     }
 
     render() {
-        const {voiceRecordstyles, showVoiceRecord} = this.props;
+        const { voiceRecordStyles, showVoiceRecord, trans } = this.props;
 
         if (!showVoiceRecord) {
             return null;
         }
-
+        const styles = voiceRecordStyles ? voiceRecordstyles : stylesObj;
         return (
-            <View style={voiceRecordstyles.voiceContainer}>
-                <TouchableOpacity style={voiceRecordstyles.actionContainer} onPress={() => this.cancel()}>
-                    <Text style={voiceRecordstyles.voiceCancelText}>{trans.t('voiceRecord', 'cancel')}</Text>
+            <View style={styles.voiceContainer}>
+                <TouchableOpacity style={styles.actionContainer} onPress={() => this.cancel()}>
+                    <Text style={styles.voiceCancelText}>{trans.voiceRecordCancel}</Text>
                 </TouchableOpacity>
-                <TouchableOpacity style={voiceRecordstyles.actionContainer} onPress={() => this.stop()}>
-                    <Text style={voiceRecordstyles.voiceSendText}>{trans.t('voiceRecord', 'send')}</Text>
+                <TouchableOpacity style={styles.actionContainer} onPress={() => this.stop()}>
+                    <Text style={styles.voiceSendText}>{trans.voiceRecordSend}</Text>
                 </TouchableOpacity>
-                <View style={voiceRecordstyles.voiceTimerContainer}>
-                    <View style={voiceRecordstyles.recordLabel} />
-                    <Text style={voiceRecordstyles.voiceTimeText}>{Utils.getCountdownTitle(this.state.timeline)}</Text>
+                <View style={styles.voiceTimerContainer}>
+                    <View style={styles.recordLabel} />
+                    <Text style={styles.voiceTimeText}>{Utils.getCountdownTitle(this.state.timeline)}</Text>
                 </View>
             </View>
         );
@@ -81,18 +80,19 @@ class VoiceRecord extends PureComponent {
 }
 
 VoiceRecord.defaultProps = {
+    trans: {},
     showVoiceRecord: false,
     cancelRecording: () => {},
     stopRecording: () => {},
     trans: {},
-    voiceRecordstyles: styles,
+    voiceRecordStyles: stylesObj,
 };
 VoiceRecord.propTypes = {
     showVoiceRecord: PropTypes.bool,
     cancelRecording: PropTypes.func,
     stopRecording: PropTypes.func,
     trans: PropTypes.object,
-    voiceRecordstyles: PropTypes.object,
+    voiceRecordStyles: PropTypes.object,
 };
 
 export default VoiceRecord;

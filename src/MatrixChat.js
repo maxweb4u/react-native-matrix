@@ -8,6 +8,7 @@ import React, { Component } from 'react';
 import { Animated, View, Platform, SafeAreaView } from 'react-native';
 import { timer } from 'rxjs';
 import PropTypes from 'prop-types';
+import AudioRecorderPlayer from 'react-native-audio-recorder-player';
 import Utils from './lib/utils';
 import trans from './trans';
 import Matrix from './Matrix';
@@ -19,6 +20,8 @@ import { PossibleChatEventsTypes, PossibleChatContentTypes } from './consts/Chat
 
 class MatrixChat extends Component {
     room = null;
+
+    audioRecorderPlayer = new AudioRecorderPlayer();
 
     constructor(props) {
         super(props);
@@ -35,6 +38,7 @@ class MatrixChat extends Component {
             members: [],
             composerHeight: this.props.minComposerHeight,
             messagesContainerHeight: undefined,
+            removePrevAudioListener: null,
         };
 
         const onKeyboardWillShow = (e) => {
@@ -102,6 +106,13 @@ class MatrixChat extends Component {
         }
     }
 
+    componentWillUnmount() {
+        if (this.state.removePrevAudioListener) {
+            this.audioRecorderPlayer.stopPlayer();
+            this.state.removePrevAudioListener();
+        }
+    }
+
     get getBottomOffsetIphoneX() {
         if (isIphoneX()) {
             return !this.props.bottomOffset ? 30 : this.props.bottomOffset;
@@ -141,8 +152,8 @@ class MatrixChat extends Component {
         Matrix.sendMessage(this.props.roomId, event.matrixContentObj).then(res => this.messageIsSent(res.event_id)).error(err => this.props.errorCallback(err));
     }
 
-    sendFile = async (msgtype, filename, uri, mimetype, base64, size) => {
-        const eventObj = Event.getEventObjFile(Matrix.userId, msgtype, filename, uri, mimetype, base64, size);
+    sendFile = async (msgtype, filename, uri, mimetype, base64, size, duration) => {
+        const eventObj = Event.getEventObjFile(Matrix.userId, msgtype, filename, uri, mimetype, base64, size, duration);
         const event = new Event(null, eventObj);
         this.addEvent({event});
         const res = await event.contentObj.uploadFile();
@@ -202,6 +213,33 @@ class MatrixChat extends Component {
         }
     }
 
+    startAudioPlay = async (url, playBack, removePrevAudioListener) => {
+        try {
+            if (this.state.removePrevAudioListener) {
+                this.state.removePrevAudioListener();
+            }
+            this.audioRecorderPlayer.stopPlayer();
+            this.audioRecorderPlayer.removePlayBackListener();
+            this.setState({ removePrevAudioListener });
+            await this.audioRecorderPlayer.startPlayer(url);
+            this.audioRecorderPlayer.addPlayBackListener((e) => {
+                if (e.current_position === e.duration) {
+                    this.audioRecorderPlayer.stopPlayer();
+                    this.state.removePrevAudioListener();
+                }
+                playBack(e);
+            });
+        } catch (e) {
+            // console.log(`cannot play the sound file`, e)
+        }
+    };
+
+    stopAudioPlay = async () => {
+        this.audioRecorderPlayer.stopPlayer();
+        this.audioRecorderPlayer.removePlayBackListener();
+        this.setState({ removePrevAudioListener: null });
+    };
+
     renderContainer = () => {
         if (this.props.renderContainer) {
             return this.props.renderContainer(this.renderEvents, this.renderInputToolbar);
@@ -220,27 +258,27 @@ class MatrixChat extends Component {
         const AnimatedView = this.props.isAnimated ? Animated.View : View;
         return (
             <AnimatedView style={{ height: messagesContainerHeight }}>
-                <EventsContainer eventProps={this.props.eventProps} events={events} ref={this.messageContainerRef} />
+                <EventsContainer eventProps={this.props.eventProps} events={events} ref={this.messageContainerRef} startAudioPlay={this.startAudioPlay} stopAudioPlay={this.stopAudioPlay} />
             </AnimatedView>
         );
     }
 
     renderInputToolbar = () => {
         const { text, composerHeight } = this.state;
-        const { minComposerHeight } = this.props;
-        const inputToolbarProps = {
-            ...this.props,
+        const { minComposerHeight, inputToolbarProps } = this.props;
+        const props = {
+            ...inputToolbarProps,
             onInputSizeChanged: this.onInputSizeChanged,
             composerHeight: Math.max(minComposerHeight, composerHeight),
             inputbarHeight: this.calculateInputToolbarHeight(),
             keyboardListeners: this.keyboardListeners,
             trans: { ...trans.t('inputToolbar'), ...(this.props.trans.inputToolbar || {}) },
-            sendMessage: { text: this.sendText.bind(this), file: this.sendFile.bind(this) }
+            sendMessage: { text: this.sendText.bind(this), file: this.sendFile.bind(this) },
         };
         if (this.props.renderInputToolbar) {
-            return this.props.renderInputToolbar(inputToolbarProps);
+            return this.props.renderInputToolbar(props);
         }
-        return <InputToolbar {...inputToolbarProps} />;
+        return <InputToolbar {...props} />;
     }
 
     render() {

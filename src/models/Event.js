@@ -10,6 +10,7 @@ import Content from './Content';
 import ContentText from './ContentText';
 import ContentImage from './ContentImage';
 import ContentFile from './ContentFile';
+import ContentAudio from './ContentAudio';
 import EventTypes from '../consts/EventTypes';
 import MsgTypes from '../consts/MsgTypes';
 
@@ -113,6 +114,12 @@ class Event {
                     case MsgTypes.mImage:
                         this.contentObj = new ContentImage(contentObj);
                         break;
+                    case MsgTypes.mAudio:
+                        this.contentObj = new ContentAudio(contentObj);
+                        break;
+                    case MsgTypes.mFile:
+                        this.contentObj = new ContentFile(contentObj);
+                        break;
                     default:
                         this.contentObj = new Content(contentObj);
                         break;
@@ -134,8 +141,8 @@ class Event {
         return obj;
     }
 
-    static getEventObjFile(userId, msgtype, filename, uri, mimetype, base64, size){
-        const contentObj = ContentFile.makeMessageObj(msgtype, filename, uri, mimetype, base64, size);
+    static getEventObjFile(userId, msgtype, filename, uri, mimetype, base64, size, duration){
+        const contentObj = ContentFile.makeMessageObj(msgtype, filename, uri, mimetype, base64, size, duration);
         const obj = { userId, contentObj };
         return obj;
     }

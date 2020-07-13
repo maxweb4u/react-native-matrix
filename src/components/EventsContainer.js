@@ -47,6 +47,8 @@ class EventsContainer extends Component {
             isOwn: Matrix.getIsOwn(event.userId),
             isNewDay: !prevEvent || (prevEvent && Utils.isNewDay(event.ts, prevEvent.ts)),
             isPrevUserTheSame: prevEvent && prevEvent.userId === event.userId,
+            startAudioPlay: this.props.startAudioPlay,
+            stopAudioPlay: this.props.stopAudioPlay,
         };
         if (this.props.renderEvent) {
             return this.props.renderEvent(props);
@@ -81,11 +83,15 @@ EventsContainer.defaultProps = {
     events: [],
     renderEvent: null,
     eventProps: {},
+    startAudioPlay: ()=>{},
+    stopAudioPlay: ()=>{},
 };
 EventsContainer.propTypes = {
     events: PropTypes.arrayOf(PropTypes.object),
     renderEvent: PropTypes.func,
     eventProps: PropTypes.object,
+    startAudioPlay: PropTypes.func,
+    stopAudioPlay: PropTypes.func,
 };
 
 export default EventsContainer;

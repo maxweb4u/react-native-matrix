@@ -17,5 +17,9 @@ export default {
         inputPlaceholder: 'Change Group Title',
         buttonTitle: 'Create',
     },
-    inputToolbar: { placeholder: 'Type a message...' },
+    inputToolbar: {
+        placeholder: 'Type a message...',
+        voiceRecordSend: 'Send',
+        voiceRecordCancel: 'Cancel',
+    },
 };

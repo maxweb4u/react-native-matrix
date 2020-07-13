@@ -7,6 +7,7 @@
 import React, { PureComponent } from 'react';
 import PropTypes from 'prop-types';
 import { View, StyleSheet, Keyboard, TouchableOpacity, TextInput, Image, Platform } from 'react-native';
+import getUid from 'get-uid';
 import SoundRecorder from 'react-native-sound-recorder';
 import Colors from '../lib/colors';
 import FileUtils from '../lib/fileUtils';
@@ -130,8 +131,9 @@ class InputToolbar extends PureComponent {
         // console.log("");
     }
 
-    addAudio = (filePath, size, base64, duration) => {
-        // console.log("");
+    addAudio = async (uri, size, base64, duration) => {
+        const filename = `${getUid()}.mp4`;
+        await this.props.sendMessage.file(MsgTypes.mAudio, filename, uri, 'video/mp4', base64, size, duration);
     }
 
     addSmiles = () => {
@@ -198,7 +200,13 @@ class InputToolbar extends PureComponent {
             return this.props.renderRecordAudio();
         }
 
-        return <VoiceRecord showVoiceRecord={this.state.showVoiceContainer} cancelRecording={this.cancelRecording} stopRecording={this.stopRecording} voiceRecordstyles={this.props.voiceRecordstyles}/>
+        return <VoiceRecord
+            showVoiceRecord={this.state.showRecordAudio}
+            cancelRecording={this.cancelRecording}
+            stopRecording={this.stopRecording}
+            voiceRecordStyles={this.props.voiceRecordStyles}
+            trans={this.props.trans}
+        />
     }
 
     renderAddFiles() {
@@ -207,7 +215,7 @@ class InputToolbar extends PureComponent {
         }
 
         return (
-            <TouchableOpacity style={[styles.containerAddFiles, this.getPropsStyle('containerAddFiles')]} onPress={() => this.addFiles()}>
+            <TouchableOpacity style={[styles.containerAddFiles, this.getPropsStyle('containerAddFiles')]} onPress={() => this.selectFile(true)}>
                 <Image source={this.props.iconActionsAddFiles || require('../assets/icon-add-files.png')} style={[styles.iconActionsAddFiles, this.getPropsStyle('iconActionsAddFiles')]} />
             </TouchableOpacity>
         );
@@ -314,8 +322,8 @@ InputToolbar.defaultProps = {
     iconActionsSend: null,
     keyboardListeners: null,
     setLoading: () => { },
-    sendMessage: {text: ()=>{}, file: ()=>{}}
-    voiceRecordstyles: {}
+    sendMessage: {text: ()=>{}, file: ()=>{}},
+    voiceRecordStyles: null,
 };
 InputToolbar.propTypes = {
     trans: PropTypes.object,
@@ -340,7 +348,7 @@ InputToolbar.propTypes = {
     keyboardListeners: PropTypes.object,
     setLoading: PropTypes.func,
     sendMessage: PropTypes.object,
-    voiceRecordstyles: PropTypes.object,
+    voiceRecordStyles: PropTypes.object,
 };
 
 export default InputToolbar;

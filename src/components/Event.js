@@ -13,6 +13,8 @@ import Colors from '../lib/colors';
 import MsgTypes from '../consts/MsgTypes';
 import ContentText from './ContentText';
 import ContentImage from './ContentImage';
+import ContentAudio from './ContentAudio';
+import ContentFile from './ContentFile';
 import EventAvatar from './EventAvatar';
 
 const styles = StyleSheet.create({
@@ -191,7 +193,11 @@ class Event extends PureComponent {
             case MsgTypes.mText:
                 return <ContentText isOwn={isOwn} contentObj={content} {...this.props.contentTextStyles} />;
             case MsgTypes.mImage:
-                return <ContentImage isOwn={isOwn} contentObj={content} {...this.props.contentImageStyles} />;
+                return <ContentImage isOwn={isOwn} contentObj={content} {...this.props.contentImageStyles} onImagePress={this.props.onImagePress} />;
+            case MsgTypes.mAudio:
+                return <ContentAudio isOwn={isOwn} contentObj={content} contentAudioStyles={this.props.contentAudioStyles} startAudioPlay={this.props.startAudioPlay} stopAudioPlay={this.props.stopAudioPlay}/>;
+            case MsgTypes.mFile:
+                return <ContentFile isOwn={isOwn} contentObj={content} contentFileStyles={this.props.contentFileStyles}  onFilePress={this.props.onFilePress}/>;
         }
     }
 
@@ -220,6 +226,7 @@ Event.defaultProps = {
     eventStyles: {},
     contentTextStyles: {},
     contentImageStyles: {},
+    contentFileStyles: {},
     isOwn: false,
     isNewDay: false,
     isPrevUserTheSame: false,
@@ -240,12 +247,17 @@ Event.defaultProps = {
     renderMessageActions: null,
     renderContentInner: null,
     noEventPhotoSource: null,
+    startAudioPlay: ()=>{},
+    stopAudioPlay: ()=>{},
+    onImagePress: null,
+    onFilePress: null,
 };
 Event.propTypes = {
     event: PropTypes.object,
     eventStyles: PropTypes.object,
     contentTextStyles: PropTypes.object,
     contentImageStyles: PropTypes.object,
+    contentFileStyles: PropTypes.object,
     isOwn: PropTypes.bool,
     isNewDay: PropTypes.bool,
     isPrevUserTheSame: PropTypes.bool,
@@ -266,6 +278,10 @@ Event.propTypes = {
     renderMessageActions: PropTypes.func,
     renderContentInner: PropTypes.func,
     noEventPhotoSource: PropTypes.object,
+    startAudioPlay: PropTypes.func,
+    stopAudioPlay: PropTypes.func,
+    onImagePress: PropTypes.func,
+    onFilePress: PropTypes.func,
 };
 
 export default Event;

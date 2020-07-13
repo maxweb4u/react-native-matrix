@@ -65,12 +65,14 @@ ContentImage.defaultProps = {
     imagePreviewMy: styles.imagePreviewMy,
     contentObj: null,
     isOwn: false,
+    onImagePress: null,
 };
 ContentImage.propTypes = {
     imagePreviewNotMy: PropTypes.object,
     imagePreviewMy: PropTypes.object,
     contentObj: PropTypes.object,
     isOwn: PropTypes.bool,
+    onImagePress: PropTypes.func,
 };
 
 export default ContentImage;

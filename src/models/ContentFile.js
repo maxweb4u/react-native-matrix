@@ -96,6 +96,7 @@ class ContentFile extends Content {
     }
 
     async uploadFile() {
+        console.log(this.body, this.info.mimetype, this.source)
         if (this.body && this.info.mimetype && this.source) {
             const res = await await api.media.uploadFile(this.body, this.info.mimetype, this.source);
             if (res.status) {
@@ -120,13 +121,16 @@ class ContentFile extends Content {
         return { status: false };
     }
 
-    static makeMessageObj(msgtype, filename, uri, mimetype, base64, size) {
+    static makeMessageObj(msgtype, filename, uri, mimetype, base64, size, duration) {
         const obj = { msgtype, body: filename, filename, info: { mimetype }, uri };
         if (size) {
             obj.info.size = size;
         }
         if (base64) {
             obj.source = base64;
+        }
+        if (duration) {
+            obj.info.duration = duration;
         }
         return obj;
     }
