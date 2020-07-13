@@ -276,6 +276,7 @@ MatrixChat.defaultProps = {
     renderInputToolbar: null,
     errorCallback: () => {},
     eventProps: {},
+    inputToolbarProps: {},
 };
 
 MatrixChat.propTypes = {
@@ -300,6 +301,7 @@ MatrixChat.propTypes = {
     renderInputToolbar: PropTypes.func,
     errorCallback: PropTypes.func,
     eventProps: PropTypes.object,
+    inputToolbarProps: PropTypes.object,
 };
 
 export default MatrixChat;

@@ -38,7 +38,13 @@ const utils = {
             }
         }
         return { serverName: '', mediaId: '' };
-    }
+    },
+    getCountdownTitle: (time) => {
+        const minutes = Math.floor(time / 60);
+        const seconds = time - minutes * 60;
+        const secondTitle = seconds < 10 ? `0${seconds}` : seconds;
+        return `${minutes}:${secondTitle}`;
+    },
 };
 
 export default utils;

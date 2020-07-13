@@ -7,9 +7,11 @@
 import React, { PureComponent } from 'react';
 import PropTypes from 'prop-types';
 import { View, StyleSheet, Keyboard, TouchableOpacity, TextInput, Image, Platform } from 'react-native';
+import SoundRecorder from 'react-native-sound-recorder';
 import Colors from '../lib/colors';
 import FileUtils from '../lib/fileUtils';
 import MsgTypes from '../consts/MsgTypes';
+import VoiceRecord from './VoiceRecord';
 
 const styles = StyleSheet.create({
     container: {
@@ -21,9 +23,6 @@ const styles = StyleSheet.create({
         shadowRadius: 5,
         shadowOpacity: 0.2,
         backgroundColor: Colors.white,
-        // bottom: 0,
-        // left: 0,
-        // right: 0,
         width: '100%',
         paddingTop: 10,
         paddingBottom: 10,
@@ -47,7 +46,7 @@ class InputToolbar extends PureComponent {
     constructor(props) {
         super(props);
         this.contentSize = undefined;
-        this.state = { text: '' };
+        this.state = { text: '', showRecordAudio: false };
     }
 
     componentDidMount() {
@@ -131,7 +130,7 @@ class InputToolbar extends PureComponent {
         // console.log("");
     }
 
-    addAudio = () => {
+    addAudio = (filePath, size, base64, duration) => {
         // console.log("");
     }
 
@@ -164,6 +163,43 @@ class InputToolbar extends PureComponent {
         }
         this.setState({ text });
     };
+
+    startRecording = () => {
+        SoundRecorder.start(`${SoundRecorder.PATH_CACHE}/temp.mp4`)
+            .then(() => this.setState({ showRecordAudio: true }))
+            .catch(e => e);
+    }
+
+    stopRecording = (duration) => {
+        this.setState({ showRecordAudio: false }, () => {
+            SoundRecorder.stop()
+                .then(result => FileUtils.readFile(result.path)
+                    .then(data => ({ base64: data, filePath: result.path })).catch(e => e))
+                .then(obj => FileUtils.getFileInfo(obj.filePath)
+                    .then(fileInfo => ({ filePath: obj.filePath, fileInfo, base64: obj.base64 })).catch(e => e))
+                .then((obj) => {
+                    if (obj.fileInfo.hasOwnProperty('size') && obj.base64) {
+                        this.addAudio(obj.filePath, obj.fileInfo.size, obj.base64, duration);
+                    }
+                })
+                .catch(e => e);
+        });
+    }
+
+    cancelRecording = () => {
+        if (this.state.showVoiceContainer) {
+            SoundRecorder.stop();
+            this.setState({ showVoiceContainer: false });
+        }
+    }
+
+    renderRecordAudio = () => {
+        if (this.props.renderRecordAudio) {
+            return this.props.renderRecordAudio();
+        }
+
+        return <VoiceRecord showVoiceRecord={this.state.showVoiceContainer} cancelRecording={this.cancelRecording} stopRecording={this.stopRecording} voiceRecordstyles={this.props.voiceRecordstyles}/>
+    }
 
     renderAddFiles() {
         if (this.props.renderAddFiles) {
@@ -216,7 +252,7 @@ class InputToolbar extends PureComponent {
         if (!this.state.text) {
             return (
                 <View style={[styles.containerAddActions, this.getPropsStyle('containerAddActions')]}>
-                    <TouchableOpacity style={[styles.containerAddAudio, this.getPropsStyle('containerAddAudio')]} onPress={() => this.addAudio()}>
+                    <TouchableOpacity style={[styles.containerAddAudio, this.getPropsStyle('containerAddAudio')]} onPress={() => this.startRecording()}>
                         <Image source={this.props.iconActionsAddAudio || require('../assets/icon-add-audio.png')} style={[styles.iconActionsAddAudio, this.getPropsStyle('iconActionsAddAudio')]} />
                     </TouchableOpacity>
                     <TouchableOpacity style={[styles.containerAddImage, this.getPropsStyle('containerAddImage')]} onPress={() => this.selectFile()}>
@@ -234,9 +270,19 @@ class InputToolbar extends PureComponent {
     }
 
     render() {
+        const { showRecordAudio  } = this.state;
         if (this.props.render) {
-            return this.props.render(this.state.position);
+            return this.props.render(showRecordAudio);
         }
+
+        if (showRecordAudio) {
+            return (
+                <View style={[styles.container, this.getPropsStyle('container'), { height: this.props.inputbarHeight }]}>
+                    {this.renderRecordAudio()}
+                </View>
+            )
+        }
+
         return (
             <View style={[styles.container, this.getPropsStyle('container'), { height: this.props.inputbarHeight }]}>
                 {this.renderAddFiles()}
@@ -258,6 +304,7 @@ InputToolbar.defaultProps = {
     renderAddFiles: null,
     renderInput: null,
     renderSend: null,
+    renderRecordAudio: null,
     onInputTextChanged: () => { },
     onInputSizeChanged: () => { },
     iconActionsAddFiles: null,
@@ -268,6 +315,7 @@ InputToolbar.defaultProps = {
     keyboardListeners: null,
     setLoading: () => { },
     sendMessage: {text: ()=>{}, file: ()=>{}}
+    voiceRecordstyles: {}
 };
 InputToolbar.propTypes = {
     trans: PropTypes.object,
@@ -281,6 +329,7 @@ InputToolbar.propTypes = {
     renderAddFiles: PropTypes.func,
     renderInput: PropTypes.func,
     renderSend: PropTypes.func,
+    renderRecordAudio: PropTypes.func,
     onInputTextChanged: PropTypes.func,
     onInputSizeChanged: PropTypes.func,
     iconActionsAddFiles: PropTypes.object,
@@ -291,6 +340,7 @@ InputToolbar.propTypes = {
     keyboardListeners: PropTypes.object,
     setLoading: PropTypes.func,
     sendMessage: PropTypes.object,
+    voiceRecordstyles: PropTypes.object,
 };
 
 export default InputToolbar;

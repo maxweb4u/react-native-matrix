@@ -13,6 +13,7 @@ const colors = {
     blue: '#0DAAFF',
     blueDark: '#337598',
     shadowColor: 'rgba(128,128,128,1)',
+    red: '#E2485C',
 };
 
 export default colors;
