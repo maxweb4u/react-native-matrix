@@ -17,7 +17,7 @@ class Content {
     constructor(contentObj) {
         if (contentObj) {
             Object.keys(contentObj).map(field => this[field] = contentObj[field]);
-            if (contentObj.format === Matrix.constCustomHTML && contentObj.formatted_body && contentObj.formatted_body.indexOf('<blockquote>') !== -1) {
+            if (contentObj.format && contentObj.format === Matrix.constCustomHTML && contentObj.formatted_body && contentObj.formatted_body.indexOf('<blockquote>') !== -1) {
                 this.isQuote = true;
             }
         }

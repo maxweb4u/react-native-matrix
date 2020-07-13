@@ -8,8 +8,10 @@ import React, { Component } from 'react';
 import { Animated, View, Platform, SafeAreaView } from 'react-native';
 import { timer } from 'rxjs';
 import PropTypes from 'prop-types';
+import Utils from './lib/utils';
 import trans from './trans';
 import Matrix from './Matrix';
+import Event from './models/Event';
 import isIphoneX from './lib/isIphoneX';
 import EventsContainer from './components/EventsContainer';
 import InputToolbar from './components/InputToolbar';
@@ -23,7 +25,7 @@ class MatrixChat extends Component {
         trans.setLocale(this.props.locale);
 
         this.keyboardHeight = 0;
-        this.bottomOffset = 0;
+        this.bottomOffset = this.getBottomOffsetIphoneX;
         this.maxHeight = undefined;
         this.messageContainerRef = React.createRef();
 
@@ -33,18 +35,17 @@ class MatrixChat extends Component {
             members: [],
             composerHeight: this.props.minComposerHeight,
             messagesContainerHeight: undefined,
-            text: '',
         };
 
         const onKeyboardWillShow = (e) => {
             this.setKeyboardHeight(e.endCoordinates ? e.endCoordinates.height : e.end.height);
-            this.setBottomOffset(this.getBottomOffsetIphoneX);
+            this.setBottomOffset(this.getBottomKeyboardOffset);
             const newMessagesContainerHeight = this.getMessagesContainerHeightWithKeyboard();
             this.setContainerHeight(newMessagesContainerHeight);
         };
         const onKeyboardWillHide = () => {
             this.setKeyboardHeight(0);
-            this.setBottomOffset(0);
+            this.setBottomOffset(this.getBottomOffsetIphoneX);
             const newMessagesContainerHeight = this.getBasicMessagesContainerHeight();
             this.setContainerHeight(newMessagesContainerHeight);
         };
@@ -69,12 +70,6 @@ class MatrixChat extends Component {
                 messagesContainerHeight: this.prepareMessagesContainerHeight(newMessagesContainerHeight),
             });
         };
-        this.onInputTextChanged = (text) => {
-            if (this.props.onInputTextChanged) {
-                this.props.onInputTextChanged(text);
-            }
-            this.setState({ text });
-        };
         this.onInitialLayoutViewLayout = (e) => {
             const { layout } = e.nativeEvent;
             if (layout.height <= 0) {
@@ -88,9 +83,6 @@ class MatrixChat extends Component {
                 messagesContainerHeight: this.prepareMessagesContainerHeight(newMessagesContainerHeight),
                 isLoading: false,
             });
-        };
-        this.onSend = () => {
-
         };
     }
 
@@ -112,13 +104,62 @@ class MatrixChat extends Component {
 
     get getBottomOffsetIphoneX() {
         if (isIphoneX()) {
-            return this.props.bottomOffset === this.bottomOffset ? 33 : this.props.bottomOffset;
+            return !this.props.bottomOffset ? 30 : this.props.bottomOffset;
         }
         return this.props.bottomOffset;
     }
 
-    syncCallback = (event, room) => {
+    get getBottomKeyboardOffset() {
+        return 10;
+    }
 
+    messageIsSent = (eventId) => {
+        const matrixEvent = Matrix.getEvent(eventId);
+        this.room.addMatrixEvent(matrixEvent);
+    }
+
+    addEvent = ({event, matrixEvent, isScrollToBottom}) => {
+        if (event || matrixEvent) {
+            const { events } = this.state;
+            if (matrixEvent) {
+                event = new Event(matrixEvent);
+            }
+            events.push(event);
+            this.setState({ events }, () => {
+                if (isScrollToBottom) {
+                    this.scrollToBottom();
+                }
+            });
+            return events.length - 1;
+        }
+        return 0;
+    }
+
+    sendText = async (text, isQuote) => {
+        const event = new Event(null, Event.getEventObjText(Matrix.userId, text, isQuote));
+        this.addEvent({event});
+        Matrix.sendMessage(this.props.roomId, event.matrixContentObj).then(res => this.messageIsSent(res.event_id)).error(err => this.props.errorCallback(err));
+    }
+
+    sendFile = async (msgtype, filename, uri, mimetype, base64, size) => {
+        const eventObj = Event.getEventObjFile(Matrix.userId, msgtype, filename, uri, mimetype, base64, size);
+        // console.log("eventObj", eventObj)
+        const event = new Event(null, eventObj);
+        // console.log("event", event)
+        this.addEvent({event});
+        const res = await event.contentObj.uploadFile();
+        if (res.status) {
+            Matrix.sendMessage(this.props.roomId, event.matrixContentObj).then(res => this.messageIsSent(res.event_id)).error(err => this.props.errorCallback(err));
+        }
+    }
+
+    syncCallback = (matrixEvent, room) => {
+        if (room && matrixEvent && room.roomId === this.props.roomId && Matrix.userId !== matrixEvent.getSender()) {
+            const shouldBeAdded = this.room.matrixEventCouldBeAdded(matrixEvent);
+            if (shouldBeAdded) {
+                this.addEvent({matrixEvent, isScrollToBottom: true});
+            }
+        }
     }
 
     setContainerHeight = (newHeight) => {
@@ -126,7 +167,9 @@ class MatrixChat extends Component {
             Animated.timing(this.state.messagesContainerHeight, {
                 toValue: newHeight,
                 duration: 200,
-            }).start();
+            }).start(() => {
+                this.scrollToBottom();
+            });
         } else {
             this.setState({ messagesContainerHeight: newHeight });
         }
@@ -142,40 +185,34 @@ class MatrixChat extends Component {
 
     setBottomOffset = value => this.bottomOffset = value;
 
-    getBottomOffset = () => this.bottomOffset;
+    getBottomOffset = () =>  this.bottomOffset;
 
-    getMinInputToolbarHeight = () => this.props.minInputToolbarHeight;
+    calculateInputToolbarHeight = composerHeight => (composerHeight || this.state.composerHeight) + this.getBottomOffset() + this.props.inputToolbarPaddingTop;
 
-    calculateInputToolbarHeight = composerHeight => (composerHeight + (this.getMinInputToolbarHeight() - this.props.minComposerHeight));
+    getBasicMessagesContainerHeight = composerHeight => (this.getMaxHeight() - this.calculateInputToolbarHeight(composerHeight));
 
-    /**
-     * Returns the height, based on current window size, without taking the keyboard into account.
-     */
-    getBasicMessagesContainerHeight = composerHeight => (this.getMaxHeight() - this.calculateInputToolbarHeight(composerHeight || this.state.composerHeight));
-
-    /**
-     * Returns the height, based on current window size, taking the keyboard into account.
-     */
-    getMessagesContainerHeightWithKeyboard = composerHeight => (this.getBasicMessagesContainerHeight(composerHeight || this.state.composerHeight) - this.getKeyboardHeight() + this.getBottomOffset());
+    getMessagesContainerHeightWithKeyboard = composerHeight => (this.getBasicMessagesContainerHeight(composerHeight) - this.getKeyboardHeight());
 
     prepareMessagesContainerHeight = value => (this.props.isAnimated ? new Animated.Value(value) : value);
 
-    scrollToBottom(animated = true) {
+    scrollToBottom(animated) {
+        if (animated) {
+            animated = true;
+        }
         if (this.messageContainerRef && this.messageContainerRef.current) {
-            this.messageContainerRef.current.scrollTo({ offset: 0, animated });
+            this.messageContainerRef.current.scrollToBottom({animated});
         }
     }
 
     renderContainer = () => {
         if (this.props.renderContainer) {
-            return this.props.renderContainer(this.renderEvents, this.renderInputToolbar, this.renderBottom);
+            return this.props.renderContainer(this.renderEvents, this.renderInputToolbar);
         }
 
         return (
             <View style={this.props.style}>
                 {this.renderEvents()}
                 {this.renderInputToolbar()}
-                {this.renderBottom()}
             </View>
         );
     }
@@ -195,24 +232,17 @@ class MatrixChat extends Component {
         const { minComposerHeight } = this.props;
         const inputToolbarProps = {
             ...this.props,
-            text,
+            onInputSizeChanged: this.onInputSizeChanged,
             composerHeight: Math.max(minComposerHeight, composerHeight),
+            inputbarHeight: this.calculateInputToolbarHeight(),
+            keyboardListeners: this.keyboardListeners,
             trans: { ...trans.t('inputToolbar'), ...(this.props.trans.inputToolbar || {}) },
+            sendMessage: { text: this.sendText.bind(this), file: this.sendFile.bind(this) }
         };
         if (this.props.renderInputToolbar) {
             return this.props.renderInputToolbar(inputToolbarProps);
         }
         return <InputToolbar {...inputToolbarProps} />;
-    }
-
-    renderBottom = () => {
-        if (this.props.renderBottom) {
-            return this.props.renderBottom(this.getBottomOffsetIphoneX);
-        }
-        return null;
-        return (
-            <View style={{ height: this.getBottomOffsetIphoneX }} />
-        );
     }
 
     render() {
@@ -244,9 +274,9 @@ MatrixChat.defaultProps = {
     renderWithSafeArea: false,
     maxInputLength: null,
     forceGetKeyboardHeight: false,
-    minInputToolbarHeight: 44,
+    inputToolbarPaddingTop: 10,
     renderInputToolbar: null,
-    renderBottom: null,
+    errorCallback: () => {}
 };
 
 MatrixChat.propTypes = {
@@ -267,9 +297,9 @@ MatrixChat.propTypes = {
     renderWithSafeArea: PropTypes.bool,
     maxInputLength: PropTypes.number,
     forceGetKeyboardHeight: PropTypes.bool,
-    minInputToolbarHeight: PropTypes.number,
+    inputToolbarPaddingTop: PropTypes.number,
     renderInputToolbar: PropTypes.func,
-    renderBottom: PropTypes.func,
+    errorCallback: PropTypes.func,
 };
 
 export default MatrixChat;

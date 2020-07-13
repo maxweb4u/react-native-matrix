@@ -4,7 +4,7 @@
  * This is container for events in a chat
  */
 
-import React, { PureComponent } from 'react';
+import React, { Component } from 'react';
 import PropTypes from 'prop-types';
 import { FlatList, View, StyleSheet, Keyboard } from 'react-native';
 import Event from './Event';
@@ -12,57 +12,28 @@ import Utils from '../lib/utils';
 import Matrix from '../Matrix';
 
 const styles = StyleSheet.create({
-    container: { flex: 1 },
-    listStyle: { flex: 1 },
-    contentContainerStyle: { justifyContent: 'flex-end' },
+    container: { flex: 1, paddingBottom: 16, },
+    // listStyle: { flex: 1 },
+    contentContainerStyle: { flexGrow:1, justifyContent: 'flex-end' },
 });
 
-class EventsContainer extends PureComponent {
+class EventsContainer extends Component {
     constructor(props) {
         super(props);
         this.flatListRef = React.createRef();
     }
 
-    componentDidMount() {
-        if (this.props.events && this.props.events.length === 0) {
-            this.attachKeyboardListeners();
-        }
-    }
-
-    componentWillUnmount() {
-        this.detachKeyboardListeners();
-    }
-
-    // static getDerivedStateFromProps(nextProps, prevState) {
-    //     if (prevState) {
-    //         const { prevProps } = prevState;
-    //         if (prevProps && prevProps.events && prevProps.events.length === 0 && nextProps.events && nextProps.events.length > 0) {
-    //             this.detachKeyboardListeners();
-    //         } else if (prevProps && prevProps.messages && nextProps.events && this.props.events.length > 0 && nextProps.events.length === 0) {
-    //             this.attachKeyboardListeners();
-    //         }
-    //     }
-    //
-    //     return { prevProps: nextProps };
+    // shouldComponentUpdate(nextProps, nextState) {
+    //     console.log("-------------------", this.props.events.length, nextProps.events.length)
+    //     return this.props.events.length !== nextProps.events.length;
     // }
 
-    attachKeyboardListeners = () => {
-        const { keyboardListeners } = this.props;
-        if (keyboardListeners) {
-            Keyboard.addListener('keyboardWillShow', keyboardListeners.onKeyboardWillShow);
-            Keyboard.addListener('keyboardDidShow', keyboardListeners.onKeyboardDidShow);
-            Keyboard.addListener('keyboardWillHide', keyboardListeners.onKeyboardWillHide);
-            Keyboard.addListener('keyboardDidHide', keyboardListeners.onKeyboardDidHide);
+    scrollToBottom(options){
+        if (!options) {
+            options = { animated: true };
         }
-    }
-
-    detachKeyboardListeners = () => {
-        const { keyboardListeners } = this.props;
-        if (keyboardListeners) {
-            Keyboard.removeListener('keyboardWillShow', keyboardListeners.onKeyboardWillShow);
-            Keyboard.removeListener('keyboardDidShow', keyboardListeners.onKeyboardDidShow);
-            Keyboard.removeListener('keyboardWillHide', keyboardListeners.onKeyboardWillHide);
-            Keyboard.removeListener('keyboardDidHide', keyboardListeners.onKeyboardDidHide);
+        if (this.flatListRef && this.flatListRef.current && options) {
+            this.flatListRef.current.scrollToEnd(options);
         }
     }
 
@@ -70,9 +41,6 @@ class EventsContainer extends PureComponent {
         const { events } = this.props;
         const prevEvent = index - 1 >= 0 ? events && events[index - 1] : null;
         const event = item;
-        if (prevEvent) {
-            console.log(event.ts, prevEvent.ts, Utils.isNewDay(event.ts, prevEvent.ts))
-        }
         const eventProps = {
             event,
             isOwn: Matrix.getIsOwn(event.userId),
@@ -91,19 +59,18 @@ class EventsContainer extends PureComponent {
         if (!this.props.events || (this.props.events && this.props.events.length === 0)) {
             return <View style={styles.container} />;
         }
-
+        // console.log("RERENDER EVENTS")
         return (
             <View style={styles.container}>
                 <FlatList
                     ref={this.flatListRef}
                     keyExtractor={this.keyExtractor}
                     enableEmptySections
-                    automaticallyAdjustContentInsets={false}
                     data={this.props.events}
                     style={styles.listStyle}
                     contentContainerStyle={styles.contentContainerStyle}
                     renderItem={this.renderEvent}
-                    scrollEventThrottle={100}
+                    onContentSizeChange={() => this.flatListRef.current.scrollToEnd({animated: true})}
                 />
             </View>
         );
@@ -111,13 +78,11 @@ class EventsContainer extends PureComponent {
 }
 EventsContainer.defaultProps = {
     events: [],
-    keyboardListeners: null,
     renderEvent: null,
     eventProps: {},
 };
 EventsContainer.propTypes = {
     events: PropTypes.arrayOf(PropTypes.object),
-    keyboardListeners: PropTypes.object,
     renderEvent: PropTypes.func,
     eventProps: PropTypes.object,
 };

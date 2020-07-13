@@ -4,9 +4,13 @@ import DocumentPicker from 'react-native-document-picker';
 import ImageResizer from 'react-native-image-resizer';
 import ImgToBase64 from 'react-native-image-base64';
 import RNFetchBlob from 'rn-fetch-blob';
+import trans from '../trans';
 
 const FileUtils = {
-    uploadFile: ({ callback, setLoadingState, resizeX, resizeY, quality, returnBase64, trans }) => {
+    uploadFile: ({ callback, setLoadingState, resizeX, resizeY, quality, returnBase64, transObj, showUploadPDF }) => {
+        if (!transObj) {
+            transObj = trans.t('fileModule');
+        }
         resizeX = resizeX || 100;
         resizeY = resizeY || 100;
         quality = quality || 80;
@@ -15,17 +19,19 @@ const FileUtils = {
         }
 
         const options = {
-            title: trans.textSelectDocument,
-            cancelButtonTitle: trans.textCancelButtonTitle,
-            takePhotoButtonTitle: trans.textTakePhotoButtonTitle,
-            chooseFromLibraryButtonTitle: trans.textChooseFromLibraryButtonTitle,
+            title: transObj.textSelectDocument,
+            cancelButtonTitle: transObj.textCancelButtonTitle,
+            takePhotoButtonTitle: transObj.textTakePhotoButtonTitle,
+            chooseFromLibraryButtonTitle: transObj.textChooseFromLibraryButtonTitle,
             mediaType: 'photo',
             storageOptions: {
                 skipBackup: true,
                 path: 'files',
             },
         };
-        options.customButtons = [{ name: 'pdffile', title: trans.textUploadPDF }];
+        if (showUploadPDF) {
+            options.customButtons = [{ name: 'pdffile', title: transObj.textUploadPDF }];
+        }
         ImagePicker.showImagePicker(options, (response) => {
             if (response.didCancel) {
                 setLoadingState(false);

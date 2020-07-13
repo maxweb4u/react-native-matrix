@@ -23,6 +23,10 @@ class Room {
 
     isDirect = false;
 
+    possibleEventsTypes = PossibleChatEventsTypes;
+
+    possibleContentTypes = PossibleChatContentTypes;
+
     constructor({ matrixRoom, isDirect, possibleEventsTypes, possibleContentTypes }) {
         if (matrixRoom) {
             this.id = matrixRoom.roomId || 0;
@@ -30,7 +34,13 @@ class Room {
             const alias = this.matrixRoom.getCanonicalAlias();
             this.title = alias || matrixRoom.name;
             this.isDirect = isDirect || false;
-            this.setEvents(possibleEventsTypes, possibleContentTypes);
+            if (possibleEventsTypes) {
+                this.possibleEventsTypes = possibleEventsTypes;
+            }
+            if (possibleContentTypes) {
+                this.possibleContentTypes = possibleContentTypes;
+            }
+            this.setEvents();
         }
     }
 
@@ -75,33 +85,24 @@ class Room {
         return false;
     }
 
-    setEvents(possibleEventsTypes, possibleContentTypes) {
+    setEvents() {
         const timeline = this.matrixRoom.getLiveTimeline();
         const matrixEvents = timeline.getEvents();
-        if (!possibleEventsTypes) {
-            possibleEventsTypes = PossibleChatEventsTypes;
-        }
-        if (!possibleContentTypes) {
-            possibleContentTypes = PossibleChatContentTypes;
-        }
-        const events = [];
-        const messagesForSearch = [];
         matrixEvents.forEach((matrixEvent) => {
-            if (possibleEventsTypes.indexOf(matrixEvent.getType()) !== -1) {
-                const content = matrixEvent.getContent();
-                if (content.body && content.msgtype) {
-                    if (content.msgtype === MsgTypes.mText) {
-                        messagesForSearch.push(content.body.toLowerCase());
-                    }
-                    if (possibleContentTypes.indexOf(content.msgtype) !== -1) {
-                        const event = new Event(matrixEvent);
-                        events.push(event);
-                    }
-                }
-            }
+            this.addMatrixEvent(matrixEvent);
         });
-        this.messagesForSearch = messagesForSearch;
-        this.events = events;
+    }
+
+    addMatrixEvent(matrixEvent) {
+        const shouldBeAdded = this.matrixEventCouldBeAdded(matrixEvent);
+        if (shouldBeAdded) {
+            this.events.push(new Event(matrixEvent));
+            const content = matrixEvent.getContent();
+            if (content.msgtype === MsgTypes.mText) {
+                this.messagesForSearch.push(content.body.toLowerCase());
+            }
+            return true;
+        }
     }
 
     getMembers(membership) {
@@ -109,6 +110,14 @@ class Room {
             membership = 'invite';
         }
         return this.matrixRoom.getMembersWithMembership(membership);
+    }
+
+    matrixEventCouldBeAdded(matrixEvent) {
+        if (this.possibleEventsTypes.indexOf(matrixEvent.getType()) !== -1) {
+            const content = matrixEvent.getContent();
+            return content.body && content.msgtype && this.possibleContentTypes.indexOf(content.msgtype) !== -1;
+        }
+        return false;
     }
 }
 

@@ -61,23 +61,27 @@ class Matrix {
 
     removeSyncCallback = () => this.setSyncCallback(null);
 
-    sync() {
-        this.client.once('sync', (state, prevState, res) => {
-            if (state === 'PREPARED') {
-                if (this.syncCallback) {
-                    this.syncCallback(res);
-                }
-            }
-        });
-    }
+    // sync() {
+    //     this.client.once('sync', (state, prevState, res) => {
+    //         if (state === 'PREPARED') {
+    //             if (this.syncCallback) {
+    //                 this.syncCallback(res);
+    //             }
+    //         }
+    //     });
+    // }
 
     getRooms() {
-        const arr = this.client.getVisibleRooms();
-        const rooms = {};
-        arr.forEach((matrixRoom) => {
-            rooms[matrixRoom.roomId] = new Room({ matrixRoom });
-        });
-        return rooms;
+        if (this.client) {
+            const arr = this.client.getVisibleRooms();
+            const rooms = {};
+            arr.forEach((matrixRoom) => {
+                rooms[matrixRoom.roomId] = new Room({ matrixRoom });
+            });
+            return rooms;
+        }
+        return [];
+
     }
 
     getRoom(roomId, possibleEventsTypes, possibleContentTypes) {
@@ -103,6 +107,13 @@ class Matrix {
     async updateDisplayName(displayName) {
         const res = await api.profile.updateDisplayName(this.userId, displayName);
         return res;
+    }
+
+    async sendMessage(roomId, contentObj, callback) {
+        if (roomId) {
+            return this.client.sendMessage(roomId, contentObj, callback);
+        }
+        return null;
     }
 }
 

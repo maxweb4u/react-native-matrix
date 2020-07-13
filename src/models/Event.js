@@ -5,8 +5,11 @@
  */
 
 import getUid from 'get-uid';
+import Utils from '../lib/utils';
 import Content from './Content';
 import ContentText from './ContentText';
+import ContentImage from './ContentImage';
+import ContentFile from './ContentFile';
 import EventTypes from '../consts/EventTypes';
 import MsgTypes from '../consts/MsgTypes';
 
@@ -15,30 +18,33 @@ class Event {
 
     contentObj = null;
 
-    constructor(matrixEvent) {
+    id = null;
+
+    uid = null;
+
+    type = EventTypes.mRoomMessage;
+
+    createdDate = 0;
+
+    constructor(matrixEvent, eventObj) {
         if (matrixEvent) {
             this.matrixEvent = matrixEvent;
-            switch (this.matrixEvent.getType()) {
-                case EventTypes.mRoomMessage:
-                    const content = this.matrixEvent.getContent();
-                    switch (content.msgtype) {
-                        case MsgTypes.mText: this.contentObj = new ContentText(content); break;
-                        default: this.contentObj = new Content(content); break;
-                    }
-                    break;
-                default:
-                    this.contentObj = new Content();
-                    break;
-            }
+            this.type = matrixEvent.getType();
+            this.uid = matrixEvent.getSender();
+            this.id = matrixEvent.getId();
+            const contentObj = matrixEvent.getContent();
+            this.setContent(contentObj);
+        } else if (eventObj) {
+            this.type = eventObj.type || EventTypes.mRoomMessage;
+            this.uid = eventObj.userId;
+            this.id = getUid();
+            this.createdDate = Utils.timestamp(true);
+            this.setContent(eventObj.contentObj);
         }
     }
 
-    get id() {
-        return this.matrixEvent.getId() || getUid();
-    }
-
     get userId() {
-        return this.matrixEvent.getSender() || '';
+        return this.uid;
     }
 
     get message() {
@@ -57,7 +63,7 @@ class Event {
 
     get ts() {
         if (!this.matrixEvent) {
-            return Number.MIN_SAFE_INTEGER;
+            return this.createdDate;
         }
         return this.matrixEvent.getTs();
     }
@@ -76,6 +82,50 @@ class Event {
 
     get senderDisplayName() {
         return 'SenderDisplayName';
+    }
+
+    get matrixContentObj() {
+        if (!this.contentObj) {
+            return {};
+        }
+        return this.contentObj.matrixContentObj;
+    }
+
+    setContent(contentObj) {
+        switch (this.type) {
+            case EventTypes.mRoomMessage:
+                switch (contentObj.msgtype) {
+                    case MsgTypes.mText:
+                        this.contentObj = new ContentText(contentObj);
+                        break;
+                    case MsgTypes.mImage:
+                        this.contentObj = new ContentImage(contentObj);
+                        break;
+                    default:
+                        this.contentObj = new Content(contentObj);
+                        break;
+                }
+                break;
+            default:
+                this.contentObj = new Content();
+                break;
+        }
+    }
+
+    setMatrixEvent(matrixEvent) {
+        this.matrixEvent = matrixEvent;
+        this.id = matrixEvent.getId();
+    }
+
+    static getEventObjText(userId, body, isQuote) {
+        const obj = { userId, contentObj: ContentText.makeMessageObj(body, isQuote) };
+        return obj;
+    }
+
+    static getEventObjFile(userId, msgtype, filename, uri, mimetype, base64, size){
+        const contentObj = ContentFile.makeMessageObj(msgtype, filename, uri, mimetype, base64, size);
+        const obj = { userId, contentObj };
+        return obj;
     }
 }
 

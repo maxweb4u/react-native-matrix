@@ -22,6 +22,10 @@ const AuthApi = {
     setBaseURL: (baseURL) => {
         handling.setBaseURL(baseURL);
     },
+
+    getBaseURL: () => {
+        handling.getBaseURL();
+    },
 };
 
 export default AuthApi;

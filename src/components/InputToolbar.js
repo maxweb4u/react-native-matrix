@@ -8,50 +8,53 @@ import React, { PureComponent } from 'react';
 import PropTypes from 'prop-types';
 import { View, StyleSheet, Keyboard, TouchableOpacity, TextInput, Image, Platform } from 'react-native';
 import Colors from '../lib/colors';
-// import Matrix from '../Matrix';
+import FileUtils from '../lib/fileUtils';
+import MsgTypes from '../consts/MsgTypes';
 
 const styles = StyleSheet.create({
     container: {
         flexDirection: 'row',
-        alignItems: 'center',
+        alignItems: 'flex-start',
         justifyContent: 'flex-start',
         shadowColor: Colors.shadowColor,
         shadowOffset: { width: 0, height: -5 },
         shadowRadius: 5,
         shadowOpacity: 0.2,
         backgroundColor: Colors.white,
-        bottom: 0,
-        left: 0,
-        right: 0,
+        // bottom: 0,
+        // left: 0,
+        // right: 0,
         width: '100%',
-        paddingTop: 5,
-        paddingBottom: 5,
+        paddingTop: 10,
+        paddingBottom: 10,
     },
-    containerAddActions: {flexDirection: 'row', alignItems: 'center', justifyContent: 'flex-start'},
+    containerAddActions: { flexDirection: 'row', alignItems: 'center', justifyContent: 'flex-start' },
     containerAddFiles: { alignItems: 'center', justifyContent: 'center', width: 40, height: 40 },
     containerAddSmiles: { alignItems: 'center', justifyContent: 'center', width: 40, height: 36 },
     containerAddAudio: { alignItems: 'center', justifyContent: 'center', width: 40, height: 40 },
     containerAddImage: { alignItems: 'center', justifyContent: 'center', width: 40, height: 40 },
     containerSend: { alignItems: 'center', justifyContent: 'center', width: 40, height: 40 },
-    iconActionsAddFiles: { width: 24, height: 24 },
+    iconActionsAddFiles: { width: 30, height: 30 },
     iconActionsAddSmiles: { width: 24, height: 24 },
     iconActionsAddAudio: { width: 24, height: 24 },
     iconActionsAddImage: { width: 24, height: 24 },
-    iconActionsSend: { width: 24, height: 24 },
-    containerTextInput: { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'flex-start', borderRadius: 25, backgroundColor: Colors.grey, padding: 5 },
-    textInput: { flex: 1, marginRight: 10, marginLeft: 10, color: Colors.black },
+    iconActionsSend: { width: 30, height: 30 },
+    containerTextInput: { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'flex-start', borderRadius: 25, backgroundColor: Colors.greyLight, padding: 5 },
+    textInput: { flex: 1, marginRight: 10, marginLeft: 10, color: Colors.black, lineHeight: 20 },
 });
 
 class InputToolbar extends PureComponent {
     constructor(props) {
         super(props);
         this.contentSize = undefined;
-        this.state = { position: 'absolute' };
+        this.state = { text: '' };
     }
 
     componentDidMount() {
         this.keyboardWillShowListener = Keyboard.addListener('keyboardWillShow', this.keyboardWillShow);
         this.keyboardWillHideListener = Keyboard.addListener('keyboardWillHide', this.keyboardWillHide);
+        this.keyboardDidShowListener = Keyboard.addListener('keyboardDidShow', this.keyboardDidShow);
+        this.keyboardDidHideListener = Keyboard.addListener('keyboardDidHide', this.keyboardDidHide);
     }
 
     componentWillUnmount() {
@@ -61,17 +64,35 @@ class InputToolbar extends PureComponent {
         if (this.keyboardWillHideListener) {
             this.keyboardWillHideListener.remove();
         }
-    }
-
-    keyboardWillShow = () => {
-        if (this.state.position !== 'relative') {
-            this.setState({ position: 'relative' });
+        if (this.keyboardDidShowListener) {
+            this.keyboardDidShowListener.remove();
+        }
+        if (this.keyboardDidHideListener) {
+            this.keyboardDidHideListener.remove();
         }
     }
 
-    keyboardWillHide = () => {
-        if (this.state.position !== 'absolute') {
-            this.setState({ position: 'absolute' });
+    keyboardWillShow = (e) => {
+        if (this.props.keyboardListeners.onKeyboardWillShow) {
+            this.props.keyboardListeners.onKeyboardWillShow(e);
+        }
+    }
+
+    keyboardWillHide = (e) => {
+        if (this.props.keyboardListeners.onKeyboardWillHide) {
+            this.props.keyboardListeners.onKeyboardWillHide(e);
+        }
+    }
+
+    keyboardDidShow = (e) => {
+        if (this.props.keyboardListeners.onKeyboardDidShow) {
+            this.props.keyboardListeners.onKeyboardDidShow(e);
+        }
+    }
+
+    keyboardDidHide = (e) => {
+        if (this.props.keyboardListeners.onKeyboardDidHide) {
+            this.props.keyboardListeners.onKeyboardDidHide(e);
         }
     }
 
@@ -79,6 +100,30 @@ class InputToolbar extends PureComponent {
         if (!Object.prototype.hasOwnProperty.call(this.props.inputToolbarStyles, style)) {
             return this.props.inputToolbarStyles[style];
         }
+        return null;
+    }
+
+    setLoadingState = (val) => {
+        this.props.setLoading(val);
+    }
+
+    selectFile = (showUploadPDF) => {
+        FileUtils.uploadFile({callback: this.uploadCallback, setLoadingState: this.setLoadingState, resizeX: 1000, resizeY: 1600, returnBase64: true, showUploadPDF});
+    }
+
+    uploadCallback = async (error, res) => {
+        this.setLoadingState(false);
+        if (error) {
+            return null;
+        }
+        if (res) {
+            if (res.type === 'image/jpeg') {
+                await this.props.sendMessage.file(MsgTypes.mImage, res.filename, res.uri, res.type, res.base64);
+            } else {
+                await this.props.sendMessage.file(MsgTypes.mFile, res.filename, res.uri, res.type, res.base64, res.size);
+            }
+        }
+
         return null;
     }
 
@@ -90,35 +135,34 @@ class InputToolbar extends PureComponent {
         // console.log("");
     }
 
-    addImage = () => {
-        // console.log("");
-    }
-
     addSmiles = () => {
         // console.log("");
     }
 
-    send = () => {
-        // console.log("");
+    addText = async () => {
+        if (this.state.text) {
+            this.setState({text: ''});
+            await this.props.sendMessage.text(this.state.text);
+        }
+
     }
 
     onContentSizeChange = (e) => {
         const { contentSize } = e.nativeEvent;
-        // Support earlier versions of React Native on Android.
         if (!contentSize) {
             return;
         }
-        if (!this.contentSize
-            || (this.contentSize
-            && (this.contentSize.width !== contentSize.width
-            || this.contentSize.height !== contentSize.height))) {
+        if (!this.contentSize || (this.contentSize && (this.contentSize.width !== contentSize.width || this.contentSize.height !== contentSize.height))) {
             this.contentSize = contentSize;
             this.props.onInputSizeChanged(this.contentSize);
         }
     };
 
     onChangeText = (text) => {
-        this.props.onInputTextChanged(text);
+        if (this.props.onInputTextChanged) {
+            this.props.onInputTextChanged(text);
+        }
+        this.setState({ text });
     };
 
     renderAddFiles() {
@@ -152,7 +196,7 @@ class InputToolbar extends PureComponent {
                     onChangeText={this.onChangeText}
                     style={[styles.textInput, this.getPropsStyle('textInput'), { height: this.props.composerHeight }]}
                     autoFocus={false}
-                    value={this.props.text}
+                    value={this.state.text}
                     enablesReturnKeyAutomatically
                     underlineColorAndroid="transparent"
                     {...this.props.textInputProps}
@@ -166,16 +210,16 @@ class InputToolbar extends PureComponent {
 
     renderSend() {
         if (this.props.renderSend) {
-            return this.props.renderSend(this.props.text, this.addAudio, this.addImage, this.send);
+            return this.props.renderSend(this.state.text, this.addAudio, this.addImage, this.send);
         }
 
-        if (!this.props.text) {
+        if (!this.state.text) {
             return (
                 <View style={[styles.containerAddActions, this.getPropsStyle('containerAddActions')]}>
                     <TouchableOpacity style={[styles.containerAddAudio, this.getPropsStyle('containerAddAudio')]} onPress={() => this.addAudio()}>
                         <Image source={this.props.iconActionsAddAudio || require('../assets/icon-add-audio.png')} style={[styles.iconActionsAddAudio, this.getPropsStyle('iconActionsAddAudio')]} />
                     </TouchableOpacity>
-                    <TouchableOpacity style={[styles.containerAddImage, this.getPropsStyle('containerAddImage')]} onPress={() => this.addImage()}>
+                    <TouchableOpacity style={[styles.containerAddImage, this.getPropsStyle('containerAddImage')]} onPress={() => this.selectFile()}>
                         <Image source={this.props.iconActionsAddImage || require('../assets/icon-add-image.png')} style={[styles.iconActionsAddImage, this.getPropsStyle('iconActionsAddImage')]} />
                     </TouchableOpacity>
                 </View>
@@ -183,7 +227,7 @@ class InputToolbar extends PureComponent {
         }
 
         return (
-            <TouchableOpacity style={[styles.containerSend, this.getPropsStyle('containerSend')]} onPress={() => this.send()}>
+            <TouchableOpacity style={[styles.containerSend, this.getPropsStyle('containerSend')]} onPress={() => this.addText()}>
                 <Image source={this.props.iconActionsSend || require('../assets/icon-send.png')} style={[styles.iconActionsSend, this.getPropsStyle('iconActionsSend')]} />
             </TouchableOpacity>
         );
@@ -193,9 +237,8 @@ class InputToolbar extends PureComponent {
         if (this.props.render) {
             return this.props.render(this.state.position);
         }
-
         return (
-            <View style={[styles.container, this.getPropsStyle('container'), { position: this.state.position }]}>
+            <View style={[styles.container, this.getPropsStyle('container'), { height: this.props.inputbarHeight }]}>
                 {this.renderAddFiles()}
                 {this.renderInput()}
                 {this.renderSend()}
@@ -205,8 +248,8 @@ class InputToolbar extends PureComponent {
 }
 InputToolbar.defaultProps = {
     trans: {},
+    inputbarHeight: 44,
     composerHeight: Platform.select({ ios: 33, android: 41 }),
-    text: '',
     inputTestId: '',
     placeholderTextColor: Colors.greyDark,
     inputToolbarStyles: {},
@@ -222,11 +265,14 @@ InputToolbar.defaultProps = {
     iconActionsAddAudio: null,
     iconActionsAddImage: null,
     iconActionsSend: null,
+    keyboardListeners: null,
+    setLoading: () => { },
+    sendMessage: {text: ()=>{}, file: ()=>{}}
 };
 InputToolbar.propTypes = {
     trans: PropTypes.object,
+    inputbarHeight: PropTypes.number,
     composerHeight: PropTypes.number,
-    text: PropTypes.string,
     inputTestId: PropTypes.string,
     placeholderTextColor: PropTypes.string,
     inputToolbarStyles: PropTypes.object,
@@ -242,6 +288,9 @@ InputToolbar.propTypes = {
     iconActionsAddAudio: PropTypes.object,
     iconActionsAddImage: PropTypes.object,
     iconActionsSend: PropTypes.object,
+    keyboardListeners: PropTypes.object,
+    setLoading: PropTypes.func,
+    sendMessage: PropTypes.object,
 };
 
 export default InputToolbar;

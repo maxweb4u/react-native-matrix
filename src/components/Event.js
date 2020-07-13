@@ -11,28 +11,28 @@ import EventModel from '../models/Event';
 import Utils from '../lib/utils';
 import Colors from '../lib/colors';
 import MsgTypes from '../consts/MsgTypes';
-// import Matrix from '../Matrix';
 import ContentText from './ContentText';
+import ContentImage from './ContentImage';
 
 const styles = StyleSheet.create({
     container: { width: '100%' },
-    containerMyEvent: { marginTop: 20, paddingRight: 10, paddingBottom: 0, flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'flex-end' },
-    containerNotMyEvent: { marginTop: 28, paddingLeft: 10, flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'flex-start' },
+    containerMyEvent: { marginBottom: 5, marginTop: 15, paddingLeft: 100, paddingBottom: 0, flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'flex-end' },
+    containerNotMyEvent: { marginBottom: 5, marginTop: 23, paddingLeft: 10, flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'flex-start' },
     chatDay: { width: '100%', padding: 16, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
     chatDayLine: { width: '33%', height: 1, backgroundColor: Colors.grey },
     chatDayText: { color: Colors.blue },
     avatarPhoto: { width: 40, height: 40, borderRadius: 20, marginRight: 10 },
     containerMyMessage: {},
     containerNotMyMessage: { position: 'relative' },
-    containerMyMessageContent: { padding: 10, paddingBottom: 2, backgroundColor: Colors.blue, borderRadius: 20, borderTopRightRadius: 0 },
-    containerNotMyMessageContent: { padding: 10, paddingBottom: 2, borderRadius: 20, borderTopLeftRadius: 0, borderWidth: 0.5, borderColor: Colors.grey, minWidth: '70%' },
-    containerMyMessageContentInner: {paddingBottom: 10},
-    containerNotMyMessageContentInner: {paddingBottom: 10},
+    containerMyMessageContent: { padding: 10, paddingBottom: 2, backgroundColor: Colors.blue, borderRadius: 20, borderTopRightRadius: 0, minWidth: '40%' },
+    containerNotMyMessageContent: { padding: 10, paddingBottom: 2, borderRadius: 20, borderTopLeftRadius: 0, borderWidth: 0.5, borderColor: Colors.grey, minWidth: '40%' },
+    containerMyMessageContentInner: { paddingBottom: 10, alignItems: 'flex-end' },
+    containerNotMyMessageContentInner: { paddingBottom: 10 },
     containerSenderDisplayName: { position: 'absolute', top: -12 },
     senderDisplayNameText: { color: Colors.blueDark, fontSize: 10 },
-    containerMyContentBottom: { flexDirection: 'row', alignItems: 'center', justifyContent: 'flex-end' },
+    containerMyContentBottom: { flexDirection: 'row', alignItems: 'center', justifyContent: 'flex-end', paddingBottom: 3 },
     messageMyTimeText: { color: Colors.white, fontSize: 10 },
-    containerNotMyContentBottom: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
+    containerNotMyContentBottom: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingBottom: 3 },
     messageNotMyTimeText: { color: Colors.grey, fontSize: 10 },
     containerLike: {},
     containerMessageActions: { alignItems: 'center', justifyContent: 'center', width: 36, height: 36 },
@@ -182,6 +182,8 @@ class Event extends PureComponent {
             default:
             case MsgTypes.mText:
                 return <ContentText isOwn={isOwn} contentObj={content} {...this.props.contentTextStyles} />;
+            case MsgTypes.mImage:
+                return <ContentImage isOwn={isOwn} contentObj={content} {...this.props.contentImageStyles} />;
         }
     }
 
@@ -209,6 +211,7 @@ Event.defaultProps = {
     event: new EventModel(),
     eventStyles: {},
     contentTextStyles: {},
+    contentImageStyles: {},
     isOwn: false,
     isNewDay: false,
     isPrevUserTheSame: false,
@@ -232,6 +235,7 @@ Event.propTypes = {
     event: PropTypes.object,
     eventStyles: PropTypes.object,
     contentTextStyles: PropTypes.object,
+    contentImageStyles: PropTypes.object,
     isOwn: PropTypes.bool,
     isNewDay: PropTypes.bool,
     isPrevUserTheSame: PropTypes.bool,
