@@ -6,6 +6,16 @@ const RoomApi = {
         return res;
     },
 
+    acceptInvite: async (roomId) => {
+        const res = await handling.request('post', `/rooms/${roomId}/join`);
+        return res;
+    },
+
+    leave: async (roomId) => {
+        const res = await handling.request('post', `/rooms/${roomId}/leave`);
+        return res;
+    },
+
     // joinViaAlias: async (roomAlias) => {
     //     const res = await handling.request('post', `/join/${roomAlias}`);
     //     return res;

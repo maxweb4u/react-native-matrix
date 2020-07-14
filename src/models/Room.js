@@ -8,6 +8,7 @@ import Event from './Event';
 import EventTypes from '../consts/EventTypes';
 import MsgTypes from '../consts/MsgTypes';
 import { PossibleChatEventsTypes, PossibleChatContentTypes } from '../consts/ChatPossibleTypes';
+import api from '../api';
 
 class Room {
     id = 0;
@@ -30,6 +31,8 @@ class Room {
 
     possibleContentTypes = PossibleChatContentTypes;
 
+    memberhsip = '';
+
     constructor({ matrixRoom, isDirect, possibleEventsTypes, possibleContentTypes }) {
         if (matrixRoom) {
             this.id = matrixRoom.roomId || 0;
@@ -37,6 +40,7 @@ class Room {
             const alias = this.matrixRoom.getCanonicalAlias();
             this.title = alias || matrixRoom.name;
             this.isDirect = isDirect || false;
+            this.membership = this.matrixRoom.getMyMembership();
             if (possibleEventsTypes) {
                 this.possibleEventsTypes = possibleEventsTypes;
             }
@@ -44,7 +48,6 @@ class Room {
                 this.possibleContentTypes = possibleContentTypes;
             }
             this.setEvents();
-            console.log(this.reactedEventIds);
         }
     }
 
@@ -61,13 +64,13 @@ class Room {
         if (!this.id) {
             return null;
         }
-        const { id, avatar, title, lastEvent } = this;
+        const { id, avatar, title, lastEvent, membership, acceptInvite, leave } = this;
         const { messageOnly, ts } = lastEvent;
         let unread = this.matrixRoom.getUnreadNotificationCount();
         if (unread > 99) {
             unread = 99;
         }
-        return { id, avatar, title, message: messageOnly, ts, unread };
+        return { id, avatar, title, message: messageOnly, ts, unread, membership, acceptInvite, leave };
     }
 
     get lastEvent() {
@@ -131,6 +134,22 @@ class Room {
             return content.body && content.msgtype && this.possibleContentTypes.indexOf(content.msgtype) !== -1;
         }
         return false;
+    }
+
+    async acceptInvite() {
+        const res = await api.room.acceptInvite(this.id);
+        if (res.status) {
+            this.membership = 'join';
+        }
+        return res;
+    }
+
+    async leave() {
+        const res = await api.room.leaveRoom(this.id);
+        if (res.status) {
+            this.membership = 'leave';
+        }
+        return res;
     }
 }
 
