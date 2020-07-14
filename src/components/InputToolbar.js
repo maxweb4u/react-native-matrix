@@ -6,9 +6,10 @@
 
 import React, { PureComponent } from 'react';
 import PropTypes from 'prop-types';
-import { View, StyleSheet, Keyboard, TouchableOpacity, TextInput, Image, Platform } from 'react-native';
+import { View, StyleSheet, Keyboard, TouchableOpacity, TextInput, Image, Platform, Modal, TouchableWithoutFeedback } from 'react-native';
 import getUid from 'get-uid';
 import SoundRecorder from 'react-native-sound-recorder';
+import EmojiSelector from 'react-native-emoji-selector'
 import Colors from '../lib/colors';
 import FileUtils from '../lib/fileUtils';
 import MsgTypes from '../consts/MsgTypes';
@@ -29,11 +30,11 @@ const styles = StyleSheet.create({
         paddingBottom: 10,
     },
     containerAddActions: { flexDirection: 'row', alignItems: 'center', justifyContent: 'flex-start' },
-    containerAddFiles: { alignItems: 'center', justifyContent: 'center', width: 40, height: 40 },
+    containerAddFiles: { alignItems: 'center', justifyContent: 'center', width: 60, height: 40 },
     containerAddSmiles: { alignItems: 'center', justifyContent: 'center', width: 40, height: 36 },
     containerAddAudio: { alignItems: 'center', justifyContent: 'center', width: 40, height: 40 },
     containerAddImage: { alignItems: 'center', justifyContent: 'center', width: 40, height: 40 },
-    containerSend: { alignItems: 'center', justifyContent: 'center', width: 40, height: 40 },
+    containerSend: { alignItems: 'center', justifyContent: 'center', width: 60, height: 40 },
     iconActionsAddFiles: { width: 30, height: 30 },
     iconActionsAddSmiles: { width: 24, height: 24 },
     iconActionsAddAudio: { width: 24, height: 24 },
@@ -41,13 +42,16 @@ const styles = StyleSheet.create({
     iconActionsSend: { width: 30, height: 30 },
     containerTextInput: { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'flex-start', borderRadius: 25, backgroundColor: Colors.greyLight, padding: 5 },
     textInput: { flex: 1, marginRight: 10, marginLeft: 10, color: Colors.black, lineHeight: 20 },
+    containerTouchEmojis: {flex: 1},
+    containerTouchEmojisInner: {flex: 1, backgroundColor: Colors.blackTransparent, justifyContent: 'flex-end'},
+    containerEmojis: {width: '100%', backgroundColor: Colors.white, height: 500}
 });
 
 class InputToolbar extends PureComponent {
     constructor(props) {
         super(props);
         this.contentSize = undefined;
-        this.state = { text: '', showRecordAudio: false };
+        this.state = { text: '', showRecordAudio: false, showEmojis: false };
     }
 
     componentDidMount() {
@@ -127,17 +131,14 @@ class InputToolbar extends PureComponent {
         return null;
     }
 
-    addFiles = () => {
-        // console.log("");
-    }
-
     addAudio = async (uri, size, base64, duration) => {
         const filename = `${getUid()}.mp4`;
         await this.props.sendMessage.file(MsgTypes.mAudio, filename, uri, 'video/mp4', base64, size, duration);
     }
 
-    addSmiles = () => {
-        // console.log("");
+    addSmiles = async (smile) => {
+        this.setState({showEmojis: false})
+        await this.props.sendMessage.text(smile);
     }
 
     addText = async () => {
@@ -195,6 +196,8 @@ class InputToolbar extends PureComponent {
         }
     }
 
+    showEmojis = (showEmojis) => this.setState({showEmojis});
+
     renderRecordAudio = () => {
         if (this.props.renderRecordAudio) {
             return this.props.renderRecordAudio();
@@ -211,7 +214,7 @@ class InputToolbar extends PureComponent {
 
     renderAddFiles() {
         if (this.props.renderAddFiles) {
-            return this.props.renderAddFiles(this.addFiles.bind(this));
+            return this.props.renderAddFiles(this.selectFile.bind(this));
         }
 
         return (
@@ -245,7 +248,7 @@ class InputToolbar extends PureComponent {
                     underlineColorAndroid="transparent"
                     {...this.props.textInputProps}
                 />
-                <TouchableOpacity style={[styles.containerAddSmiles, this.getPropsStyle('containerAddSmiles')]} onPress={() => this.addSmiles()}>
+                <TouchableOpacity style={[styles.containerAddSmiles, this.getPropsStyle('containerAddSmiles')]} onPress={() => this.showEmojis(true)}>
                     <Image source={this.props.iconActionsAddSmiles || require('../assets/icon-smile.png')} style={[styles.iconActionsAddSmiles, this.getPropsStyle('iconActionsAddSmiles')]} />
                 </TouchableOpacity>
             </View>
@@ -277,6 +280,24 @@ class InputToolbar extends PureComponent {
         );
     }
 
+    renderEmojis() {
+        if (this.props.renderEmojis) {
+            return this.props.renderEmojis(this.state.showEmojis, this.showEmojis, this.addSmiles);
+        }
+
+        return (
+            <Modal animationType="fade" transparent visible={this.state.showEmojis} onRequestClose={() => this.showEmojis(false)}>
+                <TouchableWithoutFeedback style={[styles.containerTouchEmojis, this.getPropsStyle('containerTouchEmojis')]} onPress={() => this.showEmojis(false)}>
+                    <View style={[styles.containerTouchEmojisInner, this.getPropsStyle('containerTouchEmojisInner')]}>
+                        <View style={[styles.containerEmojis, this.getPropsStyle('containerEmojis')]}>
+                            <EmojiSelector columns={10} showSectionTitles={false} showSearchBar={false} onEmojiSelected={emoji => this.addSmiles(emoji)} />
+                        </View>
+                    </View>
+                </TouchableWithoutFeedback>
+            </Modal>
+        )
+    }
+
     render() {
         const { showRecordAudio  } = this.state;
         if (this.props.render) {
@@ -296,6 +317,7 @@ class InputToolbar extends PureComponent {
                 {this.renderAddFiles()}
                 {this.renderInput()}
                 {this.renderSend()}
+                {this.renderEmojis()}
             </View>
         );
     }
@@ -313,6 +335,7 @@ InputToolbar.defaultProps = {
     renderInput: null,
     renderSend: null,
     renderRecordAudio: null,
+    renderEmojis: null,
     onInputTextChanged: () => { },
     onInputSizeChanged: () => { },
     iconActionsAddFiles: null,
@@ -338,6 +361,7 @@ InputToolbar.propTypes = {
     renderInput: PropTypes.func,
     renderSend: PropTypes.func,
     renderRecordAudio: PropTypes.func,
+    renderEmojis: PropTypes.func,
     onInputTextChanged: PropTypes.func,
     onInputSizeChanged: PropTypes.func,
     iconActionsAddFiles: PropTypes.object,

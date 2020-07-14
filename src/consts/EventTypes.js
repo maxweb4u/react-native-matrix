@@ -11,4 +11,5 @@ export default {
     mRoomName: 'm.room.name',
     mRoomMessageFeedback: 'm.room.message.feedback',
     mRoomMessage: 'm.room.message',
+    mRoomReaction: 'm.reaction',
 };

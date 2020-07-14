@@ -7,6 +7,7 @@ import './lib/poly.js';
 import * as sdk from 'matrix-js-sdk';
 import api from './api';
 import Room from './models/Room';
+import EventTypes from './consts/EventTypes';
 
 class Matrix {
     static instance;
@@ -114,6 +115,17 @@ class Matrix {
             return this.client.sendMessage(roomId, contentObj, callback);
         }
         return null;
+    }
+
+    async sendEvent(roomId, eventType, contentObj, callback) {
+        if (roomId) {
+            return this.client.sendEvent(roomId, eventType, contentObj, callback);
+        }
+        return null;
+    }
+
+    async sendReaction(roomId, contentReactionObj, callback) {
+        this.sendEvent(roomId, EventTypes.mRoomReaction, contentReactionObj, callback)
     }
 }
 

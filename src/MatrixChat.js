@@ -258,7 +258,15 @@ class MatrixChat extends Component {
         const AnimatedView = this.props.isAnimated ? Animated.View : View;
         return (
             <AnimatedView style={{ height: messagesContainerHeight }}>
-                <EventsContainer eventProps={this.props.eventProps} events={events} ref={this.messageContainerRef} startAudioPlay={this.startAudioPlay} stopAudioPlay={this.stopAudioPlay} />
+                <EventsContainer
+                    ref={this.messageContainerRef}
+                    eventProps={this.props.eventProps}
+                    events={events}
+                    reactedEventIds={!!this.room && this.room.reactedEventIds}
+                    startAudioPlay={this.startAudioPlay}
+                    stopAudioPlay={this.stopAudioPlay}
+                    roomId={this.props.roomId}
+                />
             </AnimatedView>
         );
     }

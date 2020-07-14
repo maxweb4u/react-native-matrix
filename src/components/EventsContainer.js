@@ -44,11 +44,13 @@ class EventsContainer extends Component {
         const props = {
             ...eventProps,
             event,
+            roomId: this.props.roomId,
             isOwn: Matrix.getIsOwn(event.userId),
             isNewDay: !prevEvent || (prevEvent && Utils.isNewDay(event.ts, prevEvent.ts)),
             isPrevUserTheSame: prevEvent && prevEvent.userId === event.userId,
             startAudioPlay: this.props.startAudioPlay,
             stopAudioPlay: this.props.stopAudioPlay,
+            reactedEventIds: this.props.reactedEventIds,
         };
         if (this.props.renderEvent) {
             return this.props.renderEvent(props);
@@ -81,15 +83,19 @@ class EventsContainer extends Component {
 }
 EventsContainer.defaultProps = {
     events: [],
+    reactedEventIds: [],
     renderEvent: null,
     eventProps: {},
+    roomId: '',
     startAudioPlay: ()=>{},
     stopAudioPlay: ()=>{},
 };
 EventsContainer.propTypes = {
     events: PropTypes.arrayOf(PropTypes.object),
+    reactedEventIds: PropTypes.arrayOf(PropTypes.string),
     renderEvent: PropTypes.func,
     eventProps: PropTypes.object,
+    roomId: PropTypes.string,
     startAudioPlay: PropTypes.func,
     stopAudioPlay: PropTypes.func,
 };

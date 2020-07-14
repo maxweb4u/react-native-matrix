@@ -7,6 +7,7 @@
 import React, { PureComponent } from 'react';
 import PropTypes from 'prop-types';
 import { View, StyleSheet, TouchableOpacity, Text, Image } from 'react-native';
+import Matrix from '../Matrix';
 import EventModel from '../models/Event';
 import Utils from '../lib/utils';
 import Colors from '../lib/colors';
@@ -38,11 +39,18 @@ const styles = StyleSheet.create({
     containerNotMyContentBottom: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingBottom: 3, paddingLeft: 10, paddingRight: 10 },
     messageNotMyTimeText: { color: Colors.grey, fontSize: 10 },
     containerLike: {},
+    likeButton: { height: 36, width: 36, alignItems: 'center', justifyContent: 'center'},
+    likeImage: {width: 16, height: 16},
     containerMessageActions: { alignItems: 'center', justifyContent: 'center', width: 36, height: 36 },
     iconActions: { width: 20, height: 20 },
 });
 
 class Event extends PureComponent {
+    constructor(props) {
+        super(props);
+        this.state = { liked: false };
+    }
+
     getPropsStyle = (style) => {
         if (Object.prototype.hasOwnProperty.call(this.props.eventStyles, style)) {
             return this.props.eventStyles[style];
@@ -50,8 +58,17 @@ class Event extends PureComponent {
         return null;
     }
 
+    isLiked = () => {
+        return this.state.liked || this.props.reactedEventIds.indexOf(this.props.event.id) !== -1
+    }
+
     showActions = () => {
 
+    }
+
+    likeEvent = () => {
+        this.setState({liked: true});
+        Matrix.sendReaction(this.props.roomId, this.props.event.reactionContentObj);
     }
 
     renderDay = () => {
@@ -144,8 +161,31 @@ class Event extends PureComponent {
             <View style={[styles.containerNotMyMessage, this.getPropsStyle('containerNotMyMessage')]}>
                 {this.renderSenderName()}
                 {this.props.renderContentInner ? this.props.renderContentInner(contentInner, false) : (<View style={[styles.containerNotMyMessageContent, this.getPropsStyle('containerNotMyMessageContent')]}>{contentInner}</View>)}
+                {this.renderLike()}
             </View>
         );
+    }
+
+    renderLike = () => {
+        if (this.props.renderLike) {
+            this.props.renderLike(this.isLiked);
+        }
+        if (this.isLiked()) {
+            return (
+                <View style={[styles.containerLike, this.getPropsStyle('containerLike')]}>
+                    <View style={[styles.likeButton, this.getPropsStyle('likeButton')]}>
+                        <Image source={require('../assets/icon-liked.png')} style={[styles.likeImage, this.getPropsStyle('likeImage')]} />
+                    </View>
+                </View>
+            )
+        }
+        return (
+            <View style={[styles.containerLike, this.getPropsStyle('containerLike')]}>
+                <TouchableOpacity style={[styles.likeButton, this.getPropsStyle('likeButton')]} onPress={this.likeEvent}>
+                    <Image source={require('../assets/icon-not-liked.png')} style={[styles.likeImage, this.getPropsStyle('likeImage')]} />
+                </TouchableOpacity>
+            </View>
+        )
     }
 
     renderSenderName = () => {
@@ -177,7 +217,6 @@ class Event extends PureComponent {
         return (
             <View style={[styles.containerNotMyContentBottom, this.getPropsStyle('containerNotMyContentBottom')]}>
                 <Text style={[styles.messageNotMyTimeText, this.getPropsStyle('messageNotMyTimeText')]}>{Utils.formatTimestamp(this.props.event.ts, this.props.formatMessageDate)}</Text>
-                <View style={[styles.containerLike, this.getPropsStyle('containerLike')]} />
             </View>
         );
     }
@@ -251,6 +290,8 @@ Event.defaultProps = {
     stopAudioPlay: ()=>{},
     onImagePress: null,
     onFilePress: null,
+    roomId: '',
+    reactedEventIds: [],
 };
 Event.propTypes = {
     event: PropTypes.object,
@@ -282,6 +323,8 @@ Event.propTypes = {
     stopAudioPlay: PropTypes.func,
     onImagePress: PropTypes.func,
     onFilePress: PropTypes.func,
+    roomId: PropTypes.string,
+    reactedEventIds: PropTypes.arrayOf(PropTypes.string),
 };
 
 export default Event;

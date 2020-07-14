@@ -5,6 +5,7 @@
  */
 
 import Event from './Event';
+import EventTypes from '../consts/EventTypes';
 import MsgTypes from '../consts/MsgTypes';
 import { PossibleChatEventsTypes, PossibleChatContentTypes } from '../consts/ChatPossibleTypes';
 
@@ -18,6 +19,8 @@ class Room {
     events = [];
 
     messagesForSearch = [];
+
+    reactedEventIds = [];
 
     lastEvent = null;
 
@@ -41,6 +44,7 @@ class Room {
                 this.possibleContentTypes = possibleContentTypes;
             }
             this.setEvents();
+            console.log(this.reactedEventIds);
         }
     }
 
@@ -88,6 +92,7 @@ class Room {
     setEvents() {
         const timeline = this.matrixRoom.getLiveTimeline();
         const matrixEvents = timeline.getEvents();
+        // console.log(matrixEvents)
         matrixEvents.forEach((matrixEvent) => {
             this.addMatrixEvent(matrixEvent);
         });
@@ -102,6 +107,14 @@ class Room {
                 this.messagesForSearch.push(content.body.toLowerCase());
             }
             return true;
+        } else {
+            if (matrixEvent.getType() === EventTypes.mRoomReaction) {
+                const content = matrixEvent.getContent();
+                const realedObj = content.hasOwnProperty('m.relates_to') ? content['m.relates_to'] : null;
+                if (realedObj && realedObj.event_id && realedObj.rel_type === 'm.annotation' && this.reactedEventIds.indexOf(realedObj.event_id) === -1) {
+                    this.reactedEventIds.push(realedObj.event_id)
+                }
+            }
         }
     }
 

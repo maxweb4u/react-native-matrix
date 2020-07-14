@@ -104,6 +104,16 @@ class Event {
         return this.contentObj.matrixContentObj;
     }
 
+    get reactionContentObj() {
+        return {
+            'm.relates_to': {
+                rel_type: 'm.annotation',
+                event_id: this.id,
+                key: 'liked',
+            }
+        }
+    }
+
     setContent(contentObj) {
         switch (this.type) {
             case EventTypes.mRoomMessage:

@@ -96,7 +96,6 @@ class ContentFile extends Content {
     }
 
     async uploadFile() {
-        console.log(this.body, this.info.mimetype, this.source)
         if (this.body && this.info.mimetype && this.source) {
             const res = await await api.media.uploadFile(this.body, this.info.mimetype, this.source);
             if (res.status) {
