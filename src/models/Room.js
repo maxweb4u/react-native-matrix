@@ -5,6 +5,7 @@
  */
 
 import Event from './Event';
+import Member from './Member';
 import EventTypes from '../consts/EventTypes';
 import MsgTypes from '../consts/MsgTypes';
 import { PossibleChatEventsTypes, PossibleChatContentTypes } from '../consts/ChatPossibleTypes';
@@ -110,22 +111,28 @@ class Room {
                 this.messagesForSearch.push(content.body.toLowerCase());
             }
             return true;
-        } else {
-            if (matrixEvent.getType() === EventTypes.mRoomReaction) {
-                const content = matrixEvent.getContent();
-                const realedObj = content.hasOwnProperty('m.relates_to') ? content['m.relates_to'] : null;
-                if (realedObj && realedObj.event_id && realedObj.rel_type === 'm.annotation' && this.reactedEventIds.indexOf(realedObj.event_id) === -1) {
-                    this.reactedEventIds.push(realedObj.event_id)
-                }
+        }
+        if (matrixEvent.getType() === EventTypes.mRoomReaction) {
+            const content = matrixEvent.getContent();
+            const realedObj = content.hasOwnProperty('m.relates_to') ? content['m.relates_to'] : null;
+            if (realedObj && realedObj.event_id && realedObj.rel_type === 'm.annotation' && this.reactedEventIds.indexOf(realedObj.event_id) === -1) {
+                this.reactedEventIds.push(realedObj.event_id);
             }
         }
     }
 
     getMembers(membership) {
         if (!membership) {
-            membership = 'invite';
+            membership = 'join';
         }
         return this.matrixRoom.getMembersWithMembership(membership);
+    }
+
+    getMembersObj() {
+        const obj = {};
+        const members = this.getMembers();
+        members.map((member) => { obj[member.userId] = new Member(member.user); });
+        return obj;
     }
 
     matrixEventCouldBeAdded(matrixEvent) {

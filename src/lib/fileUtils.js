@@ -7,6 +7,71 @@ import RNFetchBlob from 'rn-fetch-blob';
 import trans from '../trans';
 
 const FileUtils = {
+    resizeImage: (response, callback, resizeX, resizeY, quality) => {
+        if (response.uri) {
+            resizeY = response.height * (resizeX / response.width);
+            ImageResizer.createResizedImage(response.uri, resizeX, resizeY, 'JPEG', quality)
+                .then((res) => {
+                    const obj = { uri: res.uri, filename: res.name, type: 'image/jpeg', size: res.size };
+                    FileUtils.getBase64String(res.uri).then((base64String) => {
+                        obj.base64 = base64String;
+                        callback(null, obj);
+                    }).catch(err => callback(err.msg, null));
+                })
+                .catch(err => callback(err.msg, null));
+        } else {
+            callback('noURI', null);
+        }
+    },
+
+    getFileFromCamera: (callback, setLoadingState, resizeX, resizeY, quality) => {
+        ImagePicker.launchCamera({ mediaType: 'photo', storageOptions: { skipBackup: true, path: 'files' } }, (response) => {
+            if (response.didCancel) {
+                setLoadingState(false);
+            } else if (response.error) {
+                callback(response.error, null);
+            } else {
+                FileUtils.resizeImage(response, callback, resizeX, resizeY, quality);
+            }
+        });
+    },
+
+    getFileFromGallery: (callback, setLoadingState, resizeX, resizeY, quality, transObj) => {
+        const options = {
+            title: transObj.textSelectDocument,
+            cancelButtonTitle: transObj.textCancelButtonTitle,
+            takePhotoButtonTitle: transObj.textTakePhotoButtonTitle,
+            chooseFromLibraryButtonTitle: transObj.textChooseFromLibraryButtonTitle,
+            mediaType: 'photo',
+            storageOptions: {
+                skipBackup: true,
+                path: 'files',
+            },
+        };
+        ImagePicker.launchImageLibrary(options, (response) => {
+            if (response.didCancel) {
+                setLoadingState(false);
+            } else if (response.error) {
+                callback(response.error, null);
+            } else {
+                FileUtils.resizeImage(response, callback, resizeX, resizeY, quality);
+            }
+        });
+    },
+
+    getPDFFile: (callback, setLoadingState) => {
+        setLoadingState(false);
+        DocumentPicker.pick({ type: [DocumentPicker.types.pdf] }).then((res) => {
+            const obj = { uri: res.uri, filename: res.name, type: res.type, size: res.size };
+            FileUtils.getBase64String(res.uri).then((base64String) => {
+                obj.base64 = base64String;
+                callback(null, obj);
+            }).catch(err => callback(err.msg, null));
+        }).catch((error) => {
+            callback(error, null);
+        });
+    },
+
     uploadFile: ({ callback, setLoadingState, resizeX, resizeY, quality, returnBase64, transObj, showUploadPDF }) => {
         if (!transObj) {
             transObj = trans.t('fileModule');

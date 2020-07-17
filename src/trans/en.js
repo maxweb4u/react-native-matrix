@@ -22,4 +22,11 @@ export default {
         voiceRecordSend: 'Send',
         voiceRecordCancel: 'Cancel',
     },
+    event: {
+        copy: 'Copy to clipboard',
+        share: 'Share',
+        quote: 'Qoute',
+        cancel: 'Cancel',
+        shareTitle: 'Share',
+    },
 };

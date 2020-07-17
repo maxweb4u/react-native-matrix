@@ -4,7 +4,6 @@
  * This is general class for all content objects
  */
 
-import Matrix from '../Matrix';
 import MsgTypes from '../consts/MsgTypes';
 
 class Content {
@@ -17,9 +16,6 @@ class Content {
     constructor(contentObj) {
         if (contentObj) {
             Object.keys(contentObj).map(field => this[field] = contentObj[field]);
-            if (contentObj.format && contentObj.format === Matrix.constCustomHTML && contentObj.formatted_body && contentObj.formatted_body.indexOf('<blockquote>') !== -1) {
-                this.isQuote = true;
-            }
         }
     }
 
@@ -53,6 +49,13 @@ class Content {
 
     get type() {
         return this.msgtype;
+    }
+
+    get quoteText() {
+        if (this.messageOnly.indexOf('> ') !== -1) {
+            return messageOnly;
+        }
+        return `> ${this.messageOnly.replace(/(?:\r\n|\r|\n)/g, '\n> ')}\n\n`;
     }
 }
 

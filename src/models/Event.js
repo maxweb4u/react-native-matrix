@@ -79,15 +79,15 @@ class Event {
     get senderAvatarObj() {
         const noPhoto = require('../assets/nophoto.png');
         if (!this.matrixEvent || !this.matrixEvent.sender || !this.matrixEvent.sender.events || !this.matrixEvent.sender.events.member || !this.matrixEvent.sender.events.member.event || !this.matrixEvent.sender.events.member.event.content || !this.matrixEvent.sender.events.member.event.content.avatar_url) {
-            return {noPhoto};
+            return { noPhoto };
         }
 
         const { serverName, mediaId } = Utils.parseMXCURI(this.matrixEvent.sender.events.member.event.content.avatar_url);
         if (!serverName || !mediaId) {
-            return {noPhoto};
+            return { noPhoto };
         }
 
-        return {serverName, mediaId, noPhoto};
+        return { serverName, mediaId, noPhoto };
     }
 
     get senderDisplayName() {
@@ -110,8 +110,16 @@ class Event {
                 rel_type: 'm.annotation',
                 event_id: this.id,
                 key: 'liked',
-            }
-        }
+            },
+        };
+    }
+
+    get msgtype() {
+        return this.content.type;
+    }
+
+    get citationMessage() {
+        return this.content.quoteText;
     }
 
     setContent(contentObj) {
@@ -151,7 +159,7 @@ class Event {
         return obj;
     }
 
-    static getEventObjFile(userId, msgtype, filename, uri, mimetype, base64, size, duration){
+    static getEventObjFile(userId, msgtype, filename, uri, mimetype, base64, size, duration) {
         const contentObj = ContentFile.makeMessageObj(msgtype, filename, uri, mimetype, base64, size, duration);
         const obj = { userId, contentObj };
         return obj;

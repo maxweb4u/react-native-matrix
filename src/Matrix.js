@@ -30,10 +30,6 @@ class Matrix {
         return '';
     }
 
-    get constCustomHTML() {
-        return 'org.matrix.custom.html';
-    }
-
     initClient(baseUrl, accessToken, userId, displayName) {
         this.client = sdk.createClient({ baseUrl, accessToken, userId });
         api.auth.setBaseURL(baseUrl);
@@ -82,7 +78,6 @@ class Matrix {
             return rooms;
         }
         return [];
-
     }
 
     getRoom(roomId, possibleEventsTypes, possibleContentTypes) {
@@ -125,7 +120,7 @@ class Matrix {
     }
 
     async sendReaction(roomId, contentReactionObj, callback) {
-        this.sendEvent(roomId, EventTypes.mRoomReaction, contentReactionObj, callback)
+        this.sendEvent(roomId, EventTypes.mRoomReaction, contentReactionObj, callback);
     }
 }
 

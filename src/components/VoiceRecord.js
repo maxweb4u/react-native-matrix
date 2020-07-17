@@ -18,7 +18,7 @@ const stylesObj = {
     voiceSendText: { color: Colors.blue, fontSize: 14 },
     voiceTimerContainer: { flexDirection: 'row', alignItems: 'center', justifyContent: 'flex-start' },
     recordLabel: { width: 16, height: 16, borderRadius: 8, backgroundColor: Colors.red },
-    voiceTimeText: {paddingLeft: 5, color: Colors.black, fontSize: 12}
+    voiceTimeText: { paddingLeft: 5, color: Colors.black, fontSize: 12 },
 };
 
 class VoiceRecord extends PureComponent {

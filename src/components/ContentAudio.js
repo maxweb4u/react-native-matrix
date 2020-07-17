@@ -14,13 +14,13 @@ const stylesObj = {
     audioPreviewMy: { borderTopLeftRadius: 20, borderTopRightRadius: Platform.OS === 'ios' ? 0 : 20 },
     audioTrackContainer: { height: 2, width: 105, backgroundColor: Colors.grey, borderRadius: 1 },
     audioTrackContainerInner: { height: 2, width: 100, position: 'relative' },
-    audioTrack: { height: 10, width: 10, position: 'relative', backgroundColor: Colors.orange, borderRadius: 5, left: 0, top: -4},
+    audioTrack: { height: 10, width: 10, position: 'relative', backgroundColor: Colors.orange, borderRadius: 5, left: 0, top: -4 },
     audioTimeContainer: { alignSelf: 'flex-end', paddingTop: 4 },
-    audioTimeText: {fontSize: 12, color: Colors.greyDark},
+    audioTimeText: { fontSize: 12, color: Colors.greyDark },
     audioTimeTextMy: { color: Colors.white },
-    audioTrackProgress: {alignItems: 'center',justifyContent: 'center', marginTop: 16, paddingRight: 10},
-    icon32: {width: 32, height: 32},
-    touchArea: {width: 36, height: 36, alignItems: 'center',justifyContent: 'center'},
+    audioTrackProgress: { alignItems: 'center', justifyContent: 'center', marginTop: 16, paddingRight: 10 },
+    icon32: { width: 32, height: 32 },
+    touchArea: { width: 36, height: 36, alignItems: 'center', justifyContent: 'center' },
 };
 
 class ContentAudio extends Component {
@@ -90,8 +90,8 @@ ContentAudio.defaultProps = {
     contentAudioStyles: stylesObj,
     contentObj: null,
     isOwn: false,
-    startAudioPlay: ()=>{},
-    stopAudioPlay: ()=>{},
+    startAudioPlay: () => {},
+    stopAudioPlay: () => {},
 };
 ContentAudio.propTypes = {
     contentAudioStyles: PropTypes.object,

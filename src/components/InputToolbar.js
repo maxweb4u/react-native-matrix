@@ -9,11 +9,12 @@ import PropTypes from 'prop-types';
 import { View, StyleSheet, Keyboard, TouchableOpacity, TextInput, Image, Platform, Modal, TouchableWithoutFeedback } from 'react-native';
 import getUid from 'get-uid';
 import SoundRecorder from 'react-native-sound-recorder';
-import EmojiSelector from 'react-native-emoji-selector'
+import EmojiSelector from 'react-native-emoji-selector';
 import Colors from '../lib/colors';
 import FileUtils from '../lib/fileUtils';
 import MsgTypes from '../consts/MsgTypes';
 import VoiceRecord from './VoiceRecord';
+import trans from '../trans';
 
 const styles = StyleSheet.create({
     container: {
@@ -42,16 +43,16 @@ const styles = StyleSheet.create({
     iconActionsSend: { width: 30, height: 30 },
     containerTextInput: { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'flex-start', borderRadius: 25, backgroundColor: Colors.greyLight, padding: 5 },
     textInput: { flex: 1, marginRight: 10, marginLeft: 10, color: Colors.black, lineHeight: 20 },
-    containerTouchEmojis: {flex: 1},
-    containerTouchEmojisInner: {flex: 1, backgroundColor: Colors.blackTransparent, justifyContent: 'flex-end'},
-    containerEmojis: {width: '100%', backgroundColor: Colors.white, height: 500}
+    containerTouchEmojis: { flex: 1 },
+    containerTouchEmojisInner: { flex: 1, backgroundColor: Colors.blackTransparent, justifyContent: 'flex-end' },
+    containerEmojis: { width: '100%', backgroundColor: Colors.white, height: 500 },
 });
 
 class InputToolbar extends PureComponent {
     constructor(props) {
         super(props);
         this.contentSize = undefined;
-        this.state = { text: '', showRecordAudio: false, showEmojis: false };
+        this.state = { text: '', showRecordAudio: false, showEmojis: false, isQuote: false };
     }
 
     componentDidMount() {
@@ -111,8 +112,25 @@ class InputToolbar extends PureComponent {
         this.props.setLoading(val);
     }
 
-    selectFile = (showUploadPDF) => {
-        FileUtils.uploadFile({callback: this.uploadCallback, setLoadingState: this.setLoadingState, resizeX: 1000, resizeY: 1600, returnBase64: true, showUploadPDF});
+    openCamera = () => {
+        FileUtils.getFileFromCamera(this.uploadCallback, this.setLoadingState, this.props.resizeX, this.props.resizeY, this.props.imageQuality);
+    }
+
+    openGallery = () => {
+        FileUtils.getFileFromGallery(this.uploadCallback, this.setLoadingState, this.props.resizeX, this.props.resizeY, this.props.imageQuality, { ...trans.t('fileModule'), ...this.props.trans });
+    }
+
+    openFile = () => {
+        FileUtils.getPDFFile(this.uploadCallback, this.setLoadingState);
+    }
+
+    openActions = (showUploadPDF) => {
+        if (this.props.showInputbarActions) {
+            this.props.showInputbarActions(this.openCamera.bind(this), this.openGallery.bind(this), this.openFile, Object.keys(this.props.members));
+            return null;
+        }
+        FileUtils.uploadFile({ callback: this.uploadCallback, setLoadingState: this.setLoadingState, resizeX: 1000, resizeY: 1600, returnBase64: true, showUploadPDF });
+        return null;
     }
 
     uploadCallback = async (error, res) => {
@@ -137,16 +155,15 @@ class InputToolbar extends PureComponent {
     }
 
     addSmiles = async (smile) => {
-        this.setState({showEmojis: false})
+        this.setState({ showEmojis: false });
         await this.props.sendMessage.text(smile);
     }
 
     addText = async () => {
         if (this.state.text) {
-            this.setState({text: ''});
-            await this.props.sendMessage.text(this.state.text);
+            this.setState({ text: '', isQuote: false });
+            await this.props.sendMessage.text(this.state.text, this.state.isQuote);
         }
-
     }
 
     onContentSizeChange = (e) => {
@@ -196,20 +213,26 @@ class InputToolbar extends PureComponent {
         }
     }
 
-    showEmojis = (showEmojis) => this.setState({showEmojis});
+    showEmojis = showEmojis => this.setState({ showEmojis });
+
+    addCitation = (message) => {
+        this.setState({ text: message, isQuote: true });
+    }
 
     renderRecordAudio = () => {
         if (this.props.renderRecordAudio) {
             return this.props.renderRecordAudio();
         }
 
-        return <VoiceRecord
-            showVoiceRecord={this.state.showRecordAudio}
-            cancelRecording={this.cancelRecording}
-            stopRecording={this.stopRecording}
-            voiceRecordStyles={this.props.voiceRecordStyles}
-            trans={this.props.trans}
-        />
+        return (
+            <VoiceRecord
+                showVoiceRecord={this.state.showRecordAudio}
+                cancelRecording={this.cancelRecording}
+                stopRecording={this.stopRecording}
+                voiceRecordStyles={this.props.voiceRecordStyles}
+                trans={this.props.trans}
+            />
+        );
     }
 
     renderAddFiles() {
@@ -218,7 +241,7 @@ class InputToolbar extends PureComponent {
         }
 
         return (
-            <TouchableOpacity style={[styles.containerAddFiles, this.getPropsStyle('containerAddFiles')]} onPress={() => this.selectFile(true)}>
+            <TouchableOpacity style={[styles.containerAddFiles, this.getPropsStyle('containerAddFiles')]} onPress={() => this.openActions(true)}>
                 <Image source={this.props.iconActionsAddFiles || require('../assets/icon-add-files.png')} style={[styles.iconActionsAddFiles, this.getPropsStyle('iconActionsAddFiles')]} />
             </TouchableOpacity>
         );
@@ -266,7 +289,7 @@ class InputToolbar extends PureComponent {
                     <TouchableOpacity style={[styles.containerAddAudio, this.getPropsStyle('containerAddAudio')]} onPress={() => this.startRecording()}>
                         <Image source={this.props.iconActionsAddAudio || require('../assets/icon-add-audio.png')} style={[styles.iconActionsAddAudio, this.getPropsStyle('iconActionsAddAudio')]} />
                     </TouchableOpacity>
-                    <TouchableOpacity style={[styles.containerAddImage, this.getPropsStyle('containerAddImage')]} onPress={() => this.selectFile()}>
+                    <TouchableOpacity style={[styles.containerAddImage, this.getPropsStyle('containerAddImage')]} onPress={() => this.openGallery()}>
                         <Image source={this.props.iconActionsAddImage || require('../assets/icon-add-image.png')} style={[styles.iconActionsAddImage, this.getPropsStyle('iconActionsAddImage')]} />
                     </TouchableOpacity>
                 </View>
@@ -295,11 +318,11 @@ class InputToolbar extends PureComponent {
                     </View>
                 </TouchableWithoutFeedback>
             </Modal>
-        )
+        );
     }
 
     render() {
-        const { showRecordAudio  } = this.state;
+        const { showRecordAudio } = this.state;
         if (this.props.render) {
             return this.props.render(showRecordAudio);
         }
@@ -309,7 +332,7 @@ class InputToolbar extends PureComponent {
                 <View style={[styles.container, this.getPropsStyle('container'), { height: this.props.inputbarHeight }]}>
                     {this.renderRecordAudio()}
                 </View>
-            )
+            );
         }
 
         return (
@@ -345,8 +368,12 @@ InputToolbar.defaultProps = {
     iconActionsSend: null,
     keyboardListeners: null,
     setLoading: () => { },
-    sendMessage: {text: ()=>{}, file: ()=>{}},
+    sendMessage: { text: () => {}, file: () => {} },
     voiceRecordStyles: null,
+    resizeX: 1000,
+    resizeY: 1600,
+    imageQuality: 80,
+    members: {},
 };
 InputToolbar.propTypes = {
     trans: PropTypes.object,
@@ -373,6 +400,10 @@ InputToolbar.propTypes = {
     setLoading: PropTypes.func,
     sendMessage: PropTypes.object,
     voiceRecordStyles: PropTypes.object,
+    resizeX: PropTypes.number,
+    resizeY: PropTypes.number,
+    imageQuality: PropTypes.number,
+    members: PropTypes.object,
 };
 
 export default InputToolbar;

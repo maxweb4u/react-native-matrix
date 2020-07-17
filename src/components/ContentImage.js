@@ -44,13 +44,13 @@ class ContentImage extends Component {
 
     onPress = () => {
         if (this.props.onImagePress) {
-            this.props.onImagePress(this.props.contentObj)
+            this.props.onImagePress(this.props.contentObj);
         }
     }
 
     render() {
         if (!this.state.loaded || !this.imageSource) {
-            <ActivityIndicator size="small" />
+            <ActivityIndicator size="small" />;
         }
         return (
             <TouchableOpacity style={this.props.isOwn ? this.props.imagePreviewMy : this.props.imagePreviewNotMy} onPress={() => this.onPress()}>

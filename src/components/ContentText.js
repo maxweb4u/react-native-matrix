@@ -10,26 +10,47 @@ import PropTypes from 'prop-types';
 import ContentTextModel from '../models/ContentText';
 import Colors from '../lib/colors';
 
+const stylesObj = {
+    contentTextContainer: { padding: 10, paddingBottom: 0 },
+    contentTextMy: { color: Colors.white, fontSize: 14 },
+    contentTextNotMy: { color: Colors.black, fontSize: 14 },
+    contentTextQuoteNotMyContainer: { borderLeftWidth: 2, borderColor: Colors.black, paddingLeft: 5, marginBottom: 10 },
+    contentTextQuoteMyContainer: { borderLeftWidth: 2, borderColor: Colors.white, paddingLeft: 5, marginBottom: 10 },
+    contentTextQuoteNotMy: { fontSize: 12, color: Colors.black, textAlign: 'left' },
+    contentTextQuoteMy: { fontSize: 12, color: Colors.white, textAlign: 'left' },
+};
+
 class ContentText extends PureComponent {
     render() {
-        const { isOwn, contentObj, contentTextMy, contentTextNotMy } = this.props;
+        const { isOwn, contentObj, contentTextStyles } = this.props;
+
+        const styles = { ...stylesObj, ...contentTextStyles };
+
+        if (contentObj.isQuote) {
+            const textObj = contentObj.quoteMessageObj;
+            return (
+                <View style={styles.contentTextContainer}>
+                    <View style={isOwn ? styles.contentTextQuoteMyContainer : styles.contentTextQuoteNotMyContainer}>
+                        <Text style={isOwn ? styles.contentTextQuoteMy : styles.contentTextQuoteNotMy}>{textObj.quote}</Text>
+                    </View>
+                    <Text style={isOwn ? styles.contentTextMy : styles.contentTextNotMy}>{textObj.message}</Text>
+                </View>
+            );
+        }
+
         return (
-            <View style={this.props.contentTextContainer}><Text style={isOwn ? contentTextMy : contentTextNotMy}>{contentObj.message}</Text></View>
+            <View style={styles.contentTextContainer}><Text style={isOwn ? styles.contentTextMy : styles.contentTextNotMy}>{contentObj.message}</Text></View>
         );
     }
 }
 
 ContentText.defaultProps = {
-    contentTextContainer: {padding: 10, paddingBottom: 0},
-    contentTextMy: { color: Colors.white, fontSize: 14 },
-    contentTextNotMy: { color: Colors.black, fontSize: 14 },
+    contentTextStyles: {},
     contentObj: new ContentTextModel(),
     isOwn: false,
 };
 ContentText.propTypes = {
-    contentTextContainer: PropTypes.object,
-    contentTextMy: PropTypes.object,
-    contentTextNotMy: PropTypes.object,
+    contentTextStyles: PropTypes.object,
     contentObj: PropTypes.object,
     isOwn: PropTypes.bool,
 };

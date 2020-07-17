@@ -12,7 +12,7 @@ const utils = {
     isNewDay: (curDate, prevDate) => moment(curDate).diff(moment(prevDate), 'days', true) > 1,
     isTextHaveURL: str => str.indexOf('http:') !== -1 || str.indexOf('https:') !== -1,
     timestamp: isMilliseconds => parseInt(isMilliseconds ? moment().valueOf() : moment().unix(), 10),
-    convertMessageToQuoteHTML: (text) => {
+    convertMessageToQuoteHTML: (message) => {
         const arr = message.split('\n');
         let ret = '<blockquote><p>';
         let isQuoteFinished = false;

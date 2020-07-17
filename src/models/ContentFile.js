@@ -70,7 +70,7 @@ class ContentFile extends Content {
     }
 
     get httpURL() {
-        return api.auth.getBaseURL() + sdk.PREFIX_MEDIA_R0 + `/download/${this.serverName}/${this.mediaId}`;
+        return `${api.auth.getBaseURL() + sdk.PREFIX_MEDIA_R0}/download/${this.serverName}/${this.mediaId}`;
     }
 
     get base64ForShare() {

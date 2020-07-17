@@ -10,24 +10,24 @@ import PropTypes from 'prop-types';
 import Colors from '../lib/colors';
 
 const stylesObj = {
-    icon24: {width: 24, height: 24 },
+    icon24: { width: 24, height: 24 },
     filePreview: { margin: 10, marginBottom: 0, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', borderRadius: 10, backgroundColor: Colors.greyLight, padding: 10 },
     textFileTitle: { fontSize: 12, color: Colors.black, paddingLeft: 10 },
     filePreviewMy: { backgroundColor: Colors.white03 },
-    textFileTitleMy: { color: Colors.white, paddingLeft: 0},
-}
+    textFileTitleMy: { color: Colors.white, paddingLeft: 0 },
+};
 
 class ContentFile extends PureComponent {
     onPress = () => {
         if (this.props.onFilePress) {
-            this.props.onFilePress(this.props.contentObj)
+            this.props.onFilePress(this.props.contentObj);
         }
     }
 
     render() {
         const { isOwn, contentObj, contentFileStyles } = this.props;
         let image = null;
-        const styles = {...stylesObj, ...contentFileStyles }
+        const styles = { ...stylesObj, ...contentFileStyles };
 
         if (contentObj.info.mimetype === 'application/pdf') {
             image = (<Image source={require('../assets/icon-file-pdf.png')} style={styles.icon24} />);

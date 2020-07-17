@@ -12,9 +12,9 @@ import Utils from '../lib/utils';
 import Matrix from '../Matrix';
 
 const styles = StyleSheet.create({
-    container: { flex: 1, paddingBottom: 16, },
+    container: { flex: 1, paddingBottom: 16 },
     // listStyle: { flex: 1 },
-    contentContainerStyle: { flexGrow:1, justifyContent: 'flex-end' },
+    contentContainerStyle: { flexGrow: 1, justifyContent: 'flex-end' },
 });
 
 class EventsContainer extends Component {
@@ -28,7 +28,7 @@ class EventsContainer extends Component {
     //     return this.props.events.length !== nextProps.events.length;
     // }
 
-    scrollToBottom(options){
+    scrollToBottom(options) {
         if (!options) {
             options = { animated: true };
         }
@@ -51,6 +51,7 @@ class EventsContainer extends Component {
             startAudioPlay: this.props.startAudioPlay,
             stopAudioPlay: this.props.stopAudioPlay,
             reactedEventIds: this.props.reactedEventIds,
+            addCitation: this.props.addCitation,
         };
         if (this.props.renderEvent) {
             return this.props.renderEvent(props);
@@ -75,7 +76,7 @@ class EventsContainer extends Component {
                     style={styles.listStyle}
                     contentContainerStyle={styles.contentContainerStyle}
                     renderItem={this.renderEvent}
-                    onContentSizeChange={() => this.flatListRef.current.scrollToEnd({animated: true})}
+                    onContentSizeChange={() => this.flatListRef.current.scrollToEnd({ animated: true })}
                 />
             </View>
         );
@@ -87,8 +88,9 @@ EventsContainer.defaultProps = {
     renderEvent: null,
     eventProps: {},
     roomId: '',
-    startAudioPlay: ()=>{},
-    stopAudioPlay: ()=>{},
+    startAudioPlay: () => {},
+    stopAudioPlay: () => {},
+    addCitation: () => {},
 };
 EventsContainer.propTypes = {
     events: PropTypes.arrayOf(PropTypes.object),
@@ -98,6 +100,7 @@ EventsContainer.propTypes = {
     roomId: PropTypes.string,
     startAudioPlay: PropTypes.func,
     stopAudioPlay: PropTypes.func,
+    addCitation: PropTypes.func,
 };
 
 export default EventsContainer;

@@ -1,4 +1,5 @@
 import Content from './Content';
+import ConstValues from '../consts';
 import MsgTypes from '../consts/MsgTypes';
 import Utils from '../lib/utils';
 
@@ -9,6 +10,9 @@ class ContentText extends Content {
 
     constructor(contentObj) {
         super(contentObj);
+        if (contentObj && contentObj.format && contentObj.format === ConstValues.customHTML && contentObj.formatted_body && contentObj.formatted_body.indexOf('<blockquote>') !== -1) {
+            this.isQuote = true;
+        }
     }
 
     get matrixContentObj() {
@@ -16,22 +20,22 @@ class ContentText extends Content {
     }
 
     static makeMessageObj(body, isQuote) {
-        return isQuote ? ContentText.makeHtmlMessageObj(body, Utils.convertMessageToQuoteHTML(body)) : ContentText.makeTextMessageObj(body)
+        return isQuote ? ContentText.makeHtmlMessageObj(body, Utils.convertMessageToQuoteHTML(body)) : ContentText.makeTextMessageObj(body);
     }
 
     static makeTextMessageObj(body) {
         return {
             msgtype: MsgTypes.mText,
-            body: body
+            body,
         };
     }
 
     static makeHtmlMessageObj(body, htmlBody) {
         return {
             msgtype: MsgTypes.mText,
-            format: "org.matrix.custom.html",
-            body: body,
-            formatted_body: htmlBody
+            format: ConstValues.customHTML,
+            body,
+            formatted_body: htmlBody,
         };
     }
 }

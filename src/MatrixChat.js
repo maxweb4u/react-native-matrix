@@ -31,6 +31,7 @@ class MatrixChat extends Component {
         this.bottomOffset = this.getBottomOffsetIphoneX;
         this.maxHeight = undefined;
         this.messageContainerRef = React.createRef();
+        this.inputToolbarRef = React.createRef();
 
         this.state = {
             isLoading: true,
@@ -95,7 +96,7 @@ class MatrixChat extends Component {
             const room = Matrix.getRoom(this.props.roomId, this.props.possibleChatEvents, this.props.possibleChatContentTypes);
             if (room) {
                 this.room = room;
-                this.setState({ events: room.events, members: room.getMembers() }, () => {
+                this.setState({ events: room.events, members: room.getMembersObj() }, () => {
                     this.props.onLoaded({ roomTitle: room.title });
                 });
             }
@@ -129,7 +130,7 @@ class MatrixChat extends Component {
         this.room.addMatrixEvent(matrixEvent);
     }
 
-    addEvent = ({event, matrixEvent, isScrollToBottom}) => {
+    addEvent = ({ event, matrixEvent, isScrollToBottom }) => {
         if (event || matrixEvent) {
             const { events } = this.state;
             if (matrixEvent) {
@@ -148,14 +149,14 @@ class MatrixChat extends Component {
 
     sendText = async (text, isQuote) => {
         const event = new Event(null, Event.getEventObjText(Matrix.userId, text, isQuote));
-        this.addEvent({event});
+        this.addEvent({ event });
         Matrix.sendMessage(this.props.roomId, event.matrixContentObj).then(res => this.messageIsSent(res.event_id)).error(err => this.props.errorCallback(err));
     }
 
     sendFile = async (msgtype, filename, uri, mimetype, base64, size, duration) => {
         const eventObj = Event.getEventObjFile(Matrix.userId, msgtype, filename, uri, mimetype, base64, size, duration);
         const event = new Event(null, eventObj);
-        this.addEvent({event});
+        this.addEvent({ event });
         const res = await event.contentObj.uploadFile();
         if (res.status) {
             Matrix.sendMessage(this.props.roomId, event.matrixContentObj).then(res => this.messageIsSent(res.event_id)).error(err => this.props.errorCallback(err));
@@ -166,7 +167,7 @@ class MatrixChat extends Component {
         if (room && matrixEvent && room.roomId === this.props.roomId && Matrix.userId !== matrixEvent.getSender()) {
             const shouldBeAdded = this.room.matrixEventCouldBeAdded(matrixEvent);
             if (shouldBeAdded) {
-                this.addEvent({matrixEvent, isScrollToBottom: true});
+                this.addEvent({ matrixEvent, isScrollToBottom: true });
             }
         }
     }
@@ -194,7 +195,7 @@ class MatrixChat extends Component {
 
     setBottomOffset = value => this.bottomOffset = value;
 
-    getBottomOffset = () =>  this.bottomOffset;
+    getBottomOffset = () => this.bottomOffset;
 
     calculateInputToolbarHeight = composerHeight => (composerHeight || this.state.composerHeight) + this.getBottomOffset() + this.props.inputToolbarPaddingTop;
 
@@ -209,7 +210,7 @@ class MatrixChat extends Component {
             animated = true;
         }
         if (this.messageContainerRef && this.messageContainerRef.current) {
-            this.messageContainerRef.current.scrollToBottom({animated});
+            this.messageContainerRef.current.scrollToBottom({ animated });
         }
     }
 
@@ -240,6 +241,12 @@ class MatrixChat extends Component {
         this.setState({ removePrevAudioListener: null });
     };
 
+    addCitation = (message) => {
+        if (this.inputToolbarRef && this.inputToolbarRef.current) {
+            this.inputToolbarRef.current.addCitation(message);
+        }
+    }
+
     renderContainer = () => {
         if (this.props.renderContainer) {
             return this.props.renderContainer(this.renderEvents, this.renderInputToolbar);
@@ -261,6 +268,7 @@ class MatrixChat extends Component {
                 <EventsContainer
                     ref={this.messageContainerRef}
                     eventProps={this.props.eventProps}
+                    addCitation={this.addCitation}
                     events={events}
                     reactedEventIds={!!this.room && this.room.reactedEventIds}
                     startAudioPlay={this.startAudioPlay}
@@ -275,18 +283,19 @@ class MatrixChat extends Component {
         const { text, composerHeight } = this.state;
         const { minComposerHeight, inputToolbarProps } = this.props;
         const props = {
-            ...inputToolbarProps,
             onInputSizeChanged: this.onInputSizeChanged,
             composerHeight: Math.max(minComposerHeight, composerHeight),
             inputbarHeight: this.calculateInputToolbarHeight(),
             keyboardListeners: this.keyboardListeners,
             trans: { ...trans.t('inputToolbar'), ...(this.props.trans.inputToolbar || {}) },
             sendMessage: { text: this.sendText.bind(this), file: this.sendFile.bind(this) },
+            members: this.state.members,
+            ...inputToolbarProps,
         };
         if (this.props.renderInputToolbar) {
             return this.props.renderInputToolbar(props);
         }
-        return <InputToolbar {...props} />;
+        return <InputToolbar ref={this.inputToolbarRef} {...props} />;
     }
 
     render() {

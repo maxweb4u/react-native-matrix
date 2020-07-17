@@ -6,7 +6,9 @@
 
 import React, { PureComponent } from 'react';
 import PropTypes from 'prop-types';
-import { View, StyleSheet, TouchableOpacity, Text, Image } from 'react-native';
+import { View, StyleSheet, TouchableOpacity, Text, Image, Platform, Clipboard } from 'react-native';
+import ActionSheet from 'react-native-action-sheet';
+import Share from 'react-native-share';
 import Matrix from '../Matrix';
 import EventModel from '../models/Event';
 import Utils from '../lib/utils';
@@ -17,6 +19,7 @@ import ContentImage from './ContentImage';
 import ContentAudio from './ContentAudio';
 import ContentFile from './ContentFile';
 import EventAvatar from './EventAvatar';
+import trans from '../trans';
 
 const styles = StyleSheet.create({
     container: { width: '100%' },
@@ -39,8 +42,8 @@ const styles = StyleSheet.create({
     containerNotMyContentBottom: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingBottom: 3, paddingLeft: 10, paddingRight: 10 },
     messageNotMyTimeText: { color: Colors.grey, fontSize: 10 },
     containerLike: {},
-    likeButton: { height: 36, width: 36, alignItems: 'center', justifyContent: 'center'},
-    likeImage: {width: 16, height: 16},
+    likeButton: { height: 36, width: 36, alignItems: 'center', justifyContent: 'center' },
+    likeImage: { width: 16, height: 16 },
     containerMessageActions: { alignItems: 'center', justifyContent: 'center', width: 36, height: 36 },
     iconActions: { width: 20, height: 20 },
 });
@@ -58,18 +61,67 @@ class Event extends PureComponent {
         return null;
     }
 
-    isLiked = () => {
-        return this.state.liked || this.props.reactedEventIds.indexOf(this.props.event.id) !== -1
-    }
-
     showActions = () => {
-
+        if (this.props.showEventActions) {
+            this.props.showEventActions(this.copyToClipboard, this.share, this.quote);
+            return null;
+        }
+        const iosButtons = [trans.t('event', 'copy'), trans.t('event', 'share'), trans.t('event', 'quote'), trans.t('event', 'cancel')];
+        const androidButtons = [trans.t('event', 'copy'), trans.t('event', 'share'), trans.t('event', 'citate')];
+        const cnf = {
+            options: Platform.OS === 'android' ? androidButtons : iosButtons,
+            cancelButtonIndex: 3,
+            tintColor: Colors.blue,
+        };
+        ActionSheet.showActionSheetWithOptions(cnf, index => this.doAction(index));
+        return null;
     }
+
+    doAction = (index) => {
+        switch (index) {
+            case 0:
+                this.copyToClipboard();
+                break;
+            case 1:
+                this.share();
+                break;
+            case 2:
+                this.quote();
+                break;
+            default:
+                break;
+        }
+    }
+
+    share = (callback) => {
+        const { event } = this.props;
+        const shareOptions = {
+            title: trans.t('event', 'shareTitle'),
+            message: event.messageOnly,
+        };
+        if ((event.msgtype === MsgTypes.mImage || event.msgtype === MsgTypes.mFile) && event.content.base64ForShare) {
+            shareOptions.url = event.content.base64ForShare;
+        }
+        Share.open(shareOptions);
+        // if (callback) callback();
+    }
+
+    quote = (callback) => {
+        if (callback) callback();
+        this.props.addCitation(this.props.event.citationMessage);
+    }
+
+    copyToClipboard = async (callback) => {
+        if (callback) callback();
+        await Clipboard.setString(this.props.event.message);
+    };
 
     likeEvent = () => {
-        this.setState({liked: true});
+        this.setState({ liked: true });
         Matrix.sendReaction(this.props.roomId, this.props.event.reactionContentObj);
     }
+
+    isLiked = () => this.state.liked || this.props.reactedEventIds.indexOf(this.props.event.id) !== -1
 
     renderDay = () => {
         if (!this.props.isNewDay) {
@@ -124,8 +176,8 @@ class Event extends PureComponent {
             return this.props.renderMessageAvatar(this.props.event.senderAvatarObj, this.props.isPrevUserTheSame);
         }
         if (!this.props.isPrevUserTheSame) {
-            //return <Image source={this.props.event.senderAvatarURI} style={[styles.avatarPhoto, this.getPropsStyle('avatarPhoto')]} />;
-            return <EventAvatar avatarObj={this.props.event.senderAvatarObj} style={[styles.avatarPhoto, this.getPropsStyle('avatarPhoto')]} noPhotoSource={this.props.noEventPhotoSource} />
+            // return <Image source={this.props.event.senderAvatarURI} style={[styles.avatarPhoto, this.getPropsStyle('avatarPhoto')]} />;
+            return <EventAvatar avatarObj={this.props.event.senderAvatarObj} style={[styles.avatarPhoto, this.getPropsStyle('avatarPhoto')]} noPhotoSource={this.props.noEventPhotoSource} />;
         }
         return <View style={[styles.avatarPhoto, this.getPropsStyle('avatarPhoto')]} />;
     }
@@ -134,12 +186,12 @@ class Event extends PureComponent {
         if (this.props.renderMyMessageContent) {
             return this.props.renderMyMessageContent(this.renderMessageContent.bind(this), this.renderMyContentBottom.bind(this));
         }
-        const contentInner =  (
+        const contentInner = (
             <View>
                 <View style={[styles.containerMyMessageContentInner, this.getPropsStyle('containerMyMessageContentInner')]}>{this.renderMessageContent({ isOwn: true })}</View>
                 {this.renderMyContentBottom()}
             </View>
-        )
+        );
         return (
             <View style={[styles.containerMyMessage, this.getPropsStyle('containerMyMessage')]}>
                 {this.props.renderContentInner ? this.props.renderContentInner(contentInner, true) : (<View style={[styles.containerMyMessageContent, this.getPropsStyle('containerMyMessageContent')]}>{contentInner}</View>)}
@@ -156,7 +208,7 @@ class Event extends PureComponent {
                 <View style={[styles.containerNotMyMessageContentInner, this.getPropsStyle('containerNotMyMessageContentInner')]}>{this.renderMessageContent({ isOwn: false })}</View>
                 {this.renderNotMyContentBottom()}
             </View>
-        )
+        );
         return (
             <View style={[styles.containerNotMyMessage, this.getPropsStyle('containerNotMyMessage')]}>
                 {this.renderSenderName()}
@@ -177,7 +229,7 @@ class Event extends PureComponent {
                         <Image source={require('../assets/icon-liked.png')} style={[styles.likeImage, this.getPropsStyle('likeImage')]} />
                     </View>
                 </View>
-            )
+            );
         }
         return (
             <View style={[styles.containerLike, this.getPropsStyle('containerLike')]}>
@@ -185,7 +237,7 @@ class Event extends PureComponent {
                     <Image source={require('../assets/icon-not-liked.png')} style={[styles.likeImage, this.getPropsStyle('likeImage')]} />
                 </TouchableOpacity>
             </View>
-        )
+        );
     }
 
     renderSenderName = () => {
@@ -230,13 +282,13 @@ class Event extends PureComponent {
         switch (content.type) {
             default:
             case MsgTypes.mText:
-                return <ContentText isOwn={isOwn} contentObj={content} {...this.props.contentTextStyles} />;
+                return <ContentText isOwn={isOwn} contentObj={content} contentTextStyles={this.props.contentTextStyles} />;
             case MsgTypes.mImage:
                 return <ContentImage isOwn={isOwn} contentObj={content} {...this.props.contentImageStyles} onImagePress={this.props.onImagePress} />;
             case MsgTypes.mAudio:
-                return <ContentAudio isOwn={isOwn} contentObj={content} contentAudioStyles={this.props.contentAudioStyles} startAudioPlay={this.props.startAudioPlay} stopAudioPlay={this.props.stopAudioPlay}/>;
+                return <ContentAudio isOwn={isOwn} contentObj={content} contentAudioStyles={this.props.contentAudioStyles} startAudioPlay={this.props.startAudioPlay} stopAudioPlay={this.props.stopAudioPlay} />;
             case MsgTypes.mFile:
-                return <ContentFile isOwn={isOwn} contentObj={content} contentFileStyles={this.props.contentFileStyles}  onFilePress={this.props.onFilePress}/>;
+                return <ContentFile isOwn={isOwn} contentObj={content} contentFileStyles={this.props.contentFileStyles} onFilePress={this.props.onFilePress} />;
         }
     }
 
@@ -265,6 +317,7 @@ Event.defaultProps = {
     eventStyles: {},
     contentTextStyles: {},
     contentImageStyles: {},
+    contentAudioStyles: {},
     contentFileStyles: {},
     isOwn: false,
     isNewDay: false,
@@ -285,19 +338,22 @@ Event.defaultProps = {
     renderMessageContent: null,
     renderMessageActions: null,
     renderContentInner: null,
+    showEventActions: null,
     noEventPhotoSource: null,
-    startAudioPlay: ()=>{},
-    stopAudioPlay: ()=>{},
+    startAudioPlay: () => {},
+    stopAudioPlay: () => {},
     onImagePress: null,
     onFilePress: null,
     roomId: '',
     reactedEventIds: [],
+    addCitation: () => {},
 };
 Event.propTypes = {
     event: PropTypes.object,
     eventStyles: PropTypes.object,
     contentTextStyles: PropTypes.object,
     contentImageStyles: PropTypes.object,
+    contentAudioStyles: PropTypes.object,
     contentFileStyles: PropTypes.object,
     isOwn: PropTypes.bool,
     isNewDay: PropTypes.bool,
@@ -318,6 +374,7 @@ Event.propTypes = {
     renderMessageContent: PropTypes.func,
     renderMessageActions: PropTypes.func,
     renderContentInner: PropTypes.func,
+    showEventActions: PropTypes.func,
     noEventPhotoSource: PropTypes.object,
     startAudioPlay: PropTypes.func,
     stopAudioPlay: PropTypes.func,
@@ -325,6 +382,7 @@ Event.propTypes = {
     onFilePress: PropTypes.func,
     roomId: PropTypes.string,
     reactedEventIds: PropTypes.arrayOf(PropTypes.string),
+    addCitation: PropTypes.func,
 };
 
 export default Event;
