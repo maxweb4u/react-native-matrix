@@ -24,7 +24,7 @@ const AuthApi = {
     },
 
     getBaseURL: () => {
-        handling.getBaseURL();
+        return handling.getBaseURL();
     },
 };
 

@@ -14,7 +14,7 @@ export default {
     },
     createGroupChat: {
         changeGroupImage: 'Change group image',
-        inputPlaceholder: 'Change Group Title',
+        inputPlaceholder: 'Change group Title',
         buttonTitle: 'Create',
     },
     inputToolbar: {
@@ -28,5 +28,11 @@ export default {
         quote: 'Qoute',
         cancel: 'Cancel',
         shareTitle: 'Share',
+    },
+    editGroupChat: {
+        changeGroupImage: 'Change group image',
+        inputPlaceholder: 'Change group Title',
+        buttonTitle: 'Add contact to the group',
+        buttonLeave: 'Exit group chat',
     },
 };

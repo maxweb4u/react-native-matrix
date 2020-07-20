@@ -16,6 +16,11 @@ const RoomApi = {
         return res;
     },
 
+    edit: async (data) => {
+        const res = await handling.request('post', '/createRoom', data);
+        return res;
+    },
+
     // joinViaAlias: async (roomAlias) => {
     //     const res = await handling.request('post', `/join/${roomAlias}`);
     //     return res;

@@ -93,14 +93,7 @@ class MatrixChat extends Component {
 
     componentDidMount() {
         if (this.props.roomId) {
-            const room = Matrix.getRoom(this.props.roomId, this.props.possibleChatEvents, this.props.possibleChatContentTypes);
-            if (room) {
-                this.room = room;
-                this.setState({ events: room.events, members: room.getMembersObj() }, () => {
-                    this.props.onLoaded({ roomTitle: room.title });
-                });
-            }
-
+            this.loadRoom({roomId: this.props.roomId});
             this.subscription = timer(1000).subscribe(() => {
                 Matrix.setSyncCallback(this.syncCallback);
             });
@@ -125,22 +118,37 @@ class MatrixChat extends Component {
         return 10;
     }
 
+    loadRoom = ({roomId, matrixRoom}) => {
+        const room = Matrix.getRoom({roomId, matrixRoom, possibleEventsTypes: this.props.possibleChatEvents, possibleContentTypes: this.props.possibleChatContentTypes});
+        if (room) {
+            this.room = room;
+            this.setState({ events: room.events.reverse(), members: room.getMembersObj() }, () => {
+                this.props.onLoaded({ roomTitle: room.title });
+            });
+        }
+    }
+
+    loadEarlyMessages = () => {
+        return Matrix.loadEarlyMessages(this.room.matrixRoom, 20).then(matrixRoom => {
+            this.loadRoom({matrixRoom});
+            return matrixRoom.oldState.paginationToken;
+        }).catch(() => false);
+    }
+
     messageIsSent = (eventId) => {
         const matrixEvent = Matrix.getEvent(eventId);
         this.room.addMatrixEvent(matrixEvent);
     }
 
-    addEvent = ({ event, matrixEvent, isScrollToBottom }) => {
+    addEvent = ({ event, matrixEvent }) => {
         if (event || matrixEvent) {
-            const { events } = this.state;
+            let { events } = this.state;
             if (matrixEvent) {
                 event = new Event(matrixEvent);
             }
-            events.push(event);
+            events = [event].concat(events);
             this.setState({ events }, () => {
-                if (isScrollToBottom) {
-                    this.scrollToBottom();
-                }
+                this.scrollToBottom();
             });
             return events.length - 1;
         }
@@ -167,7 +175,7 @@ class MatrixChat extends Component {
         if (room && matrixEvent && room.roomId === this.props.roomId && Matrix.userId !== matrixEvent.getSender()) {
             const shouldBeAdded = this.room.matrixEventCouldBeAdded(matrixEvent);
             if (shouldBeAdded) {
-                this.addEvent({ matrixEvent, isScrollToBottom: true });
+                this.addEvent({ matrixEvent });
             }
         }
     }
@@ -274,6 +282,7 @@ class MatrixChat extends Component {
                     startAudioPlay={this.startAudioPlay}
                     stopAudioPlay={this.stopAudioPlay}
                     roomId={this.props.roomId}
+                    loadEarlyMessages={this.loadEarlyMessages}
                 />
             </AnimatedView>
         );

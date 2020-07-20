@@ -7,25 +7,27 @@
 import React, { PureComponent } from 'react';
 import { Image } from 'react-native';
 import PropTypes from 'prop-types';
-import ContentTextModel from '../models/ContentText';
+import ContentFile from '../models/ContentFile';
 import Colors from '../lib/colors';
 import api from '../api';
 
 class EventAvatar extends PureComponent {
-    imageSource = null;
+    // imageSource = null;
 
     constructor(props) {
         super(props);
-        this.state = { loaded: false };
+        this.state = { uri: '' };
     }
 
     async componentDidMount() {
+        console.log(this.props.avatarObj)
         if (this.props.avatarObj && this.props.avatarObj.serverName && this.props.avatarObj.mediaId) {
-            const res = await api.media.downloadFile(this.props.avatarObj.serverName, this.props.avatarObj.mediaId);
-            if (res.status) {
-                this.source = `data:${this.mimeType};base64,${this.data}`;
-                return { status: true };
-            }
+            this.setState({ uri: ContentFile.getHTTPURI(this.props.avatarObj.serverName, this.props.avatarObj.mediaId)});
+            // const res = await api.media.downloadFile(this.props.avatarObj.serverName, this.props.avatarObj.mediaId);
+            // if (res.status) {
+            //     this.imageSource = `data:image/jpeg;base64,${res.data}`;
+            //     this.setState({ loaded: true });
+            // }
         }
     }
 
@@ -39,7 +41,7 @@ class EventAvatar extends PureComponent {
     render() {
         const { avatarObj } = this.props;
         return (
-            <Image source={this.imageSource ? { uri: this.imageSource } : this.getNoPhoto()} style={this.props.style} />
+            <Image source={this.state.uri ? { uri: this.state.uri } : this.getNoPhoto()} style={this.props.style} />
         );
     }
 }

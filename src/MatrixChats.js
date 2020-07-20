@@ -14,6 +14,7 @@ import Matrix from './Matrix';
 class MatrixChats extends Component {
     constructor(props) {
         super(props);
+        this.subscription = null;
         this.state = {
             searchText: '',
             rooms: {},
@@ -21,17 +22,19 @@ class MatrixChats extends Component {
     }
 
     componentDidMount() {
-        this.subscription = timer(1000).subscribe(() => {
-            const rooms = Matrix.getRooms();
-            this.setState({ rooms }, () => {
-                Matrix.setSyncCallback(this.syncCallback);
-                this.props.onLoaded();
-            });
-        });
+        this.subscription = timer(1000).subscribe(() => this.setRooms());
     }
 
     componentWillUnmount() {
         if (this.subscription && this.subscription.unsubscribe) this.subscription.unsubscribe();
+    }
+
+    setRooms = () => {
+        const obj = Matrix.getRoomsForChatsList();
+        this.setState({rooms: obj.rooms}, () => {
+            Matrix.setSyncCallback(this.syncCallback);
+            this.props.onLoaded(obj.userIdsDM);
+        });
     }
 
     syncCallback = (event, room) => {

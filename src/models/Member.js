@@ -35,6 +35,14 @@ class Member {
         }
     }
 
+    get name() {
+        return this.displayName;
+    }
+
+    get uri() {
+        return this.mxcURI ? this.httpURL : '';
+    }
+
     get httpURL() {
         return `${api.auth.getBaseURL() + sdk.PREFIX_MEDIA_R0}/download/${this.serverName}/${this.mediaId}`;
     }

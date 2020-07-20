@@ -65,7 +65,7 @@ class ContentAudio extends Component {
 
     render() {
         const leftPosition = this.state.currentDurationSec && this.state.currentPositionSec ? this.state.currentPositionSec / this.state.currentDurationSec * 99 : 0;
-        const styles = this.props.contentAudioStyles || stylesObj;
+        const styles = {...stylesObj, ...this.props.contentAudioStyles };
         return (
             <View style={[styles.audioPreview, this.props.isOwn && styles.audioPreviewMy]}>
                 <TouchableOpacity style={styles.touchArea} onPress={this.action}>

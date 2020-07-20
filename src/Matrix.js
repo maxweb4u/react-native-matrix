@@ -59,29 +59,32 @@ class Matrix {
     removeSyncCallback = () => this.setSyncCallback(null);
 
     // sync() {
-    //     this.client.once('sync', (state, prevState, res) => {
-    //         if (state === 'PREPARED') {
-    //             if (this.syncCallback) {
-    //                 this.syncCallback(res);
-    //             }
-    //         }
+    //     this.client.on('sync', (state, prevState, res) => {
+    //         console.log("state", state)
     //     });
     // }
 
-    getRooms() {
+    getRoomsForChatsList() {
         if (this.client) {
             const arr = this.client.getVisibleRooms();
             const rooms = {};
+            const userIdsDM = {};
             arr.forEach((matrixRoom) => {
-                rooms[matrixRoom.roomId] = new Room({ matrixRoom });
+                const room = new Room({ matrixRoom });
+                rooms[matrixRoom.roomId] = room;
+                if (room.isDirect) {
+                    userIdsDM[room.userIdDM] = room.id;
+                }
             });
-            return rooms;
+            return { rooms, userIdsDM };
         }
-        return [];
+        return {rooms: {}, userIdsDM: {}};
     }
 
-    getRoom(roomId, possibleEventsTypes, possibleContentTypes) {
-        const matrixRoom = this.client.getRoom(roomId);
+    getRoom({roomId, matrixRoom, possibleEventsTypes, possibleContentTypes}) {
+        if (!matrixRoom && roomId) {
+            matrixRoom = this.client.getRoom(roomId);
+        }
         if (matrixRoom) {
             const room = new Room({ matrixRoom, possibleEventsTypes, possibleContentTypes });
             return room;
@@ -96,7 +99,11 @@ class Matrix {
     async createRoom(inviteIds, name, isDirect, preset) {
         isDirect = isDirect || false;
         preset = preset || 'private_chat';
-        const res = await api.room.create({ invite: inviteIds, name, preset, is_direct: isDirect });
+        const options = { invite: inviteIds, preset, is_direct: isDirect };
+        if (name) {
+            options.name = name;
+        }
+        const res = await api.room.create(options);
         return res;
     }
 
@@ -121,6 +128,15 @@ class Matrix {
 
     async sendReaction(roomId, contentReactionObj, callback) {
         this.sendEvent(roomId, EventTypes.mRoomReaction, contentReactionObj, callback);
+    }
+
+    async loadEarlyMessages(room, limit) {
+        return this.client.scrollback(room, limit).then(res => res).catch(e => e);
+    }
+
+    async changeRoom(title) {
+        const res = await api.room.create(options);
+        return res;
     }
 }
 

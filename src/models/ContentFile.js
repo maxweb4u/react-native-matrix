@@ -70,7 +70,7 @@ class ContentFile extends Content {
     }
 
     get httpURL() {
-        return `${api.auth.getBaseURL() + sdk.PREFIX_MEDIA_R0}/download/${this.serverName}/${this.mediaId}`;
+        return ContentFile.getHTTPURI(this.serverName, this.mediaId);
     }
 
     get base64ForShare() {
@@ -132,6 +132,10 @@ class ContentFile extends Content {
             obj.info.duration = duration;
         }
         return obj;
+    }
+
+    static getHTTPURI = (serverName, mediaId) => {
+        return api.auth.getBaseURL() + sdk.PREFIX_MEDIA_R0 + `/download/${serverName}/${mediaId}`;
     }
 }
 
