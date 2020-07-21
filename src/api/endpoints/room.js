@@ -21,6 +21,25 @@ const RoomApi = {
         return res;
     },
 
+    sync: async (fullState, since, filter, presence, timeout) => {
+        fullState = fullState || false;
+        const params = { full_state: fullState };
+        if (since) {
+            params.since = since;
+        }
+        if (filter) {
+            params.filter = filter;
+        }
+        if (presence) {
+            params.presence = presence;
+        }
+        if (timeout) {
+            params.timeout = timeout;
+        }
+        const res = await handling.request('get', '/sync', null, params);
+        return res;
+    },
+
     // joinViaAlias: async (roomAlias) => {
     //     const res = await handling.request('post', `/join/${roomAlias}`);
     //     return res;

@@ -20,14 +20,8 @@ class EventAvatar extends PureComponent {
     }
 
     async componentDidMount() {
-        console.log(this.props.avatarObj)
         if (this.props.avatarObj && this.props.avatarObj.serverName && this.props.avatarObj.mediaId) {
             this.setState({ uri: ContentFile.getHTTPURI(this.props.avatarObj.serverName, this.props.avatarObj.mediaId)});
-            // const res = await api.media.downloadFile(this.props.avatarObj.serverName, this.props.avatarObj.mediaId);
-            // if (res.status) {
-            //     this.imageSource = `data:image/jpeg;base64,${res.data}`;
-            //     this.setState({ loaded: true });
-            // }
         }
     }
 

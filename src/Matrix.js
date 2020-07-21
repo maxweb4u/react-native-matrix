@@ -14,7 +14,11 @@ class Matrix {
 
     client = null;
 
-    syncCallback = null;
+    timelineChatsCallback = null;
+
+    timelineChatCallback = null;
+
+    totalUnread = 0;
 
     static getInstance() {
         if (!Matrix.instance) {
@@ -30,52 +34,86 @@ class Matrix {
         return '';
     }
 
-    initClient(baseUrl, accessToken, userId, displayName) {
+    get unread() {
+        return this.totalUnread;
+    }
+
+    setUnread(room, roomUnread, totalUnread) {
+        if (totalUnread) {
+            this.totalUnread = totalUnread;
+            return null;
+        }
+        if (room && roomUnread >= 0) {
+            room.setUnread(roomUnread);
+            let newUnread = this.totalUnread - roomUnread;
+            if (newUnread < 0) {
+                newUnread = 0;
+            }
+            this.totalUnread = newUnread;
+        }
+
+    }
+
+    initClient({ baseUrl, accessToken, userId, displayName }) {
         this.client = sdk.createClient({ baseUrl, accessToken, userId });
         api.auth.setBaseURL(baseUrl);
         api.auth.setAccessToken(accessToken);
-        if (displayName) {
-            this.updateDisplayName(displayName);
-        }
+        this.updateDisplayName(displayName);
     }
 
-    async startClient(syncTime) {
-        await this.client.startClient({ initialSyncLimit: syncTime });
+    startClient(syncTime) {
         this.client.on('Room.timeline', (event, room, toStartOfTimeline) => {
-            if (this.syncCallback) {
-                this.syncCallback(event, room, toStartOfTimeline);
+            // console.log("CALBACK TIMELINE")
+            if (this.timelineChatsCallback) {
+                this.timelineChatsCallback(event, room, toStartOfTimeline);
+            }
+            if (this.timelineChatCallback) {
+                this.timelineChatCallback(event, room, toStartOfTimeline);
             }
         });
+        this.client.on('sync', (state, prevState, data) => {
+            if (state === 'SYNCING' && data.nextSyncToken !== data.oldSyncToken) {
+                // console.log(data.nextSyncToken, data.oldSyncToken)
+            }
+        });
+        // this.client.startClient({ initialSyncLimit: syncTime });
+        this.client.startClient({ initialSyncLimit: 4, pollTimeout: 10 });
     }
 
     stopClient() {
-        this.removeSyncCallback();
+        this.removeSyncCallbacks();
         this.client.stopClient();
         api.auth.removeAccessToken();
     }
 
-    setSyncCallback = syncCallback => this.syncCallback = syncCallback;
+    setTimelineChatsCallback = syncCallback => this.timelineChatsCallback = syncCallback;
 
-    removeSyncCallback = () => this.setSyncCallback(null);
+    setTimelineChatCallback = syncCallback => this.timelineChatCallback = syncCallback;
 
-    // sync() {
-    //     this.client.on('sync', (state, prevState, res) => {
-    //         console.log("state", state)
-    //     });
-    // }
+    removeTimelineChatsCallback = () => this.setTimelineChatsCallback(null);
+    removeTimelineChatCallback = () => this.setTimelineChatCallback(null);
+
+    removeSyncCallbacks = () => {
+        this.removeTimelineChatsCallback();
+        this.removeTimelineChatCallback(null);
+
+    }
 
     getRoomsForChatsList() {
         if (this.client) {
             const arr = this.client.getVisibleRooms();
             const rooms = {};
             const userIdsDM = {};
+            let totalUnread = 0;
             arr.forEach((matrixRoom) => {
-                const room = new Room({ matrixRoom });
+                const room = new Room({ matrixRoom, myUserId: this.userId });
                 rooms[matrixRoom.roomId] = room;
                 if (room.isDirect) {
                     userIdsDM[room.userIdDM] = room.id;
                 }
+                totalUnread += room.unread;
             });
+            this.setUnread(null, null, totalUnread);
             return { rooms, userIdsDM };
         }
         return {rooms: {}, userIdsDM: {}};
@@ -86,7 +124,7 @@ class Matrix {
             matrixRoom = this.client.getRoom(roomId);
         }
         if (matrixRoom) {
-            const room = new Room({ matrixRoom, possibleEventsTypes, possibleContentTypes });
+            const room = new Room({ matrixRoom, possibleEventsTypes, possibleContentTypes, myUserId: this.userId });
             return room;
         }
         return null;
@@ -108,8 +146,11 @@ class Matrix {
     }
 
     async updateDisplayName(displayName) {
-        const res = await api.profile.updateDisplayName(this.userId, displayName);
-        return res;
+        if (displayName) {
+            const res = await api.profile.updateDisplayName(this.userId, displayName);
+            return res;
+        }
+        return {status: false};
     }
 
     async sendMessage(roomId, contentObj, callback) {
@@ -136,6 +177,28 @@ class Matrix {
 
     async changeRoom(title) {
         const res = await api.room.create(options);
+        return res;
+    }
+
+    async exitFromRoom(roomId) {
+        return this.client.leave(roomId).then(() => {
+            return this.client.forget(roomId).then(() => true).catch(() => false);
+        }).catch(() => false);
+    }
+
+    async setPusher(options) {
+        if (!(options && options.pushkey && options.data && options.data.url && options.app_id)) {
+            return {status: false};
+        }
+        const defaultOptions = {
+            pushkey,
+            lang: lang || 'en',
+            kind: kind || 'http',
+            app_display_name: 'MatrixClient',
+            device_display_name: 'ClientDeviceName',
+            append: false,
+        }
+        const res = await api.pusher.setPusher({...defaultOptions, ...options});
         return res;
     }
 }

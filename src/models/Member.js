@@ -11,6 +11,8 @@ import api from '../api';
 class Member {
     userId = null;
 
+    isMy = false;
+
     presence = '';
 
     displayName = '';
@@ -23,7 +25,7 @@ class Member {
 
     source = null;
 
-    constructor(matrixUser) {
+    constructor(matrixUser, myUserId) {
         if (matrixUser) {
             this.userId = matrixUser.userId;
             this.presence = matrixUser.presence;
@@ -32,6 +34,7 @@ class Member {
             const { serverName, mediaId } = Utils.parseMXCURI(this.mxcURI);
             this.serverName = serverName;
             this.mediaId = mediaId;
+            this.isMy = myUserId && this.userId === myUserId;
         }
     }
 

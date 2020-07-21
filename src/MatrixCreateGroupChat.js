@@ -55,7 +55,10 @@ class MatrixCreateGroupChat extends Component {
             return { status: false, msg: 'usersNotSelected' };
         }
         const res = await Matrix.createRoom(userIdsToInvite, title);
-        return res;
+        if (!res.status) {
+            return res;
+        }
+        return {status: true, roomId: res.data.room_id, title};
     }
 
     renderUploadRoomImage = () => {

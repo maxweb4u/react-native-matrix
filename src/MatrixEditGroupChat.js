@@ -5,17 +5,19 @@
  */
 
 import React, { Component } from 'react';
-import { View, TextInput, Image, Text, StyleSheet, TouchableOpacity } from 'react-native';
+import { View, TextInput, Image, Text, StyleSheet, TouchableOpacity, Dimensions } from 'react-native';
 import PropTypes from 'prop-types';
 import fileUtils from './lib/fileUtils';
 import trans from './trans';
 import Matrix from './Matrix';
+import LeftX from './components/LeftX';
 
 const styles = StyleSheet.create({
     containerImage: { flexDirection: 'row', alignItems: 'center', justifyContent: 'flex-start', width: '100%', padding: 16 },
     groupPhoto: { width: 40, height: 40, borderRadius: 20, marginRight: 10 },
     titleInput: { width: '90%', margin: 16 },
-    containerContacts: {  },
+    containerContacts: { top: 0, left: Dimensions.get('window').width, width: '100%' },
+    containerMembers: { height: 200 },
     containerExitButton: { flex: 1, paddingTop: 20 },
     containerButton: { flexDirection: 'column', alignItems: 'center', justifyContent: 'center', width: '100%', height: 100 },
     buttonExit: { flexDirection: 'column', alignItems: 'center', justifyContent: 'center', width: '100%', height: 40, borderTopWidth: 1, borderBottomWidth: 1, borderColor: '#ccc' },
@@ -28,16 +30,14 @@ class MatrixEditGroupChat extends Component {
         trans.setLocale(this.props.locale);
         this.room = this.props.room;
         if (!this.room && this.props.roomId) {
-            this.room = Matrix.getRoom(this.props.roomId);
+            this.room = Matrix.getRoom({roomId: this.props.roomId});
         }
-        if (this.room) {
-            this.state = {
-                imageObj: null,
-                imageURI: '',
-                title: this.room.title,
-                members: this.room.allMembers,
-            };
-        }
+        this.state = {
+            imageObj: null,
+            imageURI: '',
+            title: this.room ? this.room.title : '',
+            members: this.room ? this.room.allMembers : {},
+        };
 
     }
 
@@ -59,6 +59,15 @@ class MatrixEditGroupChat extends Component {
         const { title } = this.state;
         const res = await Matrix.changeRoom(title);
         return res;
+    }
+
+    //return true if you leave room
+    exitRoom = async (callback) => {
+        const res = await Matrix.exitFromRoom(this.room.id);
+    }
+
+    addContacts = async () => {
+
     }
 
     renderUploadRoomImage = () => {
@@ -93,11 +102,16 @@ class MatrixEditGroupChat extends Component {
         );
     }
 
-    renderContacts = () => {
-        const { members } = this.state;
-        if (this.props.renderContacts) {
-            return this.props.renderContacts(members);
+    renderMembers = () => {
+        if (this.props.renderMembers) {
+            return this.props.renderMembers(this.state.members);
         }
+        return (
+            <View style={styles.containerMembers} />
+        );
+    }
+
+    renderContacts = () => {
         return (
             <View style={styles.containerContacts} />
         );
@@ -118,15 +132,26 @@ class MatrixEditGroupChat extends Component {
 
     renderActions = () => {
         if (this.props.renderActions) {
-            return this.props.renderActions(this.createRoom.bind(this));
+            return this.props.renderActions(this.changeRoom.bind(this));
         }
         return (
             <View style={styles.containerButton}>
-                <TouchableOpacity style={styles.button} onPress={this.createRoom.bind(this)}>
+                <TouchableOpacity style={styles.button} onPress={this.changeRoom.bind(this)}>
                     <Text>{trans.t('editGroupChat', 'buttonLeave')}</Text>
                 </TouchableOpacity>
             </View>
         );
+    }
+
+    renderContactsContainer = () => {
+        if (this.props.renderContactsContainer) {
+            return this.props.renderContactsContainer(this.state.members, this.addContacts.bind(this));
+        }
+        return (
+            <LeftX ref="animationSearch" duration={400} fromValue={Dimensions.get('window').width} toValue={0} style={styles.containerContacts}>
+                {this.renderContacts()}
+            </LeftX>
+        )
     }
 
     render() {
@@ -137,23 +162,25 @@ class MatrixEditGroupChat extends Component {
             <View style={this.props.style}>
                 {this.renderUploadRoomImage()}
                 {this.renderGroupTitle()}
-                {this.renderContacts()}
+                {this.renderMembers()}
                 {this.renderExitRoom()}
                 {this.renderActions()}
+                {this.renderContactsContainer()}
             </View>
         );
     }
 }
 
 MatrixEditGroupChat.defaultProps = {
-    style: { flex: 1 },
+    style: { flex: 1, position: 'relative' },
     trans: {},
     render: null,
     renderUploadRoomImage: null,
     renderGroupTitle: null,
-    renderContacts: null,
+    renderContactsContainer: null,
     renderActions: null,
     renderExitRoom: null,
+    renderMembers: null,
     locale: 'en',
     roomId: null,
     room: null,
@@ -165,11 +192,12 @@ MatrixEditGroupChat.propTypes = {
     render: PropTypes.func,
     renderUploadRoomImage: PropTypes.func,
     renderGroupTitle: PropTypes.func,
-    renderContacts: PropTypes.func,
+    renderContactsContainer: PropTypes.func,
     renderActions: PropTypes.func,
     renderExitRoom: PropTypes.func,
+    renderMembers: PropTypes.func,
     locale: PropTypes.string,
-    roomId: PropTypes.number,
+    roomId: PropTypes.string,
     room: PropTypes.object,
 };
 

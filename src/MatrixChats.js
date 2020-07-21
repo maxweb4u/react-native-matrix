@@ -10,39 +10,63 @@ import { timer } from 'rxjs';
 import PropTypes from 'prop-types';
 import Room from './models/Room';
 import Matrix from './Matrix';
+import getUid from 'get-uid';
 
 class MatrixChats extends Component {
+    rooms = {};
+    userIdsDM = {};
     constructor(props) {
         super(props);
         this.subscription = null;
+        this.setData();
         this.state = {
             searchText: '',
-            rooms: {},
+            // rooms: {},
+            alwaysNewValue: '',
         };
     }
 
     componentDidMount() {
-        this.subscription = timer(1000).subscribe(() => this.setRooms());
+        // this.subscription = timer(1000).subscribe(() => this.setRooms());
+        this.subscription = timer(1000).subscribe(() => Matrix.setTimelineChatsCallback(this.syncCallback));
+        this.props.onLoaded(this.userIdsDM);
     }
 
     componentWillUnmount() {
-        if (this.subscription && this.subscription.unsubscribe) this.subscription.unsubscribe();
-    }
-
-    setRooms = () => {
-        const obj = Matrix.getRoomsForChatsList();
-        this.setState({rooms: obj.rooms}, () => {
-            Matrix.setSyncCallback(this.syncCallback);
-            this.props.onLoaded(obj.userIdsDM);
-        });
-    }
-
-    syncCallback = (event, room) => {
-        if (room.roomId) {
-            const { rooms } = this.state;
-            rooms[room.roomId] = new Room({ matrixRoom: room });
-            this.setState({ rooms });
+        Matrix.removeTimelineChatsCallback();
+        if (this.subscription && this.subscription.unsubscribe){
+            this.subscription.unsubscribe();
         }
+    }
+
+    setData = () => {
+        const obj = Matrix.getRoomsForChatsList();
+        this.rooms = obj.rooms;
+        this.userIdsDM = obj.userIdsDM;
+    }
+
+    // setRooms = () => {
+    //     const obj = Matrix.getRoomsForChatsList();
+    //     this.setState({rooms: obj.rooms}, () => {
+    //         Matrix.setTimelineChatsCallback(this.syncCallback);
+    //         this.props.onLoaded(obj.userIdsDM);
+    //     });
+    // }
+
+    syncCallback = (event, matrixRoom) => {
+        if (matrixRoom.roomId) {
+            const room = Matrix.getRoom({ matrixRoom });
+            // if (room.matrixEventCouldBeAdded(event)) {
+                // Matrix.setUnread(room, room.unread)
+            // }
+            this.rooms[matrixRoom.roomId] = room;
+            this.setState({alwaysNewValue: getUid()})
+        }
+        // if (room.roomId) {
+        //     const { rooms } = this.state;
+        //     rooms[room.roomId] = Matrix.getRoom({ matrixRoom: room });
+        //     this.setState({ rooms });
+        // }
     }
 
     searchingChats = (searchText) => {
@@ -83,7 +107,7 @@ class MatrixChats extends Component {
     keyExtractor = (room, index) => index.toString();
 
     render() {
-        const items = Object.values(this.state.rooms);
+        const items = Object.values(this.rooms);
         return (
             <View style={this.props.style}>
                 {this.renderSearch()}

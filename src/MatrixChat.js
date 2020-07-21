@@ -95,12 +95,13 @@ class MatrixChat extends Component {
         if (this.props.roomId) {
             this.loadRoom({roomId: this.props.roomId});
             this.subscription = timer(1000).subscribe(() => {
-                Matrix.setSyncCallback(this.syncCallback);
+                Matrix.setTimelineChatCallback(this.syncCallback);
             });
         }
     }
 
     componentWillUnmount() {
+        Matrix.removeTimelineChatCallback();
         if (this.state.removePrevAudioListener) {
             this.audioRecorderPlayer.stopPlayer();
             this.state.removePrevAudioListener();
@@ -121,9 +122,10 @@ class MatrixChat extends Component {
     loadRoom = ({roomId, matrixRoom}) => {
         const room = Matrix.getRoom({roomId, matrixRoom, possibleEventsTypes: this.props.possibleChatEvents, possibleContentTypes: this.props.possibleChatContentTypes});
         if (room) {
+            Matrix.setUnread(room, 0)
             this.room = room;
             this.setState({ events: room.events.reverse(), members: room.getMembersObj() }, () => {
-                this.props.onLoaded({ roomTitle: room.title });
+                this.props.onLoaded({ roomTitle: room.title, isDirect: room.isDirect });
             });
         }
     }

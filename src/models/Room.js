@@ -36,9 +36,8 @@ class Room {
 
     userIdDM = '';
 
-    constructor({ matrixRoom, isDirect, possibleEventsTypes, possibleContentTypes }) {
+    constructor({ matrixRoom, possibleEventsTypes, possibleContentTypes, myUserId }) {
         if (matrixRoom) {
-            // console.log("unread", matrixRoom)
             this.id = matrixRoom.roomId || 0;
             this.matrixRoom = matrixRoom || null;
             const alias = this.matrixRoom.getCanonicalAlias();
@@ -50,11 +49,13 @@ class Room {
             if (possibleContentTypes) {
                 this.possibleContentTypes = possibleContentTypes;
             }
+            this.lastReadEventId = this.matrixRoom.getEventReadUpTo(myUserId);
             this.isDirect = false;
             this.setEvents();
             if (this.isDirect) {
                 this.userIdDM = this.matrixRoom.guessDMUserId();
             }
+
         }
     }
 
@@ -71,16 +72,9 @@ class Room {
         if (!this.id) {
             return null;
         }
-        const { id, avatar, title, lastEvent, membership, acceptInvite, leave, isDirect } = this;
+        const { id, avatar, title, lastEvent, membership, acceptInvite, leave, isDirect, unread } = this;
         const { messageOnly, ts } = lastEvent;
-        let unread = this.matrixRoom.getUnreadNotificationCount() || 0;
-        if (unread > 99) {
-            unread = 99;
-        }
         const isInvite = membership === 'invite';
-        if (isInvite) {
-            unread = 1;
-        }
         return { id, avatar, title, message: messageOnly, ts, unread, membership, acceptInvite, leave, isInvite, isDirect  };
     }
 
@@ -99,6 +93,22 @@ class Room {
         return {...joined, ...invited};
     }
 
+    get myUserId() {
+        return this.matrixRoom ? this.matrixRoom.myUserId : '';
+    }
+
+    get unread() {
+        return this.matrixRoom.getUnreadNotificationCount() || 0;
+    }
+
+    setUnread(number) {
+        this.matrixRoom.setUnreadNotificationCount('total', number)
+    }
+
+    increaseUnread() {
+        this.setUnread(this.unread + 1);
+    }
+
     isFound(searchText) {
         if (this.title.toLowerCase().indexOf(searchText.toLowerCase()) !== -1) {
             return true;
@@ -112,10 +122,23 @@ class Room {
     setEvents() {
         const timeline = this.matrixRoom.getLiveTimeline();
         const matrixEvents = timeline.getEvents();
-        //console.log(matrixEvents)
+        let numberUnread = 0;
+        let foundLastRead = false;
+        const lastUnread = this.matrixRoom.getUnreadNotificationCount();
+        console.log("lastUnread", lastUnread)
+        const checkUnread = typeof lastUnread !== 'number';
         matrixEvents.forEach((matrixEvent) => {
-            this.addMatrixEvent(matrixEvent);
+            const eventId = this.addMatrixEvent(matrixEvent);
+            if (eventId && checkUnread) {
+                if (!foundLastRead && eventId === this.lastReadEventId) {
+                    foundLastRead = true;
+                    numberUnread = 0;
+                } else {
+                    numberUnread += 1;
+                }
+            }
         });
+        this.setUnread(numberUnread);
     }
 
     addMatrixEvent(matrixEvent) {
@@ -124,12 +147,13 @@ class Room {
             this.isDirect = true;
         }
         if (shouldBeAdded) {
-            this.events.push(new Event(matrixEvent));
+            const event = new Event(matrixEvent);
+            this.events.push(event);
             const content = matrixEvent.getContent();
             if (content.msgtype === MsgTypes.mText) {
                 this.messagesForSearch.push(content.body.toLowerCase());
             }
-            return true;
+            return event.id;
         }
         if (matrixEvent.getType() === EventTypes.mRoomReaction) {
             const content = matrixEvent.getContent();
@@ -138,6 +162,7 @@ class Room {
                 this.reactedEventIds.push(realedObj.event_id);
             }
         }
+        return null;
     }
 
     getMembers(membership) {
@@ -150,7 +175,7 @@ class Room {
     getMembersObj(membership) {
         const obj = {};
         const members = this.getMembers(membership);
-        members.map((member) => { obj[member.userId] = new Member(member.user); });
+        members.map((member) => { obj[member.userId] = new Member(member.user, this.myUserId); });
         return obj;
     }
 
