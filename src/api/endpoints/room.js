@@ -40,6 +40,15 @@ const RoomApi = {
         return res;
     },
 
+    setRoomReadMarkers: async (roomId, eventId) => {
+        const data = {
+            "m.fully_read": eventId,
+            "m.read": eventId,
+        }
+        const res = await handling.request('post', `/rooms/${roomId}/read_markers`, data);
+        return res;
+    }
+
     // joinViaAlias: async (roomAlias) => {
     //     const res = await handling.request('post', `/join/${roomAlias}`);
     //     return res;

@@ -18,7 +18,7 @@ class Matrix {
 
     timelineChatCallback = null;
 
-    totalUnread = 0;
+    totalUnreadPrev = null;
 
     static getInstance() {
         if (!Matrix.instance) {
@@ -34,24 +34,17 @@ class Matrix {
         return '';
     }
 
-    get unread() {
-        return this.totalUnread;
-    }
-
-    setUnread(room, roomUnread, totalUnread) {
-        if (totalUnread) {
-            this.totalUnread = totalUnread;
-            return null;
+    get totalUnread() {
+        let totalUnread = 0;
+        if (this.client) {
+            const matrixRooms = this.client.getVisibleRooms();
+            matrixRooms.forEach((matrixRoom) => {
+                const roomUnreadCount = matrixRoom.getUnreadNotificationCount() || 0;
+                totalUnread += roomUnreadCount;
+            });
         }
-        if (room && roomUnread >= 0) {
-            room.setUnread(roomUnread);
-            let newUnread = this.totalUnread - roomUnread;
-            if (newUnread < 0) {
-                newUnread = 0;
-            }
-            this.totalUnread = newUnread;
-        }
-
+        this.totalUnreadPrev = totalUnread;
+        return totalUnread;
     }
 
     initClient({ baseUrl, accessToken, userId, displayName }) {
@@ -61,9 +54,8 @@ class Matrix {
         this.updateDisplayName(displayName);
     }
 
-    startClient(syncTime) {
+    async startClient(syncTime) {
         this.client.on('Room.timeline', (event, room, toStartOfTimeline) => {
-            // console.log("CALBACK TIMELINE")
             if (this.timelineChatsCallback) {
                 this.timelineChatsCallback(event, room, toStartOfTimeline);
             }
@@ -77,7 +69,7 @@ class Matrix {
             }
         });
         // this.client.startClient({ initialSyncLimit: syncTime });
-        this.client.startClient({ initialSyncLimit: 4, pollTimeout: 10 });
+        await this.client.startClient({ initialSyncLimit: 4, pollTimeout: 10 });
     }
 
     stopClient() {
@@ -99,6 +91,35 @@ class Matrix {
 
     }
 
+    //get unread count of all messages from all rooms and also save each room's unread to store of matrix-js-sdk
+    setUnreadCount() {
+        if (this.client) {
+            const matrixRooms = this.client.getVisibleRooms();
+            matrixRooms.map((matrixRoom) => {
+                const roomUnreadCount = matrixRoom.getUnreadNotificationCount();
+                if (typeof roomUnreadCount !== 'number') {
+                    const lastReadEventId = matrixRoom.getEventReadUpTo(this.userId);
+                    let numberUnread = 0;
+                    const timeline = matrixRoom.getLiveTimeline();
+                    const matrixEvents = timeline.getEvents();
+                    let foundLastRead = false;
+                    matrixEvents.map(matrixEvent => {
+                        if (Room.isEventPermitted(matrixEvent)) {
+                            if (!foundLastRead && matrixEvent.getId() === lastReadEventId) {
+                                foundLastRead = true;
+                                numberUnread = 0;
+                            } else {
+                                numberUnread += 1;
+                            }
+                        }
+                    });
+                    console.log("numberUnread", numberUnread)
+                    matrixRoom.setUnreadNotificationCount('total', numberUnread);
+                }
+            });
+        }
+    }
+
     getRoomsForChatsList() {
         if (this.client) {
             const arr = this.client.getVisibleRooms();
@@ -113,7 +134,6 @@ class Matrix {
                 }
                 totalUnread += room.unread;
             });
-            this.setUnread(null, null, totalUnread);
             return { rooms, userIdsDM };
         }
         return {rooms: {}, userIdsDM: {}};
@@ -199,6 +219,12 @@ class Matrix {
             append: false,
         }
         const res = await api.pusher.setPusher({...defaultOptions, ...options});
+        return res;
+    }
+
+    async setRoomReadMarkers(roomId, eventId) {
+        console.log("UPDATED!!!!!")
+        const res = await api.room.setRoomReadMarkers(roomId, eventId);
         return res;
     }
 }

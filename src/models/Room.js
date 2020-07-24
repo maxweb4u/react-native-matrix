@@ -24,8 +24,6 @@ class Room {
 
     reactedEventIds = [];
 
-    lastEvent = null;
-
     isDirect = false;
 
     possibleEventsTypes = PossibleChatEventsTypes;
@@ -35,6 +33,8 @@ class Room {
     memberhsip = '';
 
     userIdDM = '';
+
+    myUserId = '';
 
     constructor({ matrixRoom, possibleEventsTypes, possibleContentTypes, myUserId }) {
         if (matrixRoom) {
@@ -49,7 +49,7 @@ class Room {
             if (possibleContentTypes) {
                 this.possibleContentTypes = possibleContentTypes;
             }
-            this.lastReadEventId = this.matrixRoom.getEventReadUpTo(myUserId);
+            this.myUserId = myUserId;
             this.isDirect = false;
             this.setEvents();
             if (this.isDirect) {
@@ -101,6 +101,10 @@ class Room {
         return this.matrixRoom.getUnreadNotificationCount() || 0;
     }
 
+    get lastReadEventId() {
+        return this.matrixRoom.getEventReadUpTo(this.myUserId)
+    }
+
     setUnread(number) {
         this.matrixRoom.setUnreadNotificationCount('total', number)
     }
@@ -125,12 +129,15 @@ class Room {
         let numberUnread = 0;
         let foundLastRead = false;
         const lastUnread = this.matrixRoom.getUnreadNotificationCount();
-        console.log("lastUnread", lastUnread)
         const checkUnread = typeof lastUnread !== 'number';
+        const { lastReadEventId } = this;
+        if (!checkUnread) {
+            numberUnread = lastUnread;
+        }
         matrixEvents.forEach((matrixEvent) => {
             const eventId = this.addMatrixEvent(matrixEvent);
             if (eventId && checkUnread) {
-                if (!foundLastRead && eventId === this.lastReadEventId) {
+                if (!foundLastRead && lastReadEventId &&  eventId === lastReadEventId) {
                     foundLastRead = true;
                     numberUnread = 0;
                 } else {
@@ -142,12 +149,13 @@ class Room {
     }
 
     addMatrixEvent(matrixEvent) {
-        const shouldBeAdded = this.matrixEventCouldBeAdded(matrixEvent);
+        const shouldBeAdded = Room.isEventPermitted(matrixEvent);
         if (!this.isDirect && Room.getIsDirect(matrixEvent)) {
             this.isDirect = true;
         }
         if (shouldBeAdded) {
             const event = new Event(matrixEvent);
+            console.log(event.messageOnly)
             this.events.push(event);
             const content = matrixEvent.getContent();
             if (content.msgtype === MsgTypes.mText) {
@@ -179,14 +187,6 @@ class Room {
         return obj;
     }
 
-    matrixEventCouldBeAdded(matrixEvent) {
-        if (this.possibleEventsTypes.indexOf(matrixEvent.getType()) !== -1) {
-            const content = matrixEvent.getContent();
-            return content.body && content.msgtype && this.possibleContentTypes.indexOf(content.msgtype) !== -1;
-        }
-        return false;
-    }
-
     async acceptInvite() {
         const res = await api.room.acceptInvite(this.id);
         if (res.status) {
@@ -205,6 +205,20 @@ class Room {
 
     static getIsDirect(e) {
         return (e.event && e.event.content && e.event.content.is_direct) || (e.sender && e.sender.events && e.sender.events.member && e.sender.events.member.event && e.sender.events.member.event.unsigned && e.sender.events.member.event.unsigned.prev_content && e.sender.events.member.event.unsigned.prev_content.is_direct)
+    }
+
+    static isEventPermitted(matrixEvent, possibleEventsTypes, possibleContentTypes) {
+        if (!possibleEventsTypes) {
+            possibleEventsTypes = PossibleChatEventsTypes;
+        }
+        if (!possibleContentTypes) {
+            possibleContentTypes = PossibleChatContentTypes;
+        }
+        if (possibleEventsTypes.indexOf(matrixEvent.getType()) !== -1) {
+            const content = matrixEvent.getContent();
+            return content.body && content.msgtype && possibleContentTypes.indexOf(content.msgtype) !== -1;
+        }
+        return false;
     }
 }
 

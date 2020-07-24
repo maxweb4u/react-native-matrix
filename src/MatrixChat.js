@@ -13,6 +13,7 @@ import Utils from './lib/utils';
 import trans from './trans';
 import Matrix from './Matrix';
 import Event from './models/Event';
+import Room from './models/Room';
 import isIphoneX from './lib/isIphoneX';
 import EventsContainer from './components/EventsContainer';
 import InputToolbar from './components/InputToolbar';
@@ -94,6 +95,9 @@ class MatrixChat extends Component {
     componentDidMount() {
         if (this.props.roomId) {
             this.loadRoom({roomId: this.props.roomId});
+            if (this.room && this.room.lastEvent.id) {
+                Matrix.setRoomReadMarkers(this.room.id, this.room.lastEvent.id);
+            }
             this.subscription = timer(1000).subscribe(() => {
                 Matrix.setTimelineChatCallback(this.syncCallback);
             });
@@ -122,9 +126,9 @@ class MatrixChat extends Component {
     loadRoom = ({roomId, matrixRoom}) => {
         const room = Matrix.getRoom({roomId, matrixRoom, possibleEventsTypes: this.props.possibleChatEvents, possibleContentTypes: this.props.possibleChatContentTypes});
         if (room) {
-            Matrix.setUnread(room, 0)
             this.room = room;
-            this.setState({ events: room.events.reverse(), members: room.getMembersObj() }, () => {
+            const reversedEvents = room.events.reverse();
+            this.setState({ events: reversedEvents, members: room.getMembersObj() }, () => {
                 this.props.onLoaded({ roomTitle: room.title, isDirect: room.isDirect });
             });
         }
@@ -175,8 +179,9 @@ class MatrixChat extends Component {
 
     syncCallback = (matrixEvent, room) => {
         if (room && matrixEvent && room.roomId === this.props.roomId && Matrix.userId !== matrixEvent.getSender()) {
-            const shouldBeAdded = this.room.matrixEventCouldBeAdded(matrixEvent);
+            const shouldBeAdded = Room.isEventPermitted(matrixEvent);
             if (shouldBeAdded) {
+                Matrix.setRoomReadMarkers(room.roomId, matrixEvent.getId());
                 this.addEvent({ matrixEvent });
             }
         }

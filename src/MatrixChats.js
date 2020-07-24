@@ -21,13 +21,11 @@ class MatrixChats extends Component {
         this.setData();
         this.state = {
             searchText: '',
-            // rooms: {},
             alwaysNewValue: '',
         };
     }
 
     componentDidMount() {
-        // this.subscription = timer(1000).subscribe(() => this.setRooms());
         this.subscription = timer(1000).subscribe(() => Matrix.setTimelineChatsCallback(this.syncCallback));
         this.props.onLoaded(this.userIdsDM);
     }
@@ -45,28 +43,12 @@ class MatrixChats extends Component {
         this.userIdsDM = obj.userIdsDM;
     }
 
-    // setRooms = () => {
-    //     const obj = Matrix.getRoomsForChatsList();
-    //     this.setState({rooms: obj.rooms}, () => {
-    //         Matrix.setTimelineChatsCallback(this.syncCallback);
-    //         this.props.onLoaded(obj.userIdsDM);
-    //     });
-    // }
-
     syncCallback = (event, matrixRoom) => {
         if (matrixRoom.roomId) {
             const room = Matrix.getRoom({ matrixRoom });
-            // if (room.matrixEventCouldBeAdded(event)) {
-                // Matrix.setUnread(room, room.unread)
-            // }
             this.rooms[matrixRoom.roomId] = room;
             this.setState({alwaysNewValue: getUid()})
         }
-        // if (room.roomId) {
-        //     const { rooms } = this.state;
-        //     rooms[room.roomId] = Matrix.getRoom({ matrixRoom: room });
-        //     this.setState({ rooms });
-        // }
     }
 
     searchingChats = (searchText) => {
