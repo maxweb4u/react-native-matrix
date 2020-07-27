@@ -7,7 +7,9 @@ import './lib/poly.js';
 import * as sdk from 'matrix-js-sdk';
 import api from './api';
 import Room from './models/Room';
+import Event from './models/Event';
 import EventTypes from './consts/EventTypes';
+import MsgTypes from './consts/MsgTypes';
 
 class Matrix {
     static instance;
@@ -47,6 +49,14 @@ class Matrix {
         return totalUnread;
     }
 
+    get totalRooms() {
+        if (this.client) {
+            const matrixRooms = this.client.getVisibleRooms();
+            return matrixRooms.length;
+        }
+        return 0;
+    }
+
     initClient({ baseUrl, accessToken, userId, displayName }) {
         this.client = sdk.createClient({ baseUrl, accessToken, userId });
         api.auth.setBaseURL(baseUrl);
@@ -63,11 +73,11 @@ class Matrix {
                 this.timelineChatCallback(event, room, toStartOfTimeline);
             }
         });
-        this.client.on('sync', (state, prevState, data) => {
-            if (state === 'SYNCING' && data.nextSyncToken !== data.oldSyncToken) {
-                // console.log(data.nextSyncToken, data.oldSyncToken)
-            }
-        });
+        // this.client.on('sync', (state, prevState, data) => {
+        //     if (state === 'SYNCING' && data.nextSyncToken !== data.oldSyncToken) {
+        //         // console.log(data.nextSyncToken, data.oldSyncToken)
+        //     }
+        // });
         // this.client.startClient({ initialSyncLimit: syncTime });
         await this.client.startClient({ initialSyncLimit: 4, pollTimeout: 10 });
     }
@@ -113,7 +123,6 @@ class Matrix {
                             }
                         }
                     });
-                    console.log("numberUnread", numberUnread)
                     matrixRoom.setUnreadNotificationCount('total', numberUnread);
                 }
             });
@@ -195,9 +204,9 @@ class Matrix {
         return this.client.scrollback(room, limit).then(res => res).catch(e => e);
     }
 
-    async changeRoom(title) {
-        const res = await api.room.create(options);
-        return res;
+    async changeRoomTitle(roomId, title) {
+        const res = await api.room.sendStateEvent(roomId, EventTypes.mRoomName, {name: title});
+        return res.status;
     }
 
     async exitFromRoom(roomId) {
@@ -223,9 +232,19 @@ class Matrix {
     }
 
     async setRoomReadMarkers(roomId, eventId) {
-        console.log("UPDATED!!!!!")
         const res = await api.room.setRoomReadMarkers(roomId, eventId);
         return res;
+    }
+
+    async saveImageForRoom(roomId, imageObj) {
+        const eventObj = Event.getEventObjFile(this.userId, MsgTypes.mImage, imageObj.filename, imageObj.uri, imageObj.type, imageObj.base64);
+        const event = new Event(null, eventObj);
+        let res = await event.contentObj.uploadFile();
+        if (res.status) {
+            res = await api.room.sendStateEvent(roomId, EventTypes.mRoomAvatar, {url: event.matrixContentObj.url});
+            return res.status;
+        }
+        return null;
     }
 }
 

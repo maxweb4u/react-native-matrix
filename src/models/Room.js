@@ -60,8 +60,14 @@ class Room {
     }
 
     get avatar() {
-        const noPhoto = require('../assets/nophoto.png');
-        return noPhoto;
+        let uri = require('../assets/nophoto.png');
+        if (this.matrixRoom) {
+            const matriURI = this.matrixRoom.getAvatarUrl(api.auth.getBaseURL());
+            if (matriURI.indexOf('download') !== -1) {
+                uri = { uri: matriURI };
+            }
+        }
+        return uri
     }
 
     get lastEventTimestamp() {
@@ -126,6 +132,7 @@ class Room {
     setEvents() {
         const timeline = this.matrixRoom.getLiveTimeline();
         const matrixEvents = timeline.getEvents();
+        // console.log(matrixEvents);
         let numberUnread = 0;
         let foundLastRead = false;
         const lastUnread = this.matrixRoom.getUnreadNotificationCount();
@@ -155,7 +162,6 @@ class Room {
         }
         if (shouldBeAdded) {
             const event = new Event(matrixEvent);
-            console.log(event.messageOnly)
             this.events.push(event);
             const content = matrixEvent.getContent();
             if (content.msgtype === MsgTypes.mText) {

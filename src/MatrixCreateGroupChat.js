@@ -6,6 +6,7 @@
 
 import React, { Component } from 'react';
 import { View, TextInput, Image, Text, StyleSheet, TouchableOpacity } from 'react-native';
+import { timer } from 'rxjs';
 import PropTypes from 'prop-types';
 import fileUtils from './lib/fileUtils';
 import trans from './trans';
@@ -24,6 +25,7 @@ class MatrixCreateGroupChat extends Component {
     constructor(props) {
         super(props);
         trans.setLocale(this.props.locale);
+        trans.setTransFromProps(this.props.trans)
         this.state = {
             imageObj: null,
             imageURI: '',
@@ -40,7 +42,7 @@ class MatrixCreateGroupChat extends Component {
                 }
             },
             returnBase64: true,
-            trans: { ...trans.t('fileModule'), ...this.props.trans },
+            trans: trans.t('fileModule'),
         });
     }
 
@@ -49,7 +51,7 @@ class MatrixCreateGroupChat extends Component {
     changeContacts = userIdsToInvite => this.setState({ userIdsToInvite });
 
     createRoom = async () => {
-        const { userIdsToInvite, title } = this.state;
+        const { userIdsToInvite, title, imageURI, imageObj } = this.state;
         const { callbackErrors, callbackCreateRoom, callbackStartCreating } = this.state;
         if (!userIdsToInvite.length) {
             return { status: false, msg: 'usersNotSelected' };
@@ -57,6 +59,9 @@ class MatrixCreateGroupChat extends Component {
         const res = await Matrix.createRoom(userIdsToInvite, title);
         if (!res.status) {
             return res;
+        }
+        if (imageURI) {
+            Matrix.saveImageForRoom(res.data.room_id, imageObj);
         }
         return {status: true, roomId: res.data.room_id, title};
     }
@@ -133,7 +138,7 @@ class MatrixCreateGroupChat extends Component {
 
 MatrixCreateGroupChat.defaultProps = {
     style: { flex: 1 },
-    trans: {},
+    trans: null,
     render: null,
     renderUploadRoomImage: null,
     renderGroupTitle: null,

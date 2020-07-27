@@ -47,7 +47,13 @@ const RoomApi = {
         }
         const res = await handling.request('post', `/rooms/${roomId}/read_markers`, data);
         return res;
-    }
+    },
+
+    sendStateEvent: async (roomId, type, content) => {
+        console.log("START DO UPDATING!!!!!!")
+        const res = await handling.request('put', `/rooms/${roomId}/state/${type}`, content);
+        return res;
+    },
 
     // joinViaAlias: async (roomAlias) => {
     //     const res = await handling.request('post', `/join/${roomAlias}`);

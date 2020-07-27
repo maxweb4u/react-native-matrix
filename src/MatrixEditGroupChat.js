@@ -28,13 +28,14 @@ class MatrixEditGroupChat extends Component {
     constructor(props) {
         super(props);
         trans.setLocale(this.props.locale);
+        trans.setTransFromProps(this.props.trans)
         this.room = this.props.room;
         if (!this.room && this.props.roomId) {
             this.room = Matrix.getRoom({roomId: this.props.roomId});
         }
         this.state = {
             imageObj: null,
-            imageURI: '',
+            imageURI: this.room.avatar,
             title: this.room ? this.room.title : '',
             members: this.room ? this.room.allMembers : {},
         };
@@ -49,21 +50,26 @@ class MatrixEditGroupChat extends Component {
                 }
             },
             returnBase64: true,
-            trans: { ...trans.t('fileModule'), ...this.props.trans },
+            trans: trans.t('fileModule'),
         });
     }
 
     changeTitle = title => this.setState({ title });
 
     changeRoom = async () => {
-        const { title } = this.state;
-        const res = await Matrix.changeRoom(title);
-        return res;
+        const { title, imageObj } = this.state;
+        if (this.room.title !== title) {
+            Matrix.changeRoomTitle(this.room.id, title);
+        }
+        if (imageObj) {
+            Matrix.saveImageForRoom(this.room.id, imageObj);
+        }
     }
 
     //return true if you leave room
     exitRoom = async (callback) => {
         const res = await Matrix.exitFromRoom(this.room.id);
+        return res.status;
     }
 
     addContacts = async () => {
@@ -77,7 +83,7 @@ class MatrixEditGroupChat extends Component {
         }
         return (
             <TouchableOpacity style={styles.containerImage} onPress={this.uploadImage.bind(this)}>
-                <Image source={imageURI ? { uri: imageURI } : require('./assets/nophoto-group.png')} style={styles.groupPhoto} />
+                <Image source={imageURI ? imageURI : require('./assets/nophoto-group.png')} style={styles.groupPhoto} />
                 <Text>{trans.t('editGroupChat', 'changeGroupImage')}</Text>
             </TouchableOpacity>
         );
@@ -173,7 +179,7 @@ class MatrixEditGroupChat extends Component {
 
 MatrixEditGroupChat.defaultProps = {
     style: { flex: 1, position: 'relative' },
-    trans: {},
+    trans: null,
     render: null,
     renderUploadRoomImage: null,
     renderGroupTitle: null,

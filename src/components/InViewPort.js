@@ -65,11 +65,7 @@ class InViewPort extends PureComponent {
             });
             isVisible = this.state.rectWidth >= 0 && this.state.rectWidth <= dimen.width && this.state.rectTop >= 0 && this.state.rectTop <= dimen.height;
         }
-        // notify the parent when the value changes
-        if (this.lastValue !== isVisible) {
-            this.lastValue = isVisible;
-            this.props.onChange(isVisible);
-        }
+        this.props.onChange(isVisible);
     }
 
     render() {

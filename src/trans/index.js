@@ -9,6 +9,8 @@ import en from './en';
 class Trans {
     static instance;
 
+    propsTrans = {}
+
     local = 'en';
 
     static getInstance() {
@@ -30,7 +32,7 @@ class Trans {
         switch (this.local) {
             default:
             case 'en':
-                f = en;
+                f = { ...en, ...this.propsTrans };
         }
         if (!f || !Object.prototype.hasOwnProperty.call(f, param1)) {
             return '';
@@ -40,6 +42,12 @@ class Trans {
         }
 
         return f[param1][param2];
+    }
+
+    setTransFromProps(trans) {
+        if (trans) {
+            this.propsTrans = trans;
+        }
     }
 }
 

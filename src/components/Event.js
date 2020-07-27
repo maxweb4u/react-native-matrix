@@ -66,8 +66,8 @@ class Event extends PureComponent {
             this.props.showEventActions(this.copyToClipboard, this.share, this.quote);
             return null;
         }
-        const iosButtons = [trans.t('event', 'copy'), trans.t('event', 'share'), trans.t('event', 'quote'), trans.t('event', 'cancel')];
-        const androidButtons = [trans.t('event', 'copy'), trans.t('event', 'share'), trans.t('event', 'citate')];
+        const iosButtons = [this.props.trans.t('event', 'copy'), this.props.trans.t('event', 'share'), this.props.trans.t('event', 'quote'), this.props.trans.t('event', 'cancel')];
+        const androidButtons = [this.props.trans.t('event', 'copy'), this.props.trans.t('event', 'share'), this.props.trans.t('event', 'citate')];
         const cnf = {
             options: Platform.OS === 'android' ? androidButtons : iosButtons,
             cancelButtonIndex: 3,
@@ -96,7 +96,7 @@ class Event extends PureComponent {
     share = (callback) => {
         const { event } = this.props;
         const shareOptions = {
-            title: trans.t('event', 'shareTitle'),
+            title: this.props.trans.t('event', 'shareTitle'),
             message: event.messageOnly,
         };
         if ((event.msgtype === MsgTypes.mImage || event.msgtype === MsgTypes.mFile) && event.content.base64ForShare) {
@@ -313,6 +313,7 @@ class Event extends PureComponent {
     }
 }
 Event.defaultProps = {
+    trans: trans,
     event: new EventModel(),
     eventStyles: {},
     contentTextStyles: {},
@@ -349,6 +350,7 @@ Event.defaultProps = {
     addCitation: () => {},
 };
 Event.propTypes = {
+    trans: PropTypes.object,
     event: PropTypes.object,
     eventStyles: PropTypes.object,
     contentTextStyles: PropTypes.object,

@@ -76,8 +76,8 @@ const FileUtils = {
         if (!transObj) {
             transObj = trans.t('fileModule');
         }
-        resizeX = resizeX || 100;
-        resizeY = resizeY || 100;
+        resizeX = resizeX || 500;
+        resizeY = resizeY || 500;
         quality = quality || 80;
         if (!setLoadingState) {
             setLoadingState = () => {};

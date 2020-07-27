@@ -61,7 +61,7 @@ class VoiceRecord extends PureComponent {
         if (!showVoiceRecord) {
             return null;
         }
-        const styles = voiceRecordStyles ? voiceRecordstyles : stylesObj;
+        const styles = voiceRecordStyles;
         return (
             <View style={styles.voiceContainer}>
                 <TouchableOpacity style={styles.actionContainer} onPress={() => this.cancel()}>

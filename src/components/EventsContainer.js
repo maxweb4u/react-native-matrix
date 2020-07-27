@@ -11,6 +11,7 @@ import Event from './Event';
 import InViewPort from './InViewPort';
 import Utils from '../lib/utils';
 import Matrix from '../Matrix';
+import trans from '../trans';
 
 const styles = StyleSheet.create({
     container: { flex: 1, paddingBottom: 16 },
@@ -22,7 +23,7 @@ class EventsContainer extends Component {
     constructor(props) {
         super(props);
         this.loading = false;
-        this.state = { loadMore: true };
+        this.state = { loadMore: false };
         this.flatListRef = React.createRef();
     }
 
@@ -50,6 +51,7 @@ class EventsContainer extends Component {
             stopAudioPlay: this.props.stopAudioPlay,
             reactedEventIds: this.props.reactedEventIds,
             addCitation: this.props.addCitation,
+            trans: this.props.trans,
         };
         if (this.props.renderEvent) {
             return this.props.renderEvent(props);
@@ -96,7 +98,6 @@ class EventsContainer extends Component {
                     contentContainerStyle={styles.contentContainerStyle}
                     renderItem={this.renderEvent}
                     ListFooterComponent={this.state.loadMore ? this.renderHeader : null}
-
                     inverted={true}
                 />
             </View>
@@ -104,6 +105,7 @@ class EventsContainer extends Component {
     }
 }
 EventsContainer.defaultProps = {
+    trans: trans,
     events: [],
     reactedEventIds: [],
     renderEvent: null,
@@ -115,6 +117,7 @@ EventsContainer.defaultProps = {
     loadEarlyMessages: () => {},
 };
 EventsContainer.propTypes = {
+    trans: PropTypes.object,
     events: PropTypes.arrayOf(PropTypes.object),
     reactedEventIds: PropTypes.arrayOf(PropTypes.string),
     renderEvent: PropTypes.func,

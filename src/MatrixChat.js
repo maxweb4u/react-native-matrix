@@ -27,6 +27,7 @@ class MatrixChat extends Component {
     constructor(props) {
         super(props);
         trans.setLocale(this.props.locale);
+        trans.setTransFromProps(this.props.trans)
 
         this.keyboardHeight = 0;
         this.bottomOffset = this.getBottomOffsetIphoneX;
@@ -114,7 +115,7 @@ class MatrixChat extends Component {
 
     get getBottomOffsetIphoneX() {
         if (isIphoneX()) {
-            return !this.props.bottomOffset ? 30 : this.props.bottomOffset;
+            return !this.props.bottomOffset ? 30 : this.props.bottomOffset + 10;
         }
         return this.props.bottomOffset;
     }
@@ -290,6 +291,7 @@ class MatrixChat extends Component {
                     stopAudioPlay={this.stopAudioPlay}
                     roomId={this.props.roomId}
                     loadEarlyMessages={this.loadEarlyMessages}
+                    trans={trans}
                 />
             </AnimatedView>
         );
@@ -303,7 +305,7 @@ class MatrixChat extends Component {
             composerHeight: Math.max(minComposerHeight, composerHeight),
             inputbarHeight: this.calculateInputToolbarHeight(),
             keyboardListeners: this.keyboardListeners,
-            trans: { ...trans.t('inputToolbar'), ...(this.props.trans.inputToolbar || {}) },
+            trans: {inputToolbar: trans.t('inputToolbar'), fileModule: trans.t('fileModule')},
             sendMessage: { text: this.sendText.bind(this), file: this.sendFile.bind(this) },
             members: this.state.members,
             ...inputToolbarProps,
@@ -327,14 +329,14 @@ class MatrixChat extends Component {
 
 MatrixChat.defaultProps = {
     style: { flex: 1 },
-    trans: {},
+    trans: null,
     render: null,
     renderContainer: null,
     locale: 'en',
     roomId: '',
     possibleChatEvents: PossibleChatEventsTypes,
     possibleChatContentTypes: PossibleChatContentTypes,
-    bottomOffset: 0,
+    bottomOffset: 20,
     minComposerHeight: Platform.select({ ios: 33, android: 41 }),
     maxComposerHeight: 200,
     onInputTextChanged: () => {},

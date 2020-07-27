@@ -117,7 +117,7 @@ class InputToolbar extends PureComponent {
     }
 
     openGallery = () => {
-        FileUtils.getFileFromGallery(this.uploadCallback, this.setLoadingState, this.props.resizeX, this.props.resizeY, this.props.imageQuality, { ...trans.t('fileModule'), ...this.props.trans });
+        FileUtils.getFileFromGallery(this.uploadCallback, this.setLoadingState, this.props.resizeX, this.props.resizeY, this.props.imageQuality, this.props.trans.fileModule);
     }
 
     openFile = () => {
@@ -207,9 +207,9 @@ class InputToolbar extends PureComponent {
     }
 
     cancelRecording = () => {
-        if (this.state.showVoiceContainer) {
+        if (this.state.showRecordAudio) {
             SoundRecorder.stop();
-            this.setState({ showVoiceContainer: false });
+            this.setState({ showRecordAudio: false });
         }
     }
 
@@ -230,7 +230,7 @@ class InputToolbar extends PureComponent {
                 cancelRecording={this.cancelRecording}
                 stopRecording={this.stopRecording}
                 voiceRecordStyles={this.props.voiceRecordStyles}
-                trans={this.props.trans}
+                trans={this.props.trans.inputToolbar}
             />
         );
     }
@@ -258,7 +258,7 @@ class InputToolbar extends PureComponent {
                     testID={this.props.inputTestId}
                     accessible
                     accessibilityLabel={this.props.inputTestId}
-                    placeholder={this.props.trans.placeholder}
+                    placeholder={this.props.trans.inputToolbar.placeholder}
                     placeholderTextColor={this.props.placeholderTextColor}
                     multiline
                     onChange={this.onContentSizeChange}
@@ -346,7 +346,7 @@ class InputToolbar extends PureComponent {
     }
 }
 InputToolbar.defaultProps = {
-    trans: {},
+    trans: {inputToolbar: trans.t('inputToolbar'), fileModule: trans.t('fileModule')},
     inputbarHeight: 44,
     composerHeight: Platform.select({ ios: 33, android: 41 }),
     inputTestId: '',
