@@ -55,18 +55,18 @@ class MatrixChat extends Component {
             const newMessagesContainerHeight = this.getBasicMessagesContainerHeight();
             this.setContainerHeight(newMessagesContainerHeight);
         };
-        const onKeyboardDidShow = (e) => {
-            if (Platform.OS === 'android') {
-                this.onKeyboardWillShow(e);
-            }
-        };
-        const onKeyboardDidHide = (e) => {
-            if (Platform.OS === 'android') {
-                this.onKeyboardWillHide(e);
-            }
-        };
+        // const onKeyboardDidShow = (e) => {
+        //     if (Platform.OS === 'android') {
+        //         this.onKeyboardWillShow(e);
+        //     }
+        // };
+        // const onKeyboardDidHide = (e) => {
+        //     if (Platform.OS === 'android') {
+        //         this.onKeyboardWillHide(e);
+        //     }
+        // };
 
-        this.keyboardListeners = { onKeyboardWillShow, onKeyboardWillHide, onKeyboardDidShow, onKeyboardDidHide };
+        this.keyboardListeners = { onKeyboardWillShow, onKeyboardWillHide };
 
         this.onInputSizeChanged = (size) => {
             const newComposerHeight = Math.max(this.props.minComposerHeight, Math.min(this.props.maxComposerHeight, size.height));
@@ -141,6 +141,7 @@ class MatrixChat extends Component {
 
     messageIsSent = (eventId) => {
         const matrixEvent = Matrix.getEvent(eventId);
+        Matrix.setRoomReadMarkers(this.room.roomId, matrixEvent.getId());
         this.room.addMatrixEvent(matrixEvent);
     }
 

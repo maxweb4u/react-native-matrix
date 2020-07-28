@@ -49,19 +49,20 @@ class MatrixCreateGroupChat extends Component {
 
     changeContacts = userIdsToInvite => this.setState({ userIdsToInvite });
 
-    createRoom = async () => {
+    createRoom = async ({ defaultTitle }) => {
         const { userIdsToInvite, title, imageURI, imageObj } = this.state;
         if (!userIdsToInvite.length) {
             return { status: false, msg: 'usersNotSelected' };
         }
-        const res = await Matrix.createRoom(userIdsToInvite, title);
+        const roomTitle = !title ? defaultTitle : title;
+        const res = await Matrix.createRoom(userIdsToInvite, roomTitle);
         if (!res.status) {
             return res;
         }
         if (imageURI) {
             Matrix.saveImageForRoom(res.data.room_id, imageObj);
         }
-        return { status: true, roomId: res.data.room_id, title };
+        return { status: true, roomId: res.data.room_id, roomTitle };
     }
 
     renderUploadRoomImage = () => {

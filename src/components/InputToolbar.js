@@ -64,8 +64,8 @@ class InputToolbar extends PureComponent {
     componentDidMount() {
         this.keyboardWillShowListener = Keyboard.addListener('keyboardWillShow', this.keyboardWillShow);
         this.keyboardWillHideListener = Keyboard.addListener('keyboardWillHide', this.keyboardWillHide);
-        this.keyboardDidShowListener = Keyboard.addListener('keyboardDidShow', this.keyboardDidShow);
-        this.keyboardDidHideListener = Keyboard.addListener('keyboardDidHide', this.keyboardDidHide);
+        // this.keyboardDidShowListener = Keyboard.addListener('keyboardDidShow', this.keyboardDidShow);
+        // this.keyboardDidHideListener = Keyboard.addListener('keyboardDidHide', this.keyboardDidHide);
     }
 
     componentWillUnmount() {
@@ -75,12 +75,12 @@ class InputToolbar extends PureComponent {
         if (this.keyboardWillHideListener) {
             this.keyboardWillHideListener.remove();
         }
-        if (this.keyboardDidShowListener) {
-            this.keyboardDidShowListener.remove();
-        }
-        if (this.keyboardDidHideListener) {
-            this.keyboardDidHideListener.remove();
-        }
+        // if (this.keyboardDidShowListener) {
+        //     this.keyboardDidShowListener.remove();
+        // }
+        // if (this.keyboardDidHideListener) {
+        //     this.keyboardDidHideListener.remove();
+        // }
     }
 
     keyboardWillShow = (e) => {
@@ -95,17 +95,17 @@ class InputToolbar extends PureComponent {
         }
     }
 
-    keyboardDidShow = (e) => {
-        if (this.props.keyboardListeners.onKeyboardDidShow) {
-            this.props.keyboardListeners.onKeyboardDidShow(e);
-        }
-    }
-
-    keyboardDidHide = (e) => {
-        if (this.props.keyboardListeners.onKeyboardDidHide) {
-            this.props.keyboardListeners.onKeyboardDidHide(e);
-        }
-    }
+    // keyboardDidShow = (e) => {
+    //     if (this.props.keyboardListeners.onKeyboardDidShow) {
+    //         this.props.keyboardListeners.onKeyboardDidShow(e);
+    //     }
+    // }
+    //
+    // keyboardDidHide = (e) => {
+    //     if (this.props.keyboardListeners.onKeyboardDidHide) {
+    //         this.props.keyboardListeners.onKeyboardDidHide(e);
+    //     }
+    // }
 
     getPropsStyle = (style) => {
         if (Object.prototype.hasOwnProperty.call(this.props.inputToolbarStyles, style)) {
