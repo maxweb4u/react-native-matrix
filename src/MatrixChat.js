@@ -9,7 +9,6 @@ import { Animated, View, Platform, SafeAreaView } from 'react-native';
 import { timer } from 'rxjs';
 import PropTypes from 'prop-types';
 import AudioRecorderPlayer from 'react-native-audio-recorder-player';
-import Utils from './lib/utils';
 import trans from './trans';
 import Matrix from './Matrix';
 import Event from './models/Event';
@@ -27,7 +26,7 @@ class MatrixChat extends Component {
     constructor(props) {
         super(props);
         trans.setLocale(this.props.locale);
-        trans.setTransFromProps(this.props.trans)
+        trans.setTransFromProps(this.props.trans);
 
         this.keyboardHeight = 0;
         this.bottomOffset = this.getBottomOffsetIphoneX;
@@ -95,7 +94,7 @@ class MatrixChat extends Component {
 
     componentDidMount() {
         if (this.props.roomId) {
-            this.loadRoom({roomId: this.props.roomId});
+            this.loadRoom({ roomId: this.props.roomId });
             if (this.room && this.room.lastEvent.id) {
                 Matrix.setRoomReadMarkers(this.room.id, this.room.lastEvent.id);
             }
@@ -124,8 +123,8 @@ class MatrixChat extends Component {
         return 10;
     }
 
-    loadRoom = ({roomId, matrixRoom}) => {
-        const room = Matrix.getRoom({roomId, matrixRoom, possibleEventsTypes: this.props.possibleChatEvents, possibleContentTypes: this.props.possibleChatContentTypes});
+    loadRoom = ({ roomId, matrixRoom }) => {
+        const room = Matrix.getRoom({ roomId, matrixRoom, possibleEventsTypes: this.props.possibleChatEvents, possibleContentTypes: this.props.possibleChatContentTypes });
         if (room) {
             this.room = room;
             const reversedEvents = room.events.reverse();
@@ -135,12 +134,10 @@ class MatrixChat extends Component {
         }
     }
 
-    loadEarlyMessages = () => {
-        return Matrix.loadEarlyMessages(this.room.matrixRoom, 20).then(matrixRoom => {
-            this.loadRoom({matrixRoom});
-            return matrixRoom.oldState.paginationToken;
-        }).catch(() => false);
-    }
+    loadEarlyMessages = () => Matrix.loadEarlyMessages(this.room.matrixRoom, 20).then((matrixRoom) => {
+        this.loadRoom({ matrixRoom });
+        return matrixRoom.oldState.paginationToken;
+    }).catch(() => false)
 
     messageIsSent = (eventId) => {
         const matrixEvent = Matrix.getEvent(eventId);
@@ -174,7 +171,7 @@ class MatrixChat extends Component {
         this.addEvent({ event });
         const res = await event.contentObj.uploadFile();
         if (res.status) {
-            Matrix.sendMessage(this.props.roomId, event.matrixContentObj).then(res => this.messageIsSent(res.event_id)).error(err => this.props.errorCallback(err));
+            Matrix.sendMessage(this.props.roomId, event.matrixContentObj).then(result => this.messageIsSent(result.event_id)).error(err => this.props.errorCallback(err));
         }
     }
 
@@ -221,7 +218,7 @@ class MatrixChat extends Component {
 
     prepareMessagesContainerHeight = value => (this.props.isAnimated ? new Animated.Value(value) : value);
 
-    scrollToBottom(animated) {
+    scrollToBottom = (animated) => {
         if (animated) {
             animated = true;
         }
@@ -257,9 +254,21 @@ class MatrixChat extends Component {
         this.setState({ removePrevAudioListener: null });
     };
 
-    addCitation = (message) => {
+    addCitation = (quoteMessageToSend, quoteMessage, quoteAuthor) => {
         if (this.inputToolbarRef && this.inputToolbarRef.current) {
-            this.inputToolbarRef.current.addCitation(message);
+            this.inputToolbarRef.current.addCitation(quoteMessageToSend, quoteMessage, quoteAuthor);
+        }
+    }
+
+    cancelCitation = () => {
+        if (this.inputToolbarRef && this.inputToolbarRef.current) {
+            this.inputToolbarRef.current.cancelCitation();
+        }
+    }
+
+    messageSent = () => {
+        if (this.messageContainerRef && this.messageContainerRef.current) {
+            this.messageContainerRef.current.messageSent();
         }
     }
 
@@ -277,7 +286,7 @@ class MatrixChat extends Component {
     }
 
     renderEvents = () => {
-        const { events, members, messagesContainerHeight } = this.state;
+        const { events, messagesContainerHeight } = this.state;
         const AnimatedView = this.props.isAnimated ? Animated.View : View;
         return (
             <AnimatedView style={{ height: messagesContainerHeight }}>
@@ -285,12 +294,14 @@ class MatrixChat extends Component {
                     ref={this.messageContainerRef}
                     eventProps={this.props.eventProps}
                     addCitation={this.addCitation}
+                    cancelCitation={this.cancelCitation}
                     events={events}
                     reactedEventIds={!!this.room && this.room.reactedEventIds}
                     startAudioPlay={this.startAudioPlay}
                     stopAudioPlay={this.stopAudioPlay}
                     roomId={this.props.roomId}
                     loadEarlyMessages={this.loadEarlyMessages}
+                    eventsStyles={this.props.eventsStyles}
                     trans={trans}
                 />
             </AnimatedView>
@@ -298,16 +309,17 @@ class MatrixChat extends Component {
     }
 
     renderInputToolbar = () => {
-        const { text, composerHeight } = this.state;
+        const { composerHeight } = this.state;
         const { minComposerHeight, inputToolbarProps } = this.props;
         const props = {
             onInputSizeChanged: this.onInputSizeChanged,
             composerHeight: Math.max(minComposerHeight, composerHeight),
             inputbarHeight: this.calculateInputToolbarHeight(),
             keyboardListeners: this.keyboardListeners,
-            trans: {inputToolbar: trans.t('inputToolbar'), fileModule: trans.t('fileModule')},
+            trans: { inputToolbar: trans.t('inputToolbar'), fileModule: trans.t('fileModule') },
             sendMessage: { text: this.sendText.bind(this), file: this.sendFile.bind(this) },
             members: this.state.members,
+            messageSent: this.messageSent,
             ...inputToolbarProps,
         };
         if (this.props.renderInputToolbar) {
@@ -350,6 +362,7 @@ MatrixChat.defaultProps = {
     errorCallback: () => {},
     eventProps: {},
     inputToolbarProps: {},
+    eventsStyles: {},
 };
 
 MatrixChat.propTypes = {
@@ -375,6 +388,7 @@ MatrixChat.propTypes = {
     errorCallback: PropTypes.func,
     eventProps: PropTypes.object,
     inputToolbarProps: PropTypes.object,
+    eventsStyles: PropTypes.object,
 };
 
 export default MatrixChat;

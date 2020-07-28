@@ -84,7 +84,6 @@ VoiceRecord.defaultProps = {
     showVoiceRecord: false,
     cancelRecording: () => {},
     stopRecording: () => {},
-    trans: {},
     voiceRecordStyles: stylesObj,
 };
 VoiceRecord.propTypes = {

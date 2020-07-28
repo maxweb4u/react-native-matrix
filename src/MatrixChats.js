@@ -8,13 +8,14 @@ import React, { Component } from 'react';
 import { View, FlatList, TextInput } from 'react-native';
 import { timer } from 'rxjs';
 import PropTypes from 'prop-types';
-import Room from './models/Room';
-import Matrix from './Matrix';
 import getUid from 'get-uid';
+import Matrix from './Matrix';
 
 class MatrixChats extends Component {
     rooms = {};
+
     userIdsDM = {};
+
     constructor(props) {
         super(props);
         this.subscription = null;
@@ -32,7 +33,7 @@ class MatrixChats extends Component {
 
     componentWillUnmount() {
         Matrix.removeTimelineChatsCallback();
-        if (this.subscription && this.subscription.unsubscribe){
+        if (this.subscription && this.subscription.unsubscribe) {
             this.subscription.unsubscribe();
         }
     }
@@ -47,7 +48,7 @@ class MatrixChats extends Component {
         if (matrixRoom.roomId) {
             const room = Matrix.getRoom({ matrixRoom });
             this.rooms[matrixRoom.roomId] = room;
-            this.setState({alwaysNewValue: getUid()})
+            this.setState({ alwaysNewValue: getUid() });
         }
     }
 

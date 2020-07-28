@@ -5,7 +5,9 @@
  */
 
 import Event from './Event';
+import ContentFile from './ContentFile';
 import Member from './Member';
+import Utils from '../lib/utils';
 import EventTypes from '../consts/EventTypes';
 import MsgTypes from '../consts/MsgTypes';
 import { PossibleChatEventsTypes, PossibleChatContentTypes } from '../consts/ChatPossibleTypes';
@@ -32,11 +34,13 @@ class Room {
 
     memberhsip = '';
 
-    userIdDM = '';
+    dmUserId = '';
+
+    dmUserAvatarURI = null;
 
     myUserId = '';
 
-    constructor({ matrixRoom, possibleEventsTypes, possibleContentTypes, myUserId }) {
+    constructor({ matrixRoom, possibleEventsTypes, possibleContentTypes, myUserId, client }) {
         if (matrixRoom) {
             this.id = matrixRoom.roomId || 0;
             this.matrixRoom = matrixRoom || null;
@@ -53,21 +57,36 @@ class Room {
             this.isDirect = false;
             this.setEvents();
             if (this.isDirect) {
-                this.userIdDM = this.matrixRoom.guessDMUserId();
+                this.dmUserId = this.matrixRoom.guessDMUserId();
+                if (client) {
+                    const user = client.getUser(this.dmUserId);
+                    if (user) {
+                        const { serverName, mediaId } = Utils.parseMXCURI(user.avatarUrl);
+                        if (serverName && mediaId) {
+                            this.dmUserAvatarURI = ContentFile.getHTTPURI(serverName, mediaId);
+                        }
+                    }
+                }
             }
-
         }
     }
 
     get avatar() {
         let uri = require('../assets/nophoto.png');
+        if (this.isDirect) {
+            if (this.dmUserAvatarURI) {
+                uri = { uri: this.dmUserAvatarURI };
+            }
+            return uri;
+        }
+        uri = require('../assets/nophoto-group.png');
         if (this.matrixRoom) {
             const matriURI = this.matrixRoom.getAvatarUrl(api.auth.getBaseURL());
             if (matriURI.indexOf('download') !== -1) {
                 uri = { uri: matriURI };
             }
         }
-        return uri
+        return uri;
     }
 
     get lastEventTimestamp() {
@@ -79,9 +98,9 @@ class Room {
             return null;
         }
         const { id, avatar, title, lastEvent, membership, acceptInvite, leave, isDirect, unread } = this;
-        const { messageOnly, ts } = lastEvent;
+        const { messageOnly, ts, msgtype } = lastEvent;
         const isInvite = membership === 'invite';
-        return { id, avatar, title, message: messageOnly, ts, unread, membership, acceptInvite, leave, isInvite, isDirect  };
+        return { id, avatar, title, message: messageOnly, ts, unread, membership, acceptInvite, leave, isInvite, isDirect, msgtype };
     }
 
     get lastEvent() {
@@ -96,7 +115,7 @@ class Room {
     get allMembers() {
         const joined = this.getMembersObj();
         const invited = this.getMembersObj('invite');
-        return {...joined, ...invited};
+        return { ...joined, ...invited };
     }
 
     get myUserId() {
@@ -108,11 +127,11 @@ class Room {
     }
 
     get lastReadEventId() {
-        return this.matrixRoom.getEventReadUpTo(this.myUserId)
+        return this.matrixRoom.getEventReadUpTo(this.myUserId);
     }
 
     setUnread(number) {
-        this.matrixRoom.setUnreadNotificationCount('total', number)
+        this.matrixRoom.setUnreadNotificationCount('total', number);
     }
 
     increaseUnread() {
@@ -144,7 +163,7 @@ class Room {
         matrixEvents.forEach((matrixEvent) => {
             const eventId = this.addMatrixEvent(matrixEvent);
             if (eventId && checkUnread) {
-                if (!foundLastRead && lastReadEventId &&  eventId === lastReadEventId) {
+                if (!foundLastRead && lastReadEventId && eventId === lastReadEventId) {
                     foundLastRead = true;
                     numberUnread = 0;
                 } else {
@@ -171,7 +190,7 @@ class Room {
         }
         if (matrixEvent.getType() === EventTypes.mRoomReaction) {
             const content = matrixEvent.getContent();
-            const realedObj = content.hasOwnProperty('m.relates_to') ? content['m.relates_to'] : null;
+            const realedObj = Object.prototype.hasOwnProperty.call(content, 'm.relates_to') ? content['m.relates_to'] : null;
             if (realedObj && realedObj.event_id && realedObj.rel_type === 'm.annotation' && this.reactedEventIds.indexOf(realedObj.event_id) === -1) {
                 this.reactedEventIds.push(realedObj.event_id);
             }
@@ -209,8 +228,14 @@ class Room {
         return res;
     }
 
+    recalculate() {
+        if (this.matrixRoom) {
+            this.matrixRoom.recalculate();
+        }
+    }
+
     static getIsDirect(e) {
-        return (e.event && e.event.content && e.event.content.is_direct) || (e.sender && e.sender.events && e.sender.events.member && e.sender.events.member.event && e.sender.events.member.event.unsigned && e.sender.events.member.event.unsigned.prev_content && e.sender.events.member.event.unsigned.prev_content.is_direct)
+        return (e.event && e.event.content && e.event.content.is_direct) || (e.sender && e.sender.events && e.sender.events.member && e.sender.events.member.event && e.sender.events.member.event.unsigned && e.sender.events.member.event.unsigned.prev_content && e.sender.events.member.event.unsigned.prev_content.is_direct);
     }
 
     static isEventPermitted(matrixEvent, possibleEventsTypes, possibleContentTypes) {

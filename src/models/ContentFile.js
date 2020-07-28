@@ -134,9 +134,7 @@ class ContentFile extends Content {
         return obj;
     }
 
-    static getHTTPURI = (serverName, mediaId) => {
-        return api.auth.getBaseURL() + sdk.PREFIX_MEDIA_R0 + `/download/${serverName}/${mediaId}`;
-    }
+    static getHTTPURI = (serverName, mediaId) => `${api.auth.getBaseURL() + sdk.PREFIX_MEDIA_R0}/download/${serverName}/${mediaId}`
 }
 
 export default ContentFile;

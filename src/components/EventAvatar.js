@@ -8,8 +8,6 @@ import React, { PureComponent } from 'react';
 import { Image } from 'react-native';
 import PropTypes from 'prop-types';
 import ContentFile from '../models/ContentFile';
-import Colors from '../lib/colors';
-import api from '../api';
 
 class EventAvatar extends PureComponent {
     // imageSource = null;
@@ -21,7 +19,7 @@ class EventAvatar extends PureComponent {
 
     async componentDidMount() {
         if (this.props.avatarObj && this.props.avatarObj.serverName && this.props.avatarObj.mediaId) {
-            this.setState({ uri: ContentFile.getHTTPURI(this.props.avatarObj.serverName, this.props.avatarObj.mediaId)});
+            this.setState({ uri: ContentFile.getHTTPURI(this.props.avatarObj.serverName, this.props.avatarObj.mediaId) });
         }
     }
 
@@ -33,7 +31,6 @@ class EventAvatar extends PureComponent {
     }
 
     render() {
-        const { avatarObj } = this.props;
         return (
             <Image source={this.state.uri ? { uri: this.state.uri } : this.getNoPhoto()} style={this.props.style} />
         );

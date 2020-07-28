@@ -12,7 +12,7 @@ class ContentAudio extends ContentFile {
     }
 
     get timeline() {
-        return this.info.hasOwnProperty('duration') && Number.isInteger(parseInt(this.info.duration, 10)) ? parseInt(this.info.duration, 10) : 0;
+        return Object.prototype.hasOwnProperty.call(this.info, 'duration') && Number.isInteger(parseInt(this.info.duration, 10)) ? parseInt(this.info.duration, 10) : 0;
     }
 
     mmss = (milisecs) => {

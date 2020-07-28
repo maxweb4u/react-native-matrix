@@ -52,7 +52,13 @@ class InputToolbar extends PureComponent {
     constructor(props) {
         super(props);
         this.contentSize = undefined;
-        this.state = { text: '', showRecordAudio: false, showEmojis: false, isQuote: false };
+        this.state = {
+            text: '',
+            quoteMessageToSend: '',
+            showRecordAudio: false,
+            showEmojis: false,
+            isQuote: false,
+        };
     }
 
     componentDidMount() {
@@ -160,9 +166,15 @@ class InputToolbar extends PureComponent {
     }
 
     addText = async () => {
-        if (this.state.text) {
+        let message = this.state.text;
+        if (message) {
+            const { isQuote, quoteMessageToSend } = this.state;
+            if (isQuote) {
+                message = `${quoteMessageToSend}\n${message}`;
+            }
             this.setState({ text: '', isQuote: false });
-            await this.props.sendMessage.text(this.state.text, this.state.isQuote);
+            this.props.messageSent();
+            await this.props.sendMessage.text(message, isQuote);
         }
     }
 
@@ -198,7 +210,7 @@ class InputToolbar extends PureComponent {
                 .then(obj => FileUtils.getFileInfo(obj.filePath)
                     .then(fileInfo => ({ filePath: obj.filePath, fileInfo, base64: obj.base64 })).catch(e => e))
                 .then((obj) => {
-                    if (obj.fileInfo.hasOwnProperty('size') && obj.base64) {
+                    if (Object.prototype.hasOwnProperty.call(obj.fileInfo, 'size') && obj.base64) {
                         this.addAudio(obj.filePath, obj.fileInfo.size, obj.base64, duration);
                     }
                 })
@@ -215,8 +227,12 @@ class InputToolbar extends PureComponent {
 
     showEmojis = showEmojis => this.setState({ showEmojis });
 
-    addCitation = (message) => {
-        this.setState({ text: message, isQuote: true });
+    addCitation = (quoteMessageToSend) => {
+        this.setState({ quoteMessageToSend, isQuote: true });
+    }
+
+    cancelCitation = () => {
+        this.setState({ isQuote: false });
     }
 
     renderRecordAudio = () => {
@@ -346,7 +362,7 @@ class InputToolbar extends PureComponent {
     }
 }
 InputToolbar.defaultProps = {
-    trans: {inputToolbar: trans.t('inputToolbar'), fileModule: trans.t('fileModule')},
+    trans: { inputToolbar: trans.t('inputToolbar'), fileModule: trans.t('fileModule') },
     inputbarHeight: 44,
     composerHeight: Platform.select({ ios: 33, android: 41 }),
     inputTestId: '',
@@ -359,6 +375,7 @@ InputToolbar.defaultProps = {
     renderSend: null,
     renderRecordAudio: null,
     renderEmojis: null,
+    renderQuote: null,
     onInputTextChanged: () => { },
     onInputSizeChanged: () => { },
     iconActionsAddFiles: null,
@@ -374,6 +391,8 @@ InputToolbar.defaultProps = {
     resizeY: 1600,
     imageQuality: 80,
     members: {},
+    messageSent: () => {},
+    showInputbarActions: null,
 };
 InputToolbar.propTypes = {
     trans: PropTypes.object,
@@ -389,6 +408,7 @@ InputToolbar.propTypes = {
     renderSend: PropTypes.func,
     renderRecordAudio: PropTypes.func,
     renderEmojis: PropTypes.func,
+    renderQuote: PropTypes.func,
     onInputTextChanged: PropTypes.func,
     onInputSizeChanged: PropTypes.func,
     iconActionsAddFiles: PropTypes.object,
@@ -404,6 +424,8 @@ InputToolbar.propTypes = {
     resizeY: PropTypes.number,
     imageQuality: PropTypes.number,
     members: PropTypes.object,
+    messageSent: PropTypes.func,
+    showInputbarActions: PropTypes.func,
 };
 
 export default InputToolbar;

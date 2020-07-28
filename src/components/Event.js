@@ -31,8 +31,8 @@ const styles = StyleSheet.create({
     avatarPhoto: { width: 40, height: 40, borderRadius: 20, marginRight: 10 },
     containerMyMessage: {},
     containerNotMyMessage: { position: 'relative' },
-    containerMyMessageContent: { paddingBottom: 2, backgroundColor: Colors.blue, borderRadius: 20, borderTopRightRadius: 0, minWidth: '40%' },
-    containerNotMyMessageContent: { paddingBottom: 2, borderRadius: 20, borderTopLeftRadius: 0, borderWidth: 0.5, borderColor: Colors.grey, minWidth: '40%' },
+    containerMyMessageContent: { paddingBottom: 2, backgroundColor: Colors.blue, borderRadius: 20, borderTopRightRadius: 0 },
+    containerNotMyMessageContent: { paddingBottom: 2, borderRadius: 20, borderTopLeftRadius: 0, borderWidth: 0.5, borderColor: Colors.grey },
     containerMyMessageContentInner: { paddingBottom: 10, alignItems: 'flex-end' },
     containerNotMyMessageContentInner: { paddingBottom: 10 },
     containerSenderDisplayName: { position: 'absolute', top: -12 },
@@ -93,7 +93,7 @@ class Event extends PureComponent {
         }
     }
 
-    share = (callback) => {
+    share = () => {
         const { event } = this.props;
         const shareOptions = {
             title: this.props.trans.t('event', 'shareTitle'),
@@ -108,7 +108,7 @@ class Event extends PureComponent {
 
     quote = (callback) => {
         if (callback) callback();
-        this.props.addCitation(this.props.event.citationMessage);
+        this.props.addCitation(this.props.event.citationMessage, this.props.event.messageOnly, this.props.event.senderDisplayName);
     }
 
     copyToClipboard = async (callback) => {
@@ -176,7 +176,6 @@ class Event extends PureComponent {
             return this.props.renderMessageAvatar(this.props.event.senderAvatarObj, this.props.isPrevUserTheSame);
         }
         if (!this.props.isPrevUserTheSame) {
-            // return <Image source={this.props.event.senderAvatarURI} style={[styles.avatarPhoto, this.getPropsStyle('avatarPhoto')]} />;
             return <EventAvatar avatarObj={this.props.event.senderAvatarObj} style={[styles.avatarPhoto, this.getPropsStyle('avatarPhoto')]} noPhotoSource={this.props.noEventPhotoSource} />;
         }
         return <View style={[styles.avatarPhoto, this.getPropsStyle('avatarPhoto')]} />;
@@ -313,7 +312,7 @@ class Event extends PureComponent {
     }
 }
 Event.defaultProps = {
-    trans: trans,
+    trans,
     event: new EventModel(),
     eventStyles: {},
     contentTextStyles: {},
@@ -339,6 +338,7 @@ Event.defaultProps = {
     renderMessageContent: null,
     renderMessageActions: null,
     renderContentInner: null,
+    renderLike: null,
     showEventActions: null,
     noEventPhotoSource: null,
     startAudioPlay: () => {},
@@ -376,6 +376,7 @@ Event.propTypes = {
     renderMessageContent: PropTypes.func,
     renderMessageActions: PropTypes.func,
     renderContentInner: PropTypes.func,
+    renderLike: PropTypes.func,
     showEventActions: PropTypes.func,
     noEventPhotoSource: PropTypes.object,
     startAudioPlay: PropTypes.func,

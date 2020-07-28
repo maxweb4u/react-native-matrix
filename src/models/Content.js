@@ -53,7 +53,7 @@ class Content {
 
     get quoteText() {
         if (this.messageOnly.indexOf('> ') !== -1) {
-            return messageOnly;
+            return this.messageOnly;
         }
         return `> ${this.messageOnly.replace(/(?:\r\n|\r|\n)/g, '\n> ')}\n\n`;
     }

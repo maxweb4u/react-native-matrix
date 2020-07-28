@@ -38,9 +38,7 @@ class ContentText extends PureComponent {
             );
         }
 
-        return (
-            <View style={styles.contentTextContainer}><Text style={isOwn ? styles.contentTextMy : styles.contentTextNotMy}>{contentObj.message}</Text></View>
-        );
+        return <View style={styles.contentTextContainer}><Text style={isOwn ? styles.contentTextMy : styles.contentTextNotMy}>{contentObj.message}</Text></View>;
     }
 }
 

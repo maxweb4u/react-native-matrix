@@ -44,16 +44,16 @@ class Handling {
 
 
     static error(error) {
-        const code = error.hasOwnProperty('status') ? error.status : codes.statusInternalError;
-        const data = error.hasOwnProperty('data') ? error.data : {};
-        const msg = data.hasOwnProperty('error') ? data.error : 'error';
-        const errorCode = data.hasOwnProperty('errcode') ? data.errorCode : codes.errorCodeUNKNOWN;
+        const code = Object.prototype.hasOwnProperty.call(error, 'status') ? error.status : codes.statusInternalError;
+        const data = Object.prototype.hasOwnProperty.call(error, 'data') ? error.data : {};
+        const msg = Object.prototype.hasOwnProperty.call(data, 'error') ? data.error : 'error';
+        const errorCode = Object.prototype.hasOwnProperty.call(data, 'errcode') ? data.errorCode : codes.errorCodeUNKNOWN;
         return { status: false, code, data, msg, errorCode };
     }
 
     static success(res) {
-        if (res && res.hasOwnProperty('status')) {
-            const data = res.hasOwnProperty('data') && res.data ? res.data : {};
+        if (res && Object.prototype.hasOwnProperty.call(res, 'status')) {
+            const data = Object.prototype.hasOwnProperty.call(res, 'data') && res.data ? res.data : {};
             const code = res.status ? res.status.toString() : codes.statusInternalError;
             return { status: true, code, data, msg: '', errorCode: codes.errorCodeNONE };
         }

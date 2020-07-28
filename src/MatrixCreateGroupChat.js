@@ -6,7 +6,6 @@
 
 import React, { Component } from 'react';
 import { View, TextInput, Image, Text, StyleSheet, TouchableOpacity } from 'react-native';
-import { timer } from 'rxjs';
 import PropTypes from 'prop-types';
 import fileUtils from './lib/fileUtils';
 import trans from './trans';
@@ -25,7 +24,7 @@ class MatrixCreateGroupChat extends Component {
     constructor(props) {
         super(props);
         trans.setLocale(this.props.locale);
-        trans.setTransFromProps(this.props.trans)
+        trans.setTransFromProps(this.props.trans);
         this.state = {
             imageObj: null,
             imageURI: '',
@@ -52,7 +51,6 @@ class MatrixCreateGroupChat extends Component {
 
     createRoom = async () => {
         const { userIdsToInvite, title, imageURI, imageObj } = this.state;
-        const { callbackErrors, callbackCreateRoom, callbackStartCreating } = this.state;
         if (!userIdsToInvite.length) {
             return { status: false, msg: 'usersNotSelected' };
         }
@@ -63,7 +61,7 @@ class MatrixCreateGroupChat extends Component {
         if (imageURI) {
             Matrix.saveImageForRoom(res.data.room_id, imageObj);
         }
-        return {status: true, roomId: res.data.room_id, title};
+        return { status: true, roomId: res.data.room_id, title };
     }
 
     renderUploadRoomImage = () => {

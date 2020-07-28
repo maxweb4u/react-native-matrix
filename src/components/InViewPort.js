@@ -18,7 +18,7 @@ class InViewPort extends PureComponent {
             rectTop: 0,
             rectBottom: 0,
             rectWidth: 0,
-        }
+        };
     }
 
     componentDidMount() {

@@ -79,7 +79,7 @@ class Matrix {
         //     }
         // });
         // this.client.startClient({ initialSyncLimit: syncTime });
-        await this.client.startClient({ initialSyncLimit: 4, pollTimeout: 10 });
+        await this.client.startClient({ initialSyncLimit: syncTime || 4, pollTimeout: 10 });
     }
 
     stopClient() {
@@ -93,15 +93,15 @@ class Matrix {
     setTimelineChatCallback = syncCallback => this.timelineChatCallback = syncCallback;
 
     removeTimelineChatsCallback = () => this.setTimelineChatsCallback(null);
+
     removeTimelineChatCallback = () => this.setTimelineChatCallback(null);
 
     removeSyncCallbacks = () => {
         this.removeTimelineChatsCallback();
         this.removeTimelineChatCallback(null);
-
     }
 
-    //get unread count of all messages from all rooms and also save each room's unread to store of matrix-js-sdk
+    // get unread count of all messages from all rooms and also save each room's unread to store of matrix-js-sdk
     setUnreadCount() {
         if (this.client) {
             const matrixRooms = this.client.getVisibleRooms();
@@ -113,7 +113,7 @@ class Matrix {
                     const timeline = matrixRoom.getLiveTimeline();
                     const matrixEvents = timeline.getEvents();
                     let foundLastRead = false;
-                    matrixEvents.map(matrixEvent => {
+                    matrixEvents.map((matrixEvent) => {
                         if (Room.isEventPermitted(matrixEvent)) {
                             if (!foundLastRead && matrixEvent.getId() === lastReadEventId) {
                                 foundLastRead = true;
@@ -134,21 +134,19 @@ class Matrix {
             const arr = this.client.getVisibleRooms();
             const rooms = {};
             const userIdsDM = {};
-            let totalUnread = 0;
             arr.forEach((matrixRoom) => {
-                const room = new Room({ matrixRoom, myUserId: this.userId });
+                const room = new Room({ matrixRoom, myUserId: this.userId, client: this.client });
                 rooms[matrixRoom.roomId] = room;
                 if (room.isDirect) {
-                    userIdsDM[room.userIdDM] = room.id;
+                    userIdsDM[room.dmUserId] = room.id;
                 }
-                totalUnread += room.unread;
             });
             return { rooms, userIdsDM };
         }
-        return {rooms: {}, userIdsDM: {}};
+        return { rooms: {}, userIdsDM: {} };
     }
 
-    getRoom({roomId, matrixRoom, possibleEventsTypes, possibleContentTypes}) {
+    getRoom({ roomId, matrixRoom, possibleEventsTypes, possibleContentTypes }) {
         if (!matrixRoom && roomId) {
             matrixRoom = this.client.getRoom(roomId);
         }
@@ -179,7 +177,7 @@ class Matrix {
             const res = await api.profile.updateDisplayName(this.userId, displayName);
             return res;
         }
-        return {status: false};
+        return { status: false };
     }
 
     async sendMessage(roomId, contentObj, callback) {
@@ -205,29 +203,26 @@ class Matrix {
     }
 
     async changeRoomTitle(roomId, title) {
-        const res = await api.room.sendStateEvent(roomId, EventTypes.mRoomName, {name: title});
+        const res = await api.room.sendStateEvent(roomId, EventTypes.mRoomName, { name: title });
         return res.status;
     }
 
     async exitFromRoom(roomId) {
-        return this.client.leave(roomId).then(() => {
-            return this.client.forget(roomId).then(() => true).catch(() => false);
-        }).catch(() => false);
+        return this.client.leave(roomId).then(() => this.client.forget(roomId).then(() => true).catch(() => false)).catch(() => false);
     }
 
     async setPusher(options) {
         if (!(options && options.pushkey && options.data && options.data.url && options.app_id)) {
-            return {status: false};
+            return { status: false };
         }
         const defaultOptions = {
-            pushkey,
-            lang: lang || 'en',
-            kind: kind || 'http',
+            lang: 'en',
+            kind: 'http',
             app_display_name: 'MatrixClient',
             device_display_name: 'ClientDeviceName',
             append: false,
-        }
-        const res = await api.pusher.setPusher({...defaultOptions, ...options});
+        };
+        const res = await api.pusher.setPusher({ ...defaultOptions, ...options });
         return res;
     }
 
@@ -241,10 +236,18 @@ class Matrix {
         const event = new Event(null, eventObj);
         let res = await event.contentObj.uploadFile();
         if (res.status) {
-            res = await api.room.sendStateEvent(roomId, EventTypes.mRoomAvatar, {url: event.matrixContentObj.url});
+            res = await api.room.sendStateEvent(roomId, EventTypes.mRoomAvatar, { url: event.matrixContentObj.url });
             return res.status;
         }
         return null;
+    }
+
+    inviteNewMembers(roomId, matrixUserIds) {
+        if (this.client && matrixUserIds && matrixUserIds.length) {
+            matrixUserIds.map(matrixUserId => this.client.invite(roomId, matrixUserId));
+            return true;
+        }
+        return false;
     }
 }
 
