@@ -8,6 +8,7 @@ import React, { Component } from 'react';
 import { Platform, View, Image, TouchableOpacity, Text } from 'react-native';
 import PropTypes from 'prop-types';
 import Colors from '../lib/colors';
+import Utils from '../lib/utils';
 
 const stylesObj = {
     audioPreview: { paddingTop: 10, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', borderTopLeftRadius: Platform.OS === 'ios' ? 0 : 20, borderTopRightRadius: 20, width: 170 },
@@ -68,7 +69,7 @@ class ContentAudio extends Component {
         const styles = { ...stylesObj, ...this.props.contentAudioStyles };
         return (
             <View style={[styles.audioPreview, this.props.isOwn && styles.audioPreviewMy]}>
-                <TouchableOpacity style={styles.touchArea} onPress={this.action}>
+                <TouchableOpacity style={styles.touchArea} onPress={this.action} {...Utils.testProps('btnEventAudioPress')}>
                     <Image source={this.state.isPlaying ? require('../assets/icon-player-pause.png') : require('../assets/icon-player-play.png')} style={styles.icon32} />
                 </TouchableOpacity>
                 <View style={styles.audioTrackProgress}>

@@ -232,7 +232,7 @@ class Event extends PureComponent {
         }
         return (
             <View style={[styles.containerLike, this.getPropsStyle('containerLike')]}>
-                <TouchableOpacity style={[styles.likeButton, this.getPropsStyle('likeButton')]} onPress={this.likeEvent}>
+                <TouchableOpacity style={[styles.likeButton, this.getPropsStyle('likeButton')]} onPress={this.likeEvent} {...Utils.testProps('btnEventLike')}>
                     <Image source={require('../assets/icon-not-liked.png')} style={[styles.likeImage, this.getPropsStyle('likeImage')]} />
                 </TouchableOpacity>
             </View>
@@ -296,7 +296,7 @@ class Event extends PureComponent {
             return this.props.renderMessageActions(this.props.event, this.showActions.bind(this));
         }
         return (
-            <TouchableOpacity style={[styles.containerMessageActions, this.getPropsStyle('containerMessageActions')]} onPress={() => this.showActions()}>
+            <TouchableOpacity style={[styles.containerMessageActions, this.getPropsStyle('containerMessageActions')]} onPress={() => this.showActions()} {...Utils.testProps('btnEventActions')}>
                 <Image source={this.props.iconMessageActions || require('../assets/icon-message-actions.png')} style={[styles.iconActions, this.getPropsStyle('iconActions')]} />
             </TouchableOpacity>
         );

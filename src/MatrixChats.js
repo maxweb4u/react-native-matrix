@@ -9,6 +9,7 @@ import { View, FlatList, TextInput } from 'react-native';
 import { timer } from 'rxjs';
 import PropTypes from 'prop-types';
 import getUid from 'get-uid';
+import Utils from './lib/utils';
 import Matrix from './Matrix';
 
 class MatrixChats extends Component {
@@ -56,13 +57,13 @@ class MatrixChats extends Component {
         this.setState({ searchText });
     }
 
-    renderItem = (obj) => {
+    renderItem = (obj, i) => {
         if (this.state.searchText && !obj.item.isFound(this.state.searchText)) {
             return null;
         }
 
         if (this.props.renderItem) {
-            return this.props.renderItem(obj.item);
+            return this.props.renderItem(obj.item, i);
         }
         return (
             <View />
@@ -83,6 +84,7 @@ class MatrixChats extends Component {
                 onChangeText={searchText => this.searchingChats(searchText)}
                 value={this.state.searchText}
                 returnKeyType="done"
+                {...Utils.testProps('inputSearch')}
             />
         );
     }

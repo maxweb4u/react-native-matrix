@@ -8,6 +8,7 @@ import React, { Component } from 'react';
 import { View, TextInput, Image, Text, StyleSheet, TouchableOpacity, Dimensions } from 'react-native';
 import PropTypes from 'prop-types';
 import fileUtils from './lib/fileUtils';
+import Utils from './lib/utils';
 import trans from './trans';
 import Matrix from './Matrix';
 import LeftX from './components/LeftX';
@@ -113,6 +114,7 @@ class MatrixEditGroupChat extends Component {
                 onChangeText={val => this.changeTitle(val)}
                 value={title}
                 returnKeyType="done"
+                {...Utils.testProps('inputChatEditTitle')}
             />
         );
     }
@@ -136,7 +138,7 @@ class MatrixEditGroupChat extends Component {
         }
         return (
             <View style={styles.containerExitButton}>
-                <TouchableOpacity style={styles.buttonExit} onPress={this.exitRoom.bind(this)}>
+                <TouchableOpacity style={styles.buttonExit} onPress={this.exitRoom.bind(this)} {...Utils.testProps('btnExitRoom')}>
                     <Text>{trans.t('editGroupChat', 'buttonTitle')}</Text>
                 </TouchableOpacity>
             </View>
@@ -149,7 +151,7 @@ class MatrixEditGroupChat extends Component {
         }
         return (
             <View style={styles.containerButton}>
-                <TouchableOpacity style={styles.button} onPress={this.changeRoom.bind(this)}>
+                <TouchableOpacity style={styles.button} onPress={this.changeRoom.bind(this)} {...Utils.testProps('btnClickAction')}>
                     <Text>{trans.t('editGroupChat', 'buttonLeave')}</Text>
                 </TouchableOpacity>
             </View>

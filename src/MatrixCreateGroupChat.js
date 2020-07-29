@@ -8,6 +8,7 @@ import React, { Component } from 'react';
 import { View, TextInput, Image, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import PropTypes from 'prop-types';
 import fileUtils from './lib/fileUtils';
+import Utils from './lib/utils';
 import trans from './trans';
 import Matrix from './Matrix';
 
@@ -113,7 +114,7 @@ class MatrixCreateGroupChat extends Component {
         }
         return (
             <View style={styles.containerButton}>
-                <TouchableOpacity style={styles.button} onPress={this.createRoom.bind(this)}>
+                <TouchableOpacity style={styles.button} onPress={this.createRoom.bind(this)} {...Utils.testProps('btnClickAction')}>
                     <Text>{trans.t('createGroupChat', 'buttonTitle')}</Text>
                 </TouchableOpacity>
             </View>

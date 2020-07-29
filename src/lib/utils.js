@@ -3,10 +3,11 @@
  *
  * This is utils class
  */
-
+import { Platform } from 'react-native';
 import moment from 'moment';
 
 const utils = {
+    testProps: name => Platform.OS === 'ios' ? { testID: name } : { accessible: true, accessibilityLabel: name },
     formatTimestamp: (ts, dateformat) => moment(ts).format(dateformat),
     addDotsToString: str => (str.length > 20 ? `${str.substr(0, 20)}...` : str),
     isNewDay: (curDate, prevDate) => moment(curDate).diff(moment(prevDate), 'days', true) > 1,

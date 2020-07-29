@@ -132,7 +132,7 @@ class EventsContainer extends Component {
                     <Text style={[styles.quoteTextAuthor, this.getPropsStyle('quoteTextAuthor')]}>{quoteAuthor}</Text>
                     <Text style={[styles.quoteText, this.getPropsStyle('quoteText')]}>{quoteMessage}</Text>
                 </View>
-                <TouchableOpacity style={[styles.quoteCancelButton, this.getPropsStyle('quoteCancelButton')]} onPress={() => this.cancelCitation()}>
+                <TouchableOpacity style={[styles.quoteCancelButton, this.getPropsStyle('quoteCancelButton')]} onPress={() => this.cancelCitation()} {...Utils.testProps('btnCloseQuote')}>
                     <Image source={this.props.iconCloseBlue || require('../assets/icon-close-blue.png')} style={[styles.iconCloseCitation, this.getPropsStyle('iconCloseCitation')]} />
                 </TouchableOpacity>
             </View>

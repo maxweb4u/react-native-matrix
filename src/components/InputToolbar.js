@@ -12,6 +12,7 @@ import SoundRecorder from 'react-native-sound-recorder';
 import EmojiSelector from 'react-native-emoji-selector';
 import Colors from '../lib/colors';
 import FileUtils from '../lib/fileUtils';
+import Utils from '../lib/utils';
 import MsgTypes from '../consts/MsgTypes';
 import VoiceRecord from './VoiceRecord';
 import trans from '../trans';
@@ -257,7 +258,7 @@ class InputToolbar extends PureComponent {
         }
 
         return (
-            <TouchableOpacity style={[styles.containerAddFiles, this.getPropsStyle('containerAddFiles')]} onPress={() => this.openActions(true)}>
+            <TouchableOpacity style={[styles.containerAddFiles, this.getPropsStyle('containerAddFiles')]} onPress={() => this.openActions(true)} {...Utils.testProps('btnAddFiles')}>
                 <Image source={this.props.iconActionsAddFiles || require('../assets/icon-add-files.png')} style={[styles.iconActionsAddFiles, this.getPropsStyle('iconActionsAddFiles')]} />
             </TouchableOpacity>
         );
@@ -286,8 +287,9 @@ class InputToolbar extends PureComponent {
                     enablesReturnKeyAutomatically
                     underlineColorAndroid="transparent"
                     {...this.props.textInputProps}
+                    {...Utils.testProps('inputText')}
                 />
-                <TouchableOpacity style={[styles.containerAddSmiles, this.getPropsStyle('containerAddSmiles')]} onPress={() => this.showEmojis(true)}>
+                <TouchableOpacity style={[styles.containerAddSmiles, this.getPropsStyle('containerAddSmiles')]} onPress={() => this.showEmojis(true)} {...Utils.testProps('btnSmileOpen')}>
                     <Image source={this.props.iconActionsAddSmiles || require('../assets/icon-smile.png')} style={[styles.iconActionsAddSmiles, this.getPropsStyle('iconActionsAddSmiles')]} />
                 </TouchableOpacity>
             </View>
@@ -302,10 +304,10 @@ class InputToolbar extends PureComponent {
         if (!this.state.text) {
             return (
                 <View style={[styles.containerAddActions, this.getPropsStyle('containerAddActions')]}>
-                    <TouchableOpacity style={[styles.containerAddAudio, this.getPropsStyle('containerAddAudio')]} onPress={() => this.startRecording()}>
+                    <TouchableOpacity style={[styles.containerAddAudio, this.getPropsStyle('containerAddAudio')]} onPress={() => this.startRecording()} {...Utils.testProps('btnAddAudio')}>
                         <Image source={this.props.iconActionsAddAudio || require('../assets/icon-add-audio.png')} style={[styles.iconActionsAddAudio, this.getPropsStyle('iconActionsAddAudio')]} />
                     </TouchableOpacity>
-                    <TouchableOpacity style={[styles.containerAddImage, this.getPropsStyle('containerAddImage')]} onPress={() => this.openGallery()}>
+                    <TouchableOpacity style={[styles.containerAddImage, this.getPropsStyle('containerAddImage')]} onPress={() => this.openGallery()} {...Utils.testProps('btnAddFileImage')}>
                         <Image source={this.props.iconActionsAddImage || require('../assets/icon-add-image.png')} style={[styles.iconActionsAddImage, this.getPropsStyle('iconActionsAddImage')]} />
                     </TouchableOpacity>
                 </View>
@@ -313,7 +315,7 @@ class InputToolbar extends PureComponent {
         }
 
         return (
-            <TouchableOpacity style={[styles.containerSend, this.getPropsStyle('containerSend')]} onPress={() => this.addText()}>
+            <TouchableOpacity style={[styles.containerSend, this.getPropsStyle('containerSend')]} onPress={() => this.addText()} {...Utils.testProps('btnSend')}>
                 <Image source={this.props.iconActionsSend || require('../assets/icon-send.png')} style={[styles.iconActionsSend, this.getPropsStyle('iconActionsSend')]} />
             </TouchableOpacity>
         );
@@ -326,7 +328,7 @@ class InputToolbar extends PureComponent {
 
         return (
             <Modal animationType="fade" transparent visible={this.state.showEmojis} onRequestClose={() => this.showEmojis(false)}>
-                <TouchableWithoutFeedback style={[styles.containerTouchEmojis, this.getPropsStyle('containerTouchEmojis')]} onPress={() => this.showEmojis(false)}>
+                <TouchableWithoutFeedback style={[styles.containerTouchEmojis, this.getPropsStyle('containerTouchEmojis')]} onPress={() => this.showEmojis(false)} {...Utils.testProps('btnSmileClose')}>
                     <View style={[styles.containerTouchEmojisInner, this.getPropsStyle('containerTouchEmojisInner')]}>
                         <View style={[styles.containerEmojis, this.getPropsStyle('containerEmojis')]}>
                             <EmojiSelector columns={10} showSectionTitles={false} showSearchBar={false} onEmojiSelected={emoji => this.addSmiles(emoji)} />

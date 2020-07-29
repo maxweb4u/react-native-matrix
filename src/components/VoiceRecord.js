@@ -64,10 +64,10 @@ class VoiceRecord extends PureComponent {
         const styles = voiceRecordStyles;
         return (
             <View style={styles.voiceContainer}>
-                <TouchableOpacity style={styles.actionContainer} onPress={() => this.cancel()}>
+                <TouchableOpacity style={styles.actionContainer} onPress={() => this.cancel()} {...Utils.testProps('btnAudioCancel')}>
                     <Text style={styles.voiceCancelText}>{trans.voiceRecordCancel}</Text>
                 </TouchableOpacity>
-                <TouchableOpacity style={styles.actionContainer} onPress={() => this.stop()}>
+                <TouchableOpacity style={styles.actionContainer} onPress={() => this.stop()} {...Utils.testProps('btnAudioSend')}>
                     <Text style={styles.voiceSendText}>{trans.voiceRecordSend}</Text>
                 </TouchableOpacity>
                 <View style={styles.voiceTimerContainer}>

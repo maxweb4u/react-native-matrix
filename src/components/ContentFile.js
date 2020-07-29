@@ -8,6 +8,7 @@ import React, { PureComponent } from 'react';
 import { Text, Image, TouchableOpacity } from 'react-native';
 import PropTypes from 'prop-types';
 import Colors from '../lib/colors';
+import Utils from '../lib/utils';
 
 const stylesObj = {
     icon24: { width: 24, height: 24 },
@@ -34,7 +35,7 @@ class ContentFile extends PureComponent {
         }
 
         return (
-            <TouchableOpacity style={[styles.filePreview, isOwn && styles.filePreviewMy]} onPress={() => this.onPress()}>
+            <TouchableOpacity style={[styles.filePreview, isOwn && styles.filePreviewMy]} onPress={() => this.onPress()} {...Utils.testProps('btnEventFilePress')}>
                 {image}
                 <Text style={[styles.textFileTitle, isOwn && styles.textFileTitleMy]}>{contentObj.title}</Text>
             </TouchableOpacity>

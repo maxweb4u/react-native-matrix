@@ -7,6 +7,7 @@
 import React, { Component } from 'react';
 import { StyleSheet, Platform, Image, TouchableOpacity, ActivityIndicator } from 'react-native';
 import PropTypes from 'prop-types';
+import Utils from '../lib/utils';
 
 const styles = StyleSheet.create({
     imagePreviewNotMy: {
@@ -52,7 +53,7 @@ class ContentImage extends Component {
             return <ActivityIndicator size="small" />;
         }
         return (
-            <TouchableOpacity style={this.props.isOwn ? this.props.imagePreviewMy : this.props.imagePreviewNotMy} onPress={() => this.onPress()}>
+            <TouchableOpacity style={this.props.isOwn ? this.props.imagePreviewMy : this.props.imagePreviewNotMy} onPress={() => this.onPress()} {...Utils.testProps('btnEventImagePress')}>
                 <Image source={{ uri: this.imageSource }} style={this.props.isOwn ? this.props.imagePreviewMy : this.props.imagePreviewNotMy} />
             </TouchableOpacity>
         );
