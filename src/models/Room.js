@@ -97,10 +97,10 @@ class Room {
         if (!this.id) {
             return null;
         }
-        const { id, avatar, title, lastEvent, membership, acceptInvite, leave, isDirect, unread } = this;
+        const { id, avatar, title, lastEvent, membership, acceptInvite, leave, isDirect, unread, dmUserId } = this;
         const { messageOnly, ts, msgtype } = lastEvent;
         const isInvite = membership === 'invite';
-        return { id, avatar, title, message: messageOnly, ts, unread, membership, acceptInvite, leave, isInvite, isDirect, msgtype };
+        return { id, avatar, title, message: messageOnly, ts, unread, membership, acceptInvite, leave, isInvite, isDirect, msgtype, dmUserId };
     }
 
     get lastEvent() {

@@ -27,9 +27,14 @@ class MatrixChats extends Component {
         };
     }
 
-    componentDidMount() {
+    async componentDidMount() {
         this.subscription = timer(1000).subscribe(() => Matrix.setTimelineChatsCallback(this.syncCallback));
-        this.props.onLoaded(this.userIdsDM);
+        const totalRooms = this.rooms ? Object.keys(this.rooms).length : null;
+        await this.props.onLoaded({userIdsDM: this.userIdsDM, totalRooms });
+        if (totalRooms === 0 && this.props.refreshAfterOnLoaded) {
+            this.setData();
+            this.refreshList();
+        }
     }
 
     componentWillUnmount() {
@@ -49,8 +54,12 @@ class MatrixChats extends Component {
         if (matrixRoom.roomId) {
             const room = Matrix.getRoom({ matrixRoom });
             this.rooms[matrixRoom.roomId] = room;
-            this.setState({ alwaysNewValue: getUid() });
+            this.refreshList()
         }
+    }
+
+    refreshList = () => {
+        this.setState({ alwaysNewValue: getUid() });
     }
 
     searchingChats = (searchText) => {
@@ -113,6 +122,7 @@ MatrixChats.defaultProps = {
     onLoaded: () => { },
     renderItem: null,
     renderSearch: null,
+    refreshAfterOnLoaded: false,
 };
 
 MatrixChats.propTypes = {
@@ -121,6 +131,7 @@ MatrixChats.propTypes = {
     onLoaded: PropTypes.func,
     renderItem: PropTypes.func,
     renderSearch: PropTypes.func,
+    refreshAfterOnLoaded: PropTypes.bool,
 };
 
 export default MatrixChats;

@@ -57,6 +57,13 @@ class Matrix {
         return 0;
     }
 
+    get isClientRunning() {
+        if (this.client) {
+            return this.client.clientRunning;
+        }
+        return false;
+    }
+
     initClient({ baseUrl, accessToken, userId, displayName }) {
         this.client = sdk.createClient({ baseUrl, accessToken, userId });
         api.auth.setBaseURL(baseUrl);
