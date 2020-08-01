@@ -24,8 +24,8 @@ class EventAvatar extends PureComponent {
     }
 
     getNoPhoto = () => {
-        if (this.props.noPhotoSource) {
-            return this.props.noPhotoSource;
+        if (this.props.icons.noPhoto) {
+            return this.props.icons.noPhoto;
         }
         return this.props.avatarObj.noPhoto;
     }
@@ -40,12 +40,12 @@ class EventAvatar extends PureComponent {
 EventAvatar.defaultProps = {
     style: [{ width: 40, height: 40, borderRadius: 20, marginRight: 10 }],
     avatarObj: { },
-    noPhotoSource: require('../assets/nophoto.png'),
+    icons: {},
 };
 EventAvatar.propTypes = {
     style: PropTypes.arrayOf(PropTypes.object),
     avatarObj: PropTypes.object,
-    noPhotoSource: PropTypes.object,
+    icons: PropTypes.object,
 };
 
 export default EventAvatar;

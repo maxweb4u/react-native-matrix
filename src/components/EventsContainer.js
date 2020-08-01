@@ -80,6 +80,7 @@ class EventsContainer extends Component {
             reactedEventIds: this.props.reactedEventIds,
             addCitation: this.addCitation,
             trans: this.props.trans,
+            icons: this.props.icons,
         };
         if (this.props.renderEvent) {
             return this.props.renderEvent(props);
@@ -133,7 +134,7 @@ class EventsContainer extends Component {
                     <Text style={[styles.quoteText, this.getPropsStyle('quoteText')]}>{quoteMessage}</Text>
                 </View>
                 <TouchableOpacity style={[styles.quoteCancelButton, this.getPropsStyle('quoteCancelButton')]} onPress={() => this.cancelCitation()} {...Utils.testProps('btnCloseQuote')}>
-                    <Image source={this.props.iconCloseBlue || require('../assets/icon-close-blue.png')} style={[styles.iconCloseCitation, this.getPropsStyle('iconCloseCitation')]} />
+                    <Image source={this.props.icons.closeQuotation || require('../assets/icon-close-blue.png')} style={[styles.iconCloseCitation, this.getPropsStyle('iconCloseCitation')]} />
                 </TouchableOpacity>
             </View>
         );
@@ -161,7 +162,8 @@ class EventsContainer extends Component {
     }
 }
 EventsContainer.defaultProps = {
-    trans,
+    trans: trans,
+    icons: {},
     eventsStyles: {},
     events: [],
     reactedEventIds: [],
@@ -177,6 +179,7 @@ EventsContainer.defaultProps = {
 };
 EventsContainer.propTypes = {
     trans: PropTypes.object,
+    icons: PropTypes.object,
     eventsStyles: PropTypes.object,
     events: PropTypes.arrayOf(PropTypes.object),
     reactedEventIds: PropTypes.arrayOf(PropTypes.string),

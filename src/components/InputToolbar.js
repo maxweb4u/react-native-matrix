@@ -259,7 +259,7 @@ class InputToolbar extends PureComponent {
 
         return (
             <TouchableOpacity style={[styles.containerAddFiles, this.getPropsStyle('containerAddFiles')]} onPress={() => this.openActions(true)} {...Utils.testProps('btnAddFiles')}>
-                <Image source={this.props.iconActionsAddFiles || require('../assets/icon-add-files.png')} style={[styles.iconActionsAddFiles, this.getPropsStyle('iconActionsAddFiles')]} />
+                <Image source={this.props.icons.actionAddFiles || require('../assets/icon-add-files.png')} style={[styles.iconActionsAddFiles, this.getPropsStyle('iconActionsAddFiles')]} />
             </TouchableOpacity>
         );
     }
@@ -290,7 +290,7 @@ class InputToolbar extends PureComponent {
                     {...Utils.testProps('inputText')}
                 />
                 <TouchableOpacity style={[styles.containerAddSmiles, this.getPropsStyle('containerAddSmiles')]} onPress={() => this.showEmojis(true)} {...Utils.testProps('btnSmileOpen')}>
-                    <Image source={this.props.iconActionsAddSmiles || require('../assets/icon-smile.png')} style={[styles.iconActionsAddSmiles, this.getPropsStyle('iconActionsAddSmiles')]} />
+                    <Image source={this.props.icons.actionsAddSmiles || require('../assets/icon-smile.png')} style={[styles.iconActionsAddSmiles, this.getPropsStyle('iconActionsAddSmiles')]} />
                 </TouchableOpacity>
             </View>
         );
@@ -305,10 +305,10 @@ class InputToolbar extends PureComponent {
             return (
                 <View style={[styles.containerAddActions, this.getPropsStyle('containerAddActions')]}>
                     <TouchableOpacity style={[styles.containerAddAudio, this.getPropsStyle('containerAddAudio')]} onPress={() => this.startRecording()} {...Utils.testProps('btnAddAudio')}>
-                        <Image source={this.props.iconActionsAddAudio || require('../assets/icon-add-audio.png')} style={[styles.iconActionsAddAudio, this.getPropsStyle('iconActionsAddAudio')]} />
+                        <Image source={this.props.icons.actionsAddAudio || require('../assets/icon-add-audio.png')} style={[styles.iconActionsAddAudio, this.getPropsStyle('iconActionsAddAudio')]} />
                     </TouchableOpacity>
                     <TouchableOpacity style={[styles.containerAddImage, this.getPropsStyle('containerAddImage')]} onPress={() => this.openGallery()} {...Utils.testProps('btnAddFileImage')}>
-                        <Image source={this.props.iconActionsAddImage || require('../assets/icon-add-image.png')} style={[styles.iconActionsAddImage, this.getPropsStyle('iconActionsAddImage')]} />
+                        <Image source={this.props.icons.actionsAddImage || require('../assets/icon-add-image.png')} style={[styles.iconActionsAddImage, this.getPropsStyle('iconActionsAddImage')]} />
                     </TouchableOpacity>
                 </View>
             );
@@ -316,7 +316,7 @@ class InputToolbar extends PureComponent {
 
         return (
             <TouchableOpacity style={[styles.containerSend, this.getPropsStyle('containerSend')]} onPress={() => this.addText()} {...Utils.testProps('btnSend')}>
-                <Image source={this.props.iconActionsSend || require('../assets/icon-send.png')} style={[styles.iconActionsSend, this.getPropsStyle('iconActionsSend')]} />
+                <Image source={this.props.icons.actionsSend || require('../assets/icon-send.png')} style={[styles.iconActionsSend, this.getPropsStyle('iconActionsSend')]} />
             </TouchableOpacity>
         );
     }
@@ -395,6 +395,7 @@ InputToolbar.defaultProps = {
     members: {},
     messageSent: () => {},
     showInputbarActions: null,
+    icons: {},
 };
 InputToolbar.propTypes = {
     trans: PropTypes.object,
@@ -428,6 +429,7 @@ InputToolbar.propTypes = {
     members: PropTypes.object,
     messageSent: PropTypes.func,
     showInputbarActions: PropTypes.func,
+    icons: PropTypes.object,
 };
 
 export default InputToolbar;

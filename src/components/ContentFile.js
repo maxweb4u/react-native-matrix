@@ -31,7 +31,7 @@ class ContentFile extends PureComponent {
         const styles = { ...stylesObj, ...contentFileStyles };
 
         if (contentObj.info.mimetype === 'application/pdf') {
-            image = (<Image source={require('../assets/icon-file-pdf.png')} style={styles.icon24} />);
+            image = (<Image source={this.props.icons.filePDF || require('../assets/icon-file-pdf.png')} style={styles.icon24} />);
         }
 
         return (
@@ -48,12 +48,14 @@ ContentFile.defaultProps = {
     contentObj: null,
     isOwn: false,
     onFilePress: null,
+    icons: {},
 };
 ContentFile.propTypes = {
     contentFileStyles: PropTypes.object,
     contentObj: PropTypes.object,
     isOwn: PropTypes.bool,
     onFilePress: PropTypes.func,
+    icons: PropTypes.object,
 };
 
 export default ContentFile;

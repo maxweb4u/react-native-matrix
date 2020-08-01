@@ -67,10 +67,12 @@ class ContentAudio extends Component {
     render() {
         const leftPosition = this.state.currentDurationSec && this.state.currentPositionSec ? this.state.currentPositionSec / this.state.currentDurationSec * 99 : 0;
         const styles = { ...stylesObj, ...this.props.contentAudioStyles };
+        const iconPlaying = this.props.icons.pause || require('../assets/icon-player-pause.png')
+        const iconNotPlaying = this.props.icons.playing || require('../assets/icon-player-play.png')
         return (
             <View style={[styles.audioPreview, this.props.isOwn && styles.audioPreviewMy]}>
                 <TouchableOpacity style={styles.touchArea} onPress={this.action} {...Utils.testProps('btnEventAudioPress')}>
-                    <Image source={this.state.isPlaying ? require('../assets/icon-player-pause.png') : require('../assets/icon-player-play.png')} style={styles.icon32} />
+                    <Image source={this.state.isPlaying ? iconPlaying : iconNotPlaying} style={styles.icon32} />
                 </TouchableOpacity>
                 <View style={styles.audioTrackProgress}>
                     <View style={styles.audioTrackContainer}>
@@ -93,6 +95,7 @@ ContentAudio.defaultProps = {
     isOwn: false,
     startAudioPlay: () => {},
     stopAudioPlay: () => {},
+    icons: {},
 };
 ContentAudio.propTypes = {
     contentAudioStyles: PropTypes.object,
@@ -100,6 +103,7 @@ ContentAudio.propTypes = {
     isOwn: PropTypes.bool,
     startAudioPlay: PropTypes.func,
     stopAudioPlay: PropTypes.func,
+    icons: PropTypes.object,
 };
 
 export default ContentAudio;

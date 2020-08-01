@@ -303,6 +303,7 @@ class MatrixChat extends Component {
                     roomId={this.props.roomId}
                     loadEarlyMessages={this.loadEarlyMessages}
                     eventsStyles={this.props.eventsStyles}
+                    icons={this.props.icons}
                     trans={trans}
                 />
             </AnimatedView>
@@ -321,6 +322,7 @@ class MatrixChat extends Component {
             sendMessage: { text: this.sendText.bind(this), file: this.sendFile.bind(this) },
             members: this.state.members,
             messageSent: this.messageSent,
+            icons: this.props.icons,
             ...inputToolbarProps,
         };
         if (this.props.renderInputToolbar) {
@@ -364,6 +366,7 @@ MatrixChat.defaultProps = {
     eventProps: {},
     inputToolbarProps: {},
     eventsStyles: {},
+    icons: {},
 };
 
 MatrixChat.propTypes = {
@@ -390,6 +393,7 @@ MatrixChat.propTypes = {
     eventProps: PropTypes.object,
     inputToolbarProps: PropTypes.object,
     eventsStyles: PropTypes.object,
+    icons: PropTypes.object,
 };
 
 export default MatrixChat;

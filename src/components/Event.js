@@ -176,7 +176,7 @@ class Event extends PureComponent {
             return this.props.renderMessageAvatar(this.props.event.senderAvatarObj, this.props.isPrevUserTheSame);
         }
         if (!this.props.isPrevUserTheSame) {
-            return <EventAvatar avatarObj={this.props.event.senderAvatarObj} style={[styles.avatarPhoto, this.getPropsStyle('avatarPhoto')]} noPhotoSource={this.props.noEventPhotoSource} />;
+            return <EventAvatar avatarObj={this.props.event.senderAvatarObj} style={[styles.avatarPhoto, this.getPropsStyle('avatarPhoto')]} icons={this.props.icons} />;
         }
         return <View style={[styles.avatarPhoto, this.getPropsStyle('avatarPhoto')]} />;
     }
@@ -225,7 +225,7 @@ class Event extends PureComponent {
             return (
                 <View style={[styles.containerLike, this.getPropsStyle('containerLike')]}>
                     <View style={[styles.likeButton, this.getPropsStyle('likeButton')]}>
-                        <Image source={require('../assets/icon-liked.png')} style={[styles.likeImage, this.getPropsStyle('likeImage')]} />
+                        <Image source={this.props.icons.liked || require('../assets/icon-liked.png')} style={[styles.likeImage, this.getPropsStyle('likeImage')]} />
                     </View>
                 </View>
             );
@@ -233,7 +233,7 @@ class Event extends PureComponent {
         return (
             <View style={[styles.containerLike, this.getPropsStyle('containerLike')]}>
                 <TouchableOpacity style={[styles.likeButton, this.getPropsStyle('likeButton')]} onPress={this.likeEvent} {...Utils.testProps('btnEventLike')}>
-                    <Image source={require('../assets/icon-not-liked.png')} style={[styles.likeImage, this.getPropsStyle('likeImage')]} />
+                    <Image source={this.props.icons.notLiked || require('../assets/icon-not-liked.png')} style={[styles.likeImage, this.getPropsStyle('likeImage')]} />
                 </TouchableOpacity>
             </View>
         );
@@ -285,9 +285,9 @@ class Event extends PureComponent {
             case MsgTypes.mImage:
                 return <ContentImage isOwn={isOwn} contentObj={content} {...this.props.contentImageStyles} onImagePress={this.props.onImagePress} />;
             case MsgTypes.mAudio:
-                return <ContentAudio isOwn={isOwn} contentObj={content} contentAudioStyles={this.props.contentAudioStyles} startAudioPlay={this.props.startAudioPlay} stopAudioPlay={this.props.stopAudioPlay} />;
+                return <ContentAudio isOwn={isOwn} contentObj={content} contentAudioStyles={this.props.contentAudioStyles} startAudioPlay={this.props.startAudioPlay} stopAudioPlay={this.props.stopAudioPlay} icons={this.props.icons} />;
             case MsgTypes.mFile:
-                return <ContentFile isOwn={isOwn} contentObj={content} contentFileStyles={this.props.contentFileStyles} onFilePress={this.props.onFilePress} />;
+                return <ContentFile isOwn={isOwn} contentObj={content} contentFileStyles={this.props.contentFileStyles} onFilePress={this.props.onFilePress} icons={this.props.icons} />;
         }
     }
 
@@ -297,7 +297,7 @@ class Event extends PureComponent {
         }
         return (
             <TouchableOpacity style={[styles.containerMessageActions, this.getPropsStyle('containerMessageActions')]} onPress={() => this.showActions()} {...Utils.testProps('btnEventActions')}>
-                <Image source={this.props.iconMessageActions || require('../assets/icon-message-actions.png')} style={[styles.iconActions, this.getPropsStyle('iconActions')]} />
+                <Image source={this.props.icons.messageActions || require('../assets/icon-message-actions.png')} style={[styles.iconActions, this.getPropsStyle('iconActions')]} />
             </TouchableOpacity>
         );
     }
@@ -348,6 +348,7 @@ Event.defaultProps = {
     roomId: '',
     reactedEventIds: [],
     addCitation: () => {},
+    icons: {},
 };
 Event.propTypes = {
     trans: PropTypes.object,
@@ -386,6 +387,7 @@ Event.propTypes = {
     roomId: PropTypes.string,
     reactedEventIds: PropTypes.arrayOf(PropTypes.string),
     addCitation: PropTypes.func,
+    icons: PropTypes.object,
 };
 
 export default Event;
