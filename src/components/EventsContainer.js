@@ -162,7 +162,7 @@ class EventsContainer extends Component {
     }
 }
 EventsContainer.defaultProps = {
-    trans: trans,
+    trans,
     icons: {},
     eventsStyles: {},
     events: [],

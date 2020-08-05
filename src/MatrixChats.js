@@ -30,11 +30,19 @@ class MatrixChats extends Component {
     async componentDidMount() {
         this.subscription = timer(1000).subscribe(() => Matrix.setTimelineChatsCallback(this.syncCallback));
         const totalRooms = this.rooms ? Object.keys(this.rooms).length : null;
-        await this.props.onLoaded({userIdsDM: this.userIdsDM, totalRooms });
+        await this.props.onLoaded({ userIdsDM: this.userIdsDM, totalRooms });
         if (totalRooms === 0 && this.props.refreshAfterOnLoaded) {
             this.setData();
             this.refreshList();
         }
+    }
+
+    shouldComponentUpdate(nextProps, nextState) {
+        const shouldBeRefreshed = nextProps.shouldBeRefreshed && nextProps.shouldBeRefreshed !== this.props.shouldBeRefreshed;
+        if (shouldBeRefreshed) {
+            this.setData();
+        }
+        return shouldBeRefreshed || (this.state.searchText !== nextState.searchText) || (this.state.alwaysNewValue !== nextState.alwaysNewValue);
     }
 
     componentWillUnmount() {
@@ -51,19 +59,44 @@ class MatrixChats extends Component {
     }
 
     syncCallback = (event, matrixRoom) => {
-        if (matrixRoom.roomId) {
+        if (matrixRoom && matrixRoom.roomId) {
             const room = Matrix.getRoom({ matrixRoom });
             this.rooms[matrixRoom.roomId] = room;
-            this.refreshList()
+            this.refreshList();
         }
     }
 
     refreshList = () => {
-        this.setState({ alwaysNewValue: getUid() });
+        if (this.props.isShown()) {
+            this.setState({ alwaysNewValue: getUid() });
+        }
     }
 
     searchingChats = (searchText) => {
         this.setState({ searchText });
+    }
+
+    acceptInvite = async (roomId) => {
+        if (roomId) {
+            const matrixRoom = await Matrix.joinRoom(roomId);
+            if (matrixRoom) {
+                this.syncCallback(matrixRoom);
+                return true;
+            }
+        }
+        return false;
+    }
+
+    declineInvite = async (roomId) => {
+        if (roomId) {
+            const isExited = await Matrix.exitFromRoom(roomId);
+            if (isExited) {
+                delete this.rooms[roomId];
+                this.refreshList();
+                return true;
+            }
+        }
+        return false;
     }
 
     renderItem = (obj, i) => {
@@ -72,7 +105,7 @@ class MatrixChats extends Component {
         }
 
         if (this.props.renderItem) {
-            return this.props.renderItem(obj.item, i);
+            return this.props.renderItem(obj.item, i, this.acceptInvite, this.declineInvite);
         }
         return (
             <View />
@@ -102,6 +135,7 @@ class MatrixChats extends Component {
 
     render() {
         const items = Object.values(this.rooms);
+        items.sort((room1, room2) => room1.lastActiveEventTimestamp < room2.lastActiveEventTimestamp || room2.isInvite);
         return (
             <View style={this.props.style}>
                 {this.renderSearch()}
@@ -123,6 +157,8 @@ MatrixChats.defaultProps = {
     renderItem: null,
     renderSearch: null,
     refreshAfterOnLoaded: false,
+    shouldBeRefreshed: '',
+    isShown: () => true,
 };
 
 MatrixChats.propTypes = {
@@ -132,6 +168,8 @@ MatrixChats.propTypes = {
     renderItem: PropTypes.func,
     renderSearch: PropTypes.func,
     refreshAfterOnLoaded: PropTypes.bool,
+    shouldBeRefreshed: PropTypes.string,
+    isShown: PropTypes.func,
 };
 
 export default MatrixChats;

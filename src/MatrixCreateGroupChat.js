@@ -30,7 +30,7 @@ class MatrixCreateGroupChat extends Component {
             imageObj: null,
             imageURI: '',
             title: '',
-            userIdsToInvite: [],
+            userIdsToInvite: this.props.preselectedUserIds,
         };
     }
 
@@ -145,6 +145,7 @@ MatrixCreateGroupChat.defaultProps = {
     renderContacts: null,
     renderActions: null,
     locale: 'en',
+    preselectedUserIds: [],
 };
 
 MatrixCreateGroupChat.propTypes = {
@@ -156,6 +157,7 @@ MatrixCreateGroupChat.propTypes = {
     renderContacts: PropTypes.func,
     renderActions: PropTypes.func,
     locale: PropTypes.string,
+    preselectedUserIds: PropTypes.array,
 };
 
 export default MatrixCreateGroupChat;

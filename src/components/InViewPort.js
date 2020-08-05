@@ -38,7 +38,9 @@ class InViewPort extends PureComponent {
     }
 
     stopWatching() {
-        if (this.subscription && this.subscription.unsubscribe) this.subscription.unsubscribe();
+        if (this.subscription && this.subscription.unsubscribe) {
+            this.subscription.unsubscribe();
+        }
     }
 
     check() {

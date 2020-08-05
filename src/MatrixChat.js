@@ -7,12 +7,12 @@
 import React, { Component } from 'react';
 import { Animated, View, Platform, SafeAreaView } from 'react-native';
 import { timer } from 'rxjs';
+import getUid from 'get-uid';
 import PropTypes from 'prop-types';
 import AudioRecorderPlayer from 'react-native-audio-recorder-player';
 import trans from './trans';
 import Matrix from './Matrix';
 import Event from './models/Event';
-import Room from './models/Room';
 import isIphoneX from './lib/isIphoneX';
 import EventsContainer from './components/EventsContainer';
 import InputToolbar from './components/InputToolbar';
@@ -33,11 +33,16 @@ class MatrixChat extends Component {
         this.maxHeight = undefined;
         this.messageContainerRef = React.createRef();
         this.inputToolbarRef = React.createRef();
+        this.isPropsOnLoaded = false;
+        this.members = [];
+
+        if (this.props.roomId) {
+            this.loadRoom({ roomId: this.props.roomId });
+        }
 
         this.state = {
             isLoading: true,
-            events: [],
-            members: [],
+            alwaysNewValue: '',
             composerHeight: this.props.minComposerHeight,
             messagesContainerHeight: undefined,
             removePrevAudioListener: null,
@@ -55,16 +60,6 @@ class MatrixChat extends Component {
             const newMessagesContainerHeight = this.getBasicMessagesContainerHeight();
             this.setContainerHeight(newMessagesContainerHeight);
         };
-        // const onKeyboardDidShow = (e) => {
-        //     if (Platform.OS === 'android') {
-        //         this.onKeyboardWillShow(e);
-        //     }
-        // };
-        // const onKeyboardDidHide = (e) => {
-        //     if (Platform.OS === 'android') {
-        //         this.onKeyboardWillHide(e);
-        //     }
-        // };
 
         this.keyboardListeners = { onKeyboardWillShow, onKeyboardWillHide };
 
@@ -94,14 +89,29 @@ class MatrixChat extends Component {
 
     componentDidMount() {
         if (this.props.roomId) {
-            this.loadRoom({ roomId: this.props.roomId });
-            if (this.room && this.room.lastEvent.id) {
+            if (this.room && this.room.lastEvent.id && (!this.room.lastReadEventId || this.room.lastReadEventId !== this.room.lastEvent.id)) {
                 Matrix.setRoomReadMarkers(this.room.id, this.room.lastEvent.id);
             }
             this.subscription = timer(1000).subscribe(() => {
                 Matrix.setTimelineChatCallback(this.syncCallback);
             });
         }
+        if (!this.isPropsOnLoaded && this.room) {
+            this.isPropsOnLoaded = true;
+            this.props.onLoaded({ roomTitle: this.room.title, isDirect: this.room.isDirect });
+        }
+    }
+
+    shouldComponentUpdate(nextProps, nextState) {
+        const shouldBeRefreshed = nextProps.shouldBeRefreshed && nextProps.shouldBeRefreshed !== this.props.shouldBeRefreshed;
+        if (shouldBeRefreshed) {
+            this.loadRoom({ roomId: this.props.roomId });
+        }
+        return true;
+        // return shouldBeRefreshed
+        //     || (this.state.composerHeight !== nextState.composerHeight)
+        //     || (this.state.removePrevAudioListener && this.state.removePrevAudioListener !== nextState.removePrevAudioListener)
+        //     || (this.state.alwaysNewValue !== nextState.alwaysNewValue);
     }
 
     componentWillUnmount() {
@@ -123,66 +133,80 @@ class MatrixChat extends Component {
         return 10;
     }
 
+    // refresh component through change the state and if this component is shown in screen (isShown is func from props, by default it always returns true)
+    refreshComponent = (isScrollToBottom) => {
+        if (this.props.isShown()) {
+            this.setState({ alwaysNewValue: getUid() }, () => {
+                if (isScrollToBottom) {
+                    this.scrollToBottom();
+                }
+            });
+        }
+    }
+
+    // load room from matrix store or from matrixRoom
     loadRoom = ({ roomId, matrixRoom }) => {
         const room = Matrix.getRoom({ roomId, matrixRoom, possibleEventsTypes: this.props.possibleChatEvents, possibleContentTypes: this.props.possibleChatContentTypes });
         if (room) {
             this.room = room;
-            const reversedEvents = room.events.reverse();
-            this.setState({ events: reversedEvents, members: room.getMembersObj() }, () => {
-                this.props.onLoaded({ roomTitle: room.title, isDirect: room.isDirect });
-            });
+            this.members = this.room.getMembersObj();
         }
     }
 
+    // synchronizate chat when new event is come
+    syncCallback = (matrixEvent, matrixRoom) => {
+        if (matrixRoom && matrixEvent && matrixRoom.getLastActiveTimestamp() <= matrixEvent.getTs() && matrixRoom.roomId === this.props.roomId && Matrix.userId !== matrixEvent.getSender()) {
+            const isAdded = this.addEvent({ matrixEvent });
+            if (isAdded) {
+                Matrix.setRoomReadMarkers(matrixRoom.roomId, matrixEvent.getId());
+            }
+        }
+    }
+
+    // load early message to event's timeline, return promise pageToken or falsy value if there is no previous messages
     loadEarlyMessages = () => Matrix.loadEarlyMessages(this.room.matrixRoom, 20).then((matrixRoom) => {
         this.loadRoom({ matrixRoom });
+        this.refreshComponent();
         return matrixRoom.oldState.paginationToken;
     }).catch(() => false)
 
-    messageIsSent = (eventId) => {
-        const matrixEvent = Matrix.getEvent(eventId);
-        Matrix.setRoomReadMarkers(this.room.roomId, matrixEvent.getId());
-        this.room.addMatrixEvent(matrixEvent);
-    }
-
-    addEvent = ({ event, matrixEvent }) => {
-        if (event || matrixEvent) {
-            let { events } = this.state;
-            if (matrixEvent) {
-                event = new Event(matrixEvent);
-            }
-            events = [event].concat(events);
-            this.setState({ events }, () => {
-                this.scrollToBottom();
-            });
-            return events.length - 1;
+    // executed when message is sent and we need to set that it's read and add it matrix's store
+    messageSent = (eventId) => {
+        if (!eventId) {
+            return null;
         }
-        return 0;
+        Matrix.setRoomReadMarkers(this.room.id, eventId);
+        this.room.addSentMessageById(eventId);
+        return true;
     }
 
+    // add my own messages to component's events
+    addEvent = ({ event, matrixEvent }) => {
+        if (this.room && (event || matrixEvent)) {
+            const isAdded = this.room.addEvent({ event, matrixEvent });
+            if (isAdded) {
+                this.refreshComponent(true);
+                return true;
+            }
+        }
+        return false;
+    }
+
+    // send text messages
     sendText = async (text, isQuote) => {
         const event = new Event(null, Event.getEventObjText(Matrix.userId, text, isQuote));
         this.addEvent({ event });
-        Matrix.sendMessage(this.props.roomId, event.matrixContentObj).then(res => this.messageIsSent(res.event_id)).error(err => this.props.errorCallback(err));
+        Matrix.sendMessage(this.props.roomId, event.matrixContentObj).then(res => this.messageSent(res.event_id)).error(err => this.props.errorCallback(err));
     }
 
+    // send file/image/audio messages
     sendFile = async (msgtype, filename, uri, mimetype, base64, size, duration) => {
         const eventObj = Event.getEventObjFile(Matrix.userId, msgtype, filename, uri, mimetype, base64, size, duration);
         const event = new Event(null, eventObj);
         this.addEvent({ event });
         const res = await event.contentObj.uploadFile();
         if (res.status) {
-            Matrix.sendMessage(this.props.roomId, event.matrixContentObj).then(result => this.messageIsSent(result.event_id)).error(err => this.props.errorCallback(err));
-        }
-    }
-
-    syncCallback = (matrixEvent, room) => {
-        if (room && matrixEvent && room.roomId === this.props.roomId && Matrix.userId !== matrixEvent.getSender()) {
-            const shouldBeAdded = Room.isEventPermitted(matrixEvent);
-            if (shouldBeAdded) {
-                Matrix.setRoomReadMarkers(room.roomId, matrixEvent.getId());
-                this.addEvent({ matrixEvent });
-            }
+            Matrix.sendMessage(this.props.roomId, event.matrixContentObj).then(result => this.messageSent(result.event_id)).error(err => this.props.errorCallback(err));
         }
     }
 
@@ -287,7 +311,7 @@ class MatrixChat extends Component {
     }
 
     renderEvents = () => {
-        const { events, messagesContainerHeight } = this.state;
+        const { messagesContainerHeight } = this.state;
         const AnimatedView = this.props.isAnimated ? Animated.View : View;
         return (
             <AnimatedView style={{ height: messagesContainerHeight }}>
@@ -296,7 +320,7 @@ class MatrixChat extends Component {
                     eventProps={this.props.eventProps}
                     addCitation={this.addCitation}
                     cancelCitation={this.cancelCitation}
-                    events={events}
+                    events={this.room.chatEvents}
                     reactedEventIds={!!this.room && this.room.reactedEventIds}
                     startAudioPlay={this.startAudioPlay}
                     stopAudioPlay={this.stopAudioPlay}
@@ -320,7 +344,7 @@ class MatrixChat extends Component {
             keyboardListeners: this.keyboardListeners,
             trans: { inputToolbar: trans.t('inputToolbar'), fileModule: trans.t('fileModule') },
             sendMessage: { text: this.sendText.bind(this), file: this.sendFile.bind(this) },
-            members: this.state.members,
+            members: this.members,
             messageSent: this.messageSent,
             icons: this.props.icons,
             ...inputToolbarProps,
@@ -367,6 +391,8 @@ MatrixChat.defaultProps = {
     inputToolbarProps: {},
     eventsStyles: {},
     icons: {},
+    shouldBeRefreshed: '',
+    isShown: () => true,
 };
 
 MatrixChat.propTypes = {
@@ -394,6 +420,8 @@ MatrixChat.propTypes = {
     inputToolbarProps: PropTypes.object,
     eventsStyles: PropTypes.object,
     icons: PropTypes.object,
+    shouldBeRefreshed: PropTypes.string,
+    isShown: PropTypes.func,
 };
 
 export default MatrixChat;

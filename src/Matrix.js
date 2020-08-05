@@ -155,13 +155,17 @@ class Matrix {
 
     getRoom({ roomId, matrixRoom, possibleEventsTypes, possibleContentTypes }) {
         if (!matrixRoom && roomId) {
-            matrixRoom = this.client.getRoom(roomId);
+            matrixRoom = this.getMatrixRoom(roomId);
         }
         if (matrixRoom) {
             const room = new Room({ matrixRoom, possibleEventsTypes, possibleContentTypes, myUserId: this.userId });
             return room;
         }
         return null;
+    }
+
+    getMatrixRoom(roomId) {
+        return this.client.getRoom(roomId);
     }
 
     getIsOwn(userId) {
@@ -255,6 +259,11 @@ class Matrix {
             return true;
         }
         return false;
+    }
+
+    // return matrixRoom
+    async joinRoom(roomId) {
+        return this.client.joinRoom(roomId).then(matrixRoom => matrixRoom).catch(() => null);
     }
 }
 

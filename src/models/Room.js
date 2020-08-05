@@ -40,6 +40,8 @@ class Room {
 
     myUserId = '';
 
+    isReversed = false;
+
     constructor({ matrixRoom, possibleEventsTypes, possibleContentTypes, myUserId, client }) {
         if (matrixRoom) {
             this.id = matrixRoom.roomId || 0;
@@ -89,7 +91,7 @@ class Room {
         return uri;
     }
 
-    get lastEventTimestamp() {
+    get lastActiveEventTimestamp() {
         return this.matrixRoom ? this.matrixRoom.getLastActiveTimestamp() : 0;
     }
 
@@ -97,15 +99,16 @@ class Room {
         if (!this.id) {
             return null;
         }
-        const { id, avatar, title, lastEvent, membership, acceptInvite, leave, isDirect, unread, dmUserId } = this;
+        const { id, avatar, title, lastEvent, membership, isDirect, unread, dmUserId, isInvite } = this;
         const { messageOnly, ts, msgtype } = lastEvent;
-        const isInvite = membership === 'invite';
-        return { id, avatar, title, message: messageOnly, ts, unread, membership, acceptInvite, leave, isInvite, isDirect, msgtype, dmUserId };
+        return { id, avatar, title, message: messageOnly, ts, unread, membership, isInvite, isDirect, msgtype, dmUserId };
     }
 
     get lastEvent() {
         if (this.events.length) {
-            const lastEvent = this.events[this.events.length - 1];
+            const index = this.isReversed ? 0 : this.events.length - 1;
+            const lastEvent = this.events[index];
+
             return lastEvent;
         }
         const lastEvent = new Event();
@@ -130,6 +133,18 @@ class Room {
         return this.matrixRoom.getEventReadUpTo(this.myUserId);
     }
 
+    get chatEvents() {
+        if (this.events) {
+            this.setReversed();
+            return this.events;
+        }
+        return [];
+    }
+
+    get isInvite() {
+        return this.membership === 'invite';
+    }
+
     setUnread(number) {
         this.matrixRoom.setUnreadNotificationCount('total', number);
     }
@@ -151,7 +166,6 @@ class Room {
     setEvents() {
         const timeline = this.matrixRoom.getLiveTimeline();
         const matrixEvents = timeline.getEvents();
-        // console.log(matrixEvents);
         let numberUnread = 0;
         let foundLastRead = false;
         const lastUnread = this.matrixRoom.getUnreadNotificationCount();
@@ -181,6 +195,7 @@ class Room {
         }
         if (shouldBeAdded) {
             const event = new Event(matrixEvent);
+            // console.log(event.messageOnly);
             this.events.push(event);
             const content = matrixEvent.getContent();
             if (content.msgtype === MsgTypes.mText) {
@@ -198,6 +213,17 @@ class Room {
         return null;
     }
 
+    addSentMessageById(eventId) {
+        const timeline = this.matrixRoom.getLiveTimeline();
+        const matrixEvents = timeline.getEvents();
+        const matrixEvent = matrixEvents[matrixEvents.length - 1];
+        if (matrixEvent.getId() === eventId) {
+            this.addMatrixEvent(matrixEvent);
+            return true;
+        }
+        return false;
+    }
+
     getMembers(membership) {
         if (!membership) {
             membership = 'join';
@@ -208,30 +234,39 @@ class Room {
     getMembersObj(membership) {
         const obj = {};
         const members = this.getMembers(membership);
-        members.map((member) => { obj[member.userId] = new Member(member.user, this.myUserId); });
+        members.map((member) => { if (member.userId !== this.myUserId) obj[member.userId] = new Member(member.user, this.myUserId); });
         return obj;
-    }
-
-    async acceptInvite() {
-        const res = await api.room.acceptInvite(this.id);
-        if (res.status) {
-            this.membership = 'join';
-        }
-        return res;
-    }
-
-    async leave() {
-        const res = await api.room.leaveRoom(this.id);
-        if (res.status) {
-            this.membership = 'leave';
-        }
-        return res;
     }
 
     recalculate() {
         if (this.matrixRoom) {
             this.matrixRoom.recalculate();
         }
+    }
+
+    setReversed() {
+        if (!this.isReversed) {
+            const { events } = this;
+            this.events = events.reverse();
+            this.isReversed = true;
+        }
+    }
+
+    addEvent({ event, matrixEvent }) {
+        if (event || matrixEvent) {
+            this.setReversed();
+            const { events } = this;
+            if (matrixEvent) {
+                const shouldBeAdded = Room.isEventPermitted(matrixEvent);
+                if (!shouldBeAdded) {
+                    return false;
+                }
+                event = new Event(matrixEvent);
+            }
+            this.events = [event].concat(events);
+            return true;
+        }
+        return false;
     }
 
     static getIsDirect(e) {
