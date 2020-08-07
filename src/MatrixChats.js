@@ -31,10 +31,6 @@ class MatrixChats extends Component {
         this.subscription = timer(1000).subscribe(() => Matrix.setTimelineChatsCallback(this.syncCallback));
         const totalRooms = this.rooms ? Object.keys(this.rooms).length : null;
         await this.props.onLoaded({ userIdsDM: this.userIdsDM, totalRooms });
-        if (totalRooms === 0 && this.props.refreshAfterOnLoaded) {
-            this.setData();
-            this.refreshList();
-        }
     }
 
     shouldComponentUpdate(nextProps, nextState) {
@@ -156,7 +152,6 @@ MatrixChats.defaultProps = {
     onLoaded: () => { },
     renderItem: null,
     renderSearch: null,
-    refreshAfterOnLoaded: false,
     shouldBeRefreshed: '',
     isShown: () => true,
 };
@@ -167,7 +162,6 @@ MatrixChats.propTypes = {
     onLoaded: PropTypes.func,
     renderItem: PropTypes.func,
     renderSearch: PropTypes.func,
-    refreshAfterOnLoaded: PropTypes.bool,
     shouldBeRefreshed: PropTypes.string,
     isShown: PropTypes.func,
 };

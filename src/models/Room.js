@@ -181,7 +181,9 @@ class Room {
                     foundLastRead = true;
                     numberUnread = 0;
                 } else {
-                    numberUnread += 1;
+                    if (matrixEvent.getSender() !== this.myUserId) {
+                        numberUnread += 1;
+                    }
                 }
             }
         });

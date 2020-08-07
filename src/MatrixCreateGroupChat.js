@@ -55,6 +55,7 @@ class MatrixCreateGroupChat extends Component {
         if (!userIdsToInvite.length) {
             return { status: false, msg: 'usersNotSelected' };
         }
+        console.log(userIdsToInvite)
         const roomTitle = !title ? defaultTitle : title;
         const res = await Matrix.createRoom(userIdsToInvite, roomTitle);
         if (!res.status) {
