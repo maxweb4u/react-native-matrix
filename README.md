@@ -23,3 +23,10 @@ if you use RN < 0.60, please follow the installation of these modules:
 ### How to use
 
 ### Main components that can me used
+
+### To Do List
+
+- update readme file
+- create login component
+- refactor the code
+- add renderItem for MatrixCahts
