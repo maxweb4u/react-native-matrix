@@ -1,7 +1,7 @@
 {
   "name": "react-native-matrix",
   "version": "0.0.1",
-  "description": "The matrix chat for React Native",
+  "description": "React native Components for matrix chat. This is beta version.",
   "main": "src/index.js",
   "repository": {
     "type": "git",
