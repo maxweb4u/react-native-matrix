@@ -2,7 +2,7 @@ const fs = require('fs');
 
 //fix timer bug that is appeared when you install matrix-js-sdk for android
 // https://stackoverflow.com/questions/44603362/setting-a-timer-for-a-long-period-of-time-i-e-multiple-minutes
-let fileLocation = '../react-native/Libraries/Core/Timer/JSTimers.js';
+let fileLocation = '../react-native/Libraries/Core/Timers/JSTimers.js';
 let targetText = 'MAX_TIMER_DURATION_MS = 60';
 let replacementText = 'MAX_TIMER_DURATION_MS = 10000';
 
