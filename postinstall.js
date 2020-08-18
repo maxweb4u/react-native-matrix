@@ -13,18 +13,11 @@ if (fileContent.includes(targetText) && !fileContent.includes(replacementText)) 
 }
 
 //fix crash in matrix-js-sdk when internet connection is lost
-fileLocation = '../matrix-js-sdk/lib/sync.js';
-targetText = '_logger.logger.error("/sync error %s", err);';
-replacementText = '// _logger.logger.error("/sync error %s", err);';
+fileLocation = '../matrix-js-sdk/lib/logger.js';
+targetText = 'methodName === "error" ||';
+replacementText = '';
 fileContent = fs.readFileSync(fileLocation, 'utf8');
-if (fileContent.includes(targetText) && !fileContent.includes(replacementText)) {
-    const patchedFileContent = fileContent.replace(targetText, replacementText);
-    fs.writeFileSync(fileLocation, patchedFileContent, 'utf8');
-}
-targetText = '_logger.logger.error(err);';
-replacementText = '// _logger.logger.error(err);';
-fileContent = fs.readFileSync(fileLocation, 'utf8');
-if (fileContent.includes(targetText) && !fileContent.includes(replacementText)) {
+if (fileContent.includes(targetText)) {
     const patchedFileContent = fileContent.replace(targetText, replacementText);
     fs.writeFileSync(fileLocation, patchedFileContent, 'utf8');
 }
