@@ -68,7 +68,7 @@ class Matrix {
         this.client = sdk.createClient({ baseUrl, accessToken, userId });
         api.auth.setBaseURL(baseUrl);
         api.auth.setAccessToken(accessToken);
-        this.updateDisplayName(displayName);
+        // this.updateDisplayName(displayName);
     }
 
     async startClient(syncTime) {
@@ -264,6 +264,11 @@ class Matrix {
     // return matrixRoom
     async joinRoom(roomId) {
         return this.client.joinRoom(roomId).then(matrixRoom => matrixRoom).catch(() => null);
+    }
+
+    getDirectRoomIdByUserId(matrixUserId) {
+        const obj = this.getRoomsForChatsList();
+        return Object.prototype.hasOwnProperty.call(obj.userIdsDM, matrixUserId) ? obj.userIdsDM[matrixUserId] : '';
     }
 }
 
