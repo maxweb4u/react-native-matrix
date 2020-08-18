@@ -266,6 +266,7 @@ class Matrix {
         return this.client.joinRoom(roomId).then(matrixRoom => matrixRoom).catch(() => null);
     }
 
+    //return the id of direct room using userid
     getDirectRoomIdByUserId(matrixUserId) {
         const obj = this.getRoomsForChatsList();
         return Object.prototype.hasOwnProperty.call(obj.userIdsDM, matrixUserId) ? obj.userIdsDM[matrixUserId] : '';
