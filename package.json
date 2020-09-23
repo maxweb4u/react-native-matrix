@@ -26,7 +26,8 @@
   "homepage": "https://github.com/maxweb4u/react-native-matrix#readme",
   "scripts": {
     "fix": "../.bin/eslint -c .eslintrc --ext .js src --fix",
-    "postinstall": "node ./postinstall.js"
+    "postinstall": "node ./postinstall.js",
+    "npmupload": "npm publish --access public"
   },
   "devDependencies": {
     "@babel/core": "^7.6.2",
