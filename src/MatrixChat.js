@@ -196,7 +196,7 @@ class MatrixChat extends Component {
     sendText = async (text, isQuote) => {
         const event = new Event(null, Event.getEventObjText(Matrix.userId, text, isQuote));
         this.addEvent({ event });
-        Matrix.sendMessage(this.props.roomId, event.matrixContentObj).then(res => this.messageSent(res.event_id)).error(err => this.props.errorCallback(err));
+        Matrix.sendMessage(this.props.roomId, event.matrixContentObj).then(res => this.messageSent(res.event_id)).catch(err => this.props.errorCallback(err));
     }
 
     // send file/image/audio messages
@@ -206,7 +206,7 @@ class MatrixChat extends Component {
         this.addEvent({ event });
         const res = await event.contentObj.uploadFile();
         if (res.status) {
-            Matrix.sendMessage(this.props.roomId, event.matrixContentObj).then(result => this.messageSent(result.event_id)).error(err => this.props.errorCallback(err));
+            Matrix.sendMessage(this.props.roomId, event.matrixContentObj).then(result => this.messageSent(result.event_id)).catch(err => this.props.errorCallback(err));
         }
     }
 
