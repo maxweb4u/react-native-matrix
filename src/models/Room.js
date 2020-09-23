@@ -134,7 +134,7 @@ class Room {
     }
 
     get chatEvents() {
-        if (this.events) {
+        if (this.events && Array.isArray(this.events)) {
             this.setReversed();
             return this.events;
         }
