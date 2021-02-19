@@ -66,35 +66,28 @@ class MatrixCreateGroupChat extends Component {
         return { status: true, roomId: res.data.room_id, roomTitle };
     }
 
-    renderUploadRoomImage = () => {
-        const { imageURI } = this.state;
-        if (this.props.renderUploadRoomImage) {
-            return this.props.renderUploadRoomImage(imageURI, this.uploadImage.bind(this));
+    renderGroupInfo = () => {
+        const { title, imageURI } = this.state;
+        if (this.props.renderGroupInfo) {
+            return this.props.renderGroupInfo(title, imageURI, this.changeTitle.bind(this), this.uploadImage.bind(this));
         }
         return (
-            <TouchableOpacity style={styles.containerImage} onPress={this.uploadImage.bind(this)}>
-                <Image source={imageURI ? { uri: imageURI } : require('./assets/nophoto-group.png')} style={styles.groupPhoto} />
-                <Text>{trans.t('createGroupChat', 'changeGroupImage')}</Text>
-            </TouchableOpacity>
-        );
-    }
-
-    renderGroupTitle = () => {
-        const { title } = this.state;
-        if (this.props.renderGroupTitle) {
-            return this.props.renderGroupTitle(title, this.changeTitle.bind(this));
-        }
-        return (
-            <TextInput
-                style={styles.titleInput}
-                autoCapitalize="none"
-                autoCorrect={false}
-                underlineColorAndroid="transparent"
-                placeholder={trans.t('createGroupChat', 'inputPlaceholder')}
-                onChangeText={val => this.changeTitle(val)}
-                value={title}
-                returnKeyType="done"
-            />
+            <View>
+                <TouchableOpacity style={styles.containerImage} onPress={this.uploadImage.bind(this)}>
+                    <Image source={imageURI ? { uri: imageURI } : require('./assets/nophoto-group.png')} style={styles.groupPhoto} />
+                    <Text>{trans.t('createGroupChat', 'changeGroupImage')}</Text>
+                </TouchableOpacity>
+                <TextInput
+                    style={styles.titleInput}
+                    autoCapitalize="none"
+                    autoCorrect={false}
+                    underlineColorAndroid="transparent"
+                    placeholder={trans.t('createGroupChat', 'inputPlaceholder')}
+                    onChangeText={val => this.changeTitle(val)}
+                    value={title}
+                    returnKeyType="done"
+                />
+            </View>
         );
     }
 
@@ -122,13 +115,9 @@ class MatrixCreateGroupChat extends Component {
     }
 
     render() {
-        if (this.props.render) {
-            return this.props.render(this.renderUploadRoomImage.bind(this), this.renderGroupTitle.bind(this), this.renderContacts.bind(this), this.renderActions.bind(this));
-        }
         return (
             <View style={this.props.style}>
-                {this.renderUploadRoomImage()}
-                {this.renderGroupTitle()}
+                {this.renderGroupInfo()}
                 {this.renderContacts()}
                 {this.renderActions()}
             </View>
@@ -139,9 +128,7 @@ class MatrixCreateGroupChat extends Component {
 MatrixCreateGroupChat.defaultProps = {
     style: { flex: 1 },
     trans: null,
-    render: null,
-    renderUploadRoomImage: null,
-    renderGroupTitle: null,
+    renderGroupInfo: null,
     renderContacts: null,
     renderActions: null,
     locale: 'en',
@@ -151,9 +138,7 @@ MatrixCreateGroupChat.defaultProps = {
 MatrixCreateGroupChat.propTypes = {
     style: PropTypes.object,
     trans: PropTypes.object,
-    render: PropTypes.func,
-    renderUploadRoomImage: PropTypes.func,
-    renderGroupTitle: PropTypes.func,
+    renderGroupInfo: PropTypes.func,
     renderContacts: PropTypes.func,
     renderActions: PropTypes.func,
     locale: PropTypes.string,

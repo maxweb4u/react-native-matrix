@@ -86,36 +86,28 @@ class MatrixEditGroupChat extends Component {
         }
     }
 
-    renderUploadRoomImage = () => {
-        const { imageURI } = this.state;
-        if (this.props.renderUploadRoomImage) {
-            return this.props.renderUploadRoomImage(imageURI, this.uploadImage.bind(this));
+    renderGroupInfo = () => {
+        const { title, imageURI } = this.state;
+        if (this.props.renderGroupInfo) {
+            return this.props.renderGroupInfo(title, imageURI, this.changeTitle.bind(this), this.uploadImage.bind(this));
         }
         return (
-            <TouchableOpacity style={styles.containerImage} onPress={this.uploadImage.bind(this)}>
-                <Image source={imageURI || require('./assets/nophoto-group.png')} style={styles.groupPhoto} />
-                <Text>{trans.t('editGroupChat', 'changeGroupImage')}</Text>
-            </TouchableOpacity>
-        );
-    }
-
-    renderGroupTitle = () => {
-        const { title } = this.state;
-        if (this.props.renderGroupTitle) {
-            return this.props.renderGroupTitle(title, this.changeTitle.bind(this));
-        }
-        return (
-            <TextInput
-                style={styles.titleInput}
-                autoCapitalize="none"
-                autoCorrect={false}
-                underlineColorAndroid="transparent"
-                placeholder={trans.t('editGroupChat', 'inputPlaceholder')}
-                onChangeText={val => this.changeTitle(val)}
-                value={title}
-                returnKeyType="done"
-                {...Utils.testProps('inputChatEditTitle')}
-            />
+            <View>
+                <TouchableOpacity style={styles.containerImage} onPress={this.uploadImage.bind(this)}>
+                    <Image source={imageURI || require('./assets/nophoto-group.png')} style={styles.groupPhoto} />
+                    <Text>{trans.t('editGroupChat', 'changeGroupImage')}</Text>
+                </TouchableOpacity>
+                <TextInput
+                    style={styles.titleInput}
+                    autoCapitalize="none"
+                    autoCorrect={false}
+                    underlineColorAndroid="transparent"
+                    placeholder={trans.t('editGroupChat', 'inputPlaceholder')}
+                    onChangeText={val => this.changeTitle(val)}
+                    value={title}
+                    returnKeyType="done"
+                />
+            </View>
         );
     }
 
@@ -171,14 +163,15 @@ class MatrixEditGroupChat extends Component {
 
     render() {
         if (this.props.render) {
-            return this.props.render(this.renderUploadRoomImage.bind(this), this.renderGroupTitle.bind(this), this.renderContacts.bind(this), this.renderExitRoom.bind(this), this.renderActions.bind(this));
+            return this.props.render(this.renderGroupInfo.bind(this), this.renderContacts.bind(this), this.renderExitRoom.bind(this), this.renderActions.bind(this));
         }
         return (
             <View style={this.props.style}>
-                {this.renderUploadRoomImage()}
-                {this.renderGroupTitle()}
-                {this.renderMembers()}
-                {this.renderExitRoom()}
+                <View style={this.props.styleContent}>
+                    {this.renderGroupInfo()}
+                    {this.renderMembers()}
+                    {this.renderExitRoom()}
+                </View>
                 {this.renderActions()}
                 {this.renderContactsContainer()}
             </View>
@@ -188,10 +181,10 @@ class MatrixEditGroupChat extends Component {
 
 MatrixEditGroupChat.defaultProps = {
     style: { flex: 1, position: 'relative' },
+    styleContent: {},
     trans: null,
     render: null,
-    renderUploadRoomImage: null,
-    renderGroupTitle: null,
+    renderGroupInfo: null,
     renderContactsContainer: null,
     renderActions: null,
     renderExitRoom: null,
@@ -203,10 +196,10 @@ MatrixEditGroupChat.defaultProps = {
 
 MatrixEditGroupChat.propTypes = {
     style: PropTypes.object,
+    styleContent: PropTypes.object,
     trans: PropTypes.object,
     render: PropTypes.func,
-    renderUploadRoomImage: PropTypes.func,
-    renderGroupTitle: PropTypes.func,
+    renderGroupInfo: PropTypes.func,
     renderContactsContainer: PropTypes.func,
     renderActions: PropTypes.func,
     renderExitRoom: PropTypes.func,

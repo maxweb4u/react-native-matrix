@@ -127,11 +127,21 @@ class MatrixChats extends Component {
         );
     }
 
+    renderEmptyList = () => {
+        if (this.props.renderEmptyList) {
+            return this.props.renderEmptyList();
+        }
+        return <View style={this.props.style} />;
+    }
+
     keyExtractor = (room, index) => index.toString();
 
     render() {
         const items = Object.values(this.rooms);
         items.sort((room1, room2) => room1.lastActiveEventTimestamp < room2.lastActiveEventTimestamp || room2.isInvite);
+        if (!items.length) {
+            this.renderEmptyList();
+        }
         return (
             <View style={this.props.style}>
                 {this.renderSearch()}
@@ -152,6 +162,7 @@ MatrixChats.defaultProps = {
     onLoaded: () => { },
     renderItem: null,
     renderSearch: null,
+    renderEmptyList: null,
     shouldBeRefreshed: '',
     isShown: () => true,
 };
@@ -162,6 +173,7 @@ MatrixChats.propTypes = {
     onLoaded: PropTypes.func,
     renderItem: PropTypes.func,
     renderSearch: PropTypes.func,
+    renderEmptyList: PropTypes.func,
     shouldBeRefreshed: PropTypes.string,
     isShown: PropTypes.func,
 };

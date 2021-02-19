@@ -165,8 +165,8 @@ class Event extends PureComponent {
         return (
             <View style={[styles.containerNotMyEvent, this.getPropsStyle('containerNotMyEvent')]}>
                 {this.props.showNotMyAvatar ? this.renderMessageAvatar() : null}
-                {this.renderNotMyMessageContent()}
                 {this.renderMessageActions()}
+                {this.renderNotMyMessageContent()}
             </View>
         );
     }

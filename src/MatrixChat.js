@@ -215,6 +215,7 @@ class MatrixChat extends Component {
             Animated.timing(this.state.messagesContainerHeight, {
                 toValue: newHeight,
                 duration: 200,
+                useNativeDriver: false,
             }).start(() => {
                 this.scrollToBottom();
             });

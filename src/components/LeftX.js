@@ -31,10 +31,12 @@ class LeftX extends PureComponent {
             Animated.timing(opacityValue, {
                 toValue: 1,
                 duration,
+                useNativeDriver: false,
             }),
             Animated.timing(leftValue, {
                 toValue,
                 duration,
+                useNativeDriver: false,
             }),
         ]).start(() => {
             if (callback) {
@@ -51,10 +53,12 @@ class LeftX extends PureComponent {
             Animated.timing(opacityValue, {
                 toValue: 0,
                 duration,
+                useNativeDriver: false,
             }),
             Animated.timing(leftValue, {
                 toValue: fromValue,
                 duration,
+                useNativeDriver: false,
             }),
         ]).start(() => {
             if (callback) {
