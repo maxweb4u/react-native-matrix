@@ -1,0 +1,35 @@
+{
+  "compilerOptions": {
+    "target": "es2020",
+    "lib": ["es2021", "dom"],
+    "module": "es2020",
+    "moduleResolution": "bundler",
+    "jsx": "react-jsx",
+    "types": ["jest", "node"],
+
+    "strict": true,
+    "noUncheckedIndexedAccess": true,
+    "noImplicitOverride": true,
+    "noFallthroughCasesInSwitch": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "exactOptionalPropertyTypes": false,
+
+    "allowSyntheticDefaultImports": true,
+    "esModuleInterop": true,
+    "forceConsistentCasingInFileNames": true,
+    "isolatedModules": true,
+    "resolveJsonModule": true,
+    "skipLibCheck": true,
+    "verbatimModuleSyntax": false,
+
+    // No `baseUrl`: TypeScript 6 deprecates it and 7 removes it outright.
+    // Without one, `paths` resolve relative to this file, which is what the
+    // single mapping below already assumed.
+    "paths": {
+      "react-native-matrix": ["./src/index.ts"]
+    }
+  },
+  "include": ["src", "jest.setup.ts", "eslint.config.mjs"],
+  "exclude": ["node_modules", "lib", "example"]
+}

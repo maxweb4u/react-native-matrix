@@ -1,8 +1,37 @@
 {
   "name": "react-native-matrix",
-  "version": "0.0.12",
-  "description": "React native Components for matrix chat. This is beta version.",
-  "main": "src/index.js",
+  "version": "1.0.0",
+  "description": "Typed React Native components and hooks for Matrix chat. Zero runtime dependencies.",
+  "main": "lib/commonjs/index.js",
+  "module": "lib/module/index.js",
+  "types": "lib/typescript/index.d.ts",
+  "react-native": "src/index.ts",
+  "source": "src/index.ts",
+  "exports": {
+    ".": {
+      "types": "./lib/typescript/index.d.ts",
+      "react-native": "./src/index.ts",
+      "import": "./lib/module/index.js",
+      "require": "./lib/commonjs/index.js"
+    },
+    "./crypto": {
+      "types": "./lib/typescript/crypto/index.d.ts",
+      "react-native": "./src/crypto/index.ts",
+      "import": "./lib/module/crypto/index.js",
+      "require": "./lib/commonjs/crypto/index.js"
+    },
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "src",
+    "lib",
+    "!**/__tests__",
+    "!**/testing",
+    "!**/*.test.ts",
+    "!**/*.test.tsx",
+    "!**/*.spec.ts"
+  ],
+  "sideEffects": false,
   "repository": {
     "type": "git",
     "url": "git+https://github.com/maxweb4u/react-native-matrix.git"
@@ -12,11 +41,11 @@
     "ios",
     "react-native",
     "react",
-    "react-component",
+    "typescript",
     "messenger",
-    "message",
     "chat",
-    "matrix"
+    "matrix",
+    "e2ee"
   ],
   "author": "Max Gornostayev",
   "license": "MIT",
@@ -24,59 +53,59 @@
     "url": "https://github.com/maxweb4u/react-native-matrix/issues"
   },
   "homepage": "https://github.com/maxweb4u/react-native-matrix#readme",
+  "engines": {
+    "node": ">=22.13.0"
+  },
   "scripts": {
-    "fix": "../.bin/eslint -c .eslintrc --ext .js src --fix",
-    "postinstall": "node ./postinstall.js",
-    "npmupload": "npm publish --access public"
-  },
-  "devDependencies": {
-    "@babel/core": "^7.6.2",
-    "@babel/plugin-proposal-class-properties": "^7.6.2",
-    "@babel/plugin-proposal-decorators": "^7.4.4",
-    "@babel/runtime": "^7.5.5",
-    "@react-native-community/eslint-config": "^0.0.5",
-    "@types/react": "^16.8.6",
-    "@types/react-native": "^0.60.6",
-    "babel-eslint": "^10.0.1",
-    "babel-jest": "^24.9.0",
-    "babel-plugin-transform-flow-strip-types": "^6.22.0",
-    "eslint": "^6.4.0",
-    "eslint-config-airbnb": "^17.1.0",
-    "eslint-plugin-import": "^2.14.0",
-    "eslint-plugin-jsx-a11y": "^6.1.1",
-    "eslint-plugin-react": "^7.11.1",
-    "eslint-plugin-react-native": "^3.2.1",
-    "react": "16.8.6",
-    "react-native": "0.60.6"
-  },
-  "dependencies": {
-    "axios": "^0.19.0",
-    "base64-arraybuffer": "^0.2.0",
-    "buffer": "^5.6.0",
-    "events": "^3.1.0",
-    "fbemitter": "^2.1.1",
-    "get-uid": "^1.0.1",
-    "matrix-js-sdk": "^7.0.0",
-    "moment": "^2.24.0",
-    "prop-types": "^15.7.2",
-    "react-native-action-sheet": "^2.2.0",
-    "react-native-audio-recorder-player": "^2.4.4-rc.1",
-    "react-native-device-info": "^5.2.1",
-    "react-native-document-picker": "^3.2.4",
-    "react-native-emoji-selector": "^0.1.9",
-    "react-native-image-base64": "^0.1.3",
-    "react-native-image-picker": "^1.0.1",
-    "react-native-image-resizer": "^1.0.1",
-    "react-native-share": "^2.0.0",
-    "react-native-sound-recorder": "^1.3.3",
-    "rn-fetch-blob": "^0.10.16",
-    "rxjs": "^6.5.4",
-    "unorm": "^1.6.0",
-    "url": "^0.11.0"
+    "build": "npm run build:cjs && npm run build:esm && npm run build:types",
+    "build:cjs": "tsc -p tsconfig.build.json --module commonjs --outDir lib/commonjs",
+    "build:esm": "tsc -p tsconfig.build.json --module es2020 --outDir lib/module",
+    "build:types": "tsc -p tsconfig.build.json --declaration --emitDeclarationOnly --outDir lib/typescript",
+    "clean": "rm -rf lib coverage",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
+    "test": "jest --selectProjects unit",
+    "test:watch": "jest --selectProjects unit --watch",
+    "test:coverage": "jest --selectProjects unit --coverage",
+    "test:integration": "jest --selectProjects integration --runInBand",
+    "synapse:up": "./scripts/synapse.sh up",
+    "synapse:down": "./scripts/synapse.sh down",
+    "synapse:reset": "./scripts/synapse.sh reset",
+    "verify": "npm run typecheck && npm run lint && npm run test && npm run check:docs",
+    "prepack": "npm run clean && npm run build",
+    "check:docs": "node scripts/check-memory-bank.mjs"
   },
   "peerDependencies": {
-    "prop-types": "*",
-    "react": "*",
-    "react-native": "*"
+    "matrix-js-sdk": ">=42.0.0",
+    "react": ">=18.2.0",
+    "react-native": ">=0.74.0"
+  },
+  "devDependencies": {
+    "@babel/core": "^7.29.7",
+    "@babel/plugin-transform-dynamic-import": "^7.29.7",
+    "@babel/plugin-transform-export-namespace-from": "^7.29.7",
+    "@eslint/js": "^10.0.1",
+    "@react-native/babel-preset": "^0.87.0",
+    "@react-native/jest-preset": "^0.87.1",
+    "@testing-library/react-native": "^14.0.1",
+    "@types/jest": "^30.0.0",
+    "@types/node": "^22.20.1",
+    "@types/react": "^19.2.0",
+    "@typescript-eslint/eslint-plugin": "^8.18.0",
+    "@typescript-eslint/parser": "^8.18.0",
+    "eslint": "^10.9.1",
+    "eslint-plugin-react-hooks": "^7.1.1",
+    "jest": "^30.5.0",
+    "matrix-js-sdk": "^42.2.0",
+    "react": "19.2.8",
+    "react-native": "0.87.1",
+    "test-renderer": "^1.2.0",
+    "typescript": "^6.0.3"
+  },
+  "overrides": {
+    "babel-jest": "^30.5.0",
+    "jest-environment-node": "^30.5.0",
+    "@jest/create-cache-key-function": "^30.5.0"
   }
 }
