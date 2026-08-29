@@ -13,9 +13,10 @@ canonical_for:
 
 # Backlog
 
-Everything still open after 0.1.0, and what waits behind it. The version is
-below 1.0.0 because these items are open; closing them is what 1.0.0 means
-here.
+Everything still open, and what waits behind it. The version in the repository
+is 0.1.0, but npm still serves 0.0.12 and there is no tag, so none of this has
+reached a consumer yet. The version is below 1.0.0 because these items are
+open; closing them is what 1.0.0 means here.
 
 Two device passes produced most of this: the first on React Native 0.76 with a
 physical Android device, the second after the upgrade to React Native 0.87 with
@@ -44,16 +45,26 @@ Native 0.87 upgrade.
 | ID | Item | Outcome |
 |-|-|-|
 | BL-10 | Lint `example/` | The app now has its own flat `eslint.config.js` on ESLint 9 and lints clean. Without one ESLint climbed to the root config and reported every file as ignored — see [engineering/gotchas.md](engineering/gotchas.md#packaging) |
-| BL-15 | Consider `matrix-js-sdk` 42 | Done. 157 unit and 26 integration tests pass against 42.2.0, and `example/` bundles for both platforms. It needs `@babel/plugin-transform-export-namespace-from` in every consuming app; the peer floor is now `>=42.0.0` |
+| BL-15 | Consider `matrix-js-sdk` 42 | Done. 160 unit and 26 integration tests pass against 42.2.0, and `example/` bundles for both platforms. It needs `@babel/plugin-transform-export-namespace-from` in every consuming app; the peer floor is now `>=42.0.0` |
 | BL-17 | Verify `matrix-js-sdk` 42 under Hermes | Done on an iOS 26 simulator: login, first sync, room list, timeline (day separator, `edited`, redaction tombstone, reply quote), and a send that appeared once and came back through sync — the list re-sorted and the unread count dropped, so the round-trip is the homeserver's, not local echo. Not yet run on a physical device |
-| BL-22 | Jest 30 running a Jest 29 transformer | Closed with an `overrides` block pinning `babel-jest`, `jest-environment-node` and `@jest/create-cache-key-function` to 30.5.0. The React Native preset still asks for `^29.7.0`; the override is what removes the skew. 157 unit and 26 integration tests pass on the matched stack |
+| BL-22 | Jest 30 running a Jest 29 transformer | Closed with an `overrides` block pinning `babel-jest`, `jest-environment-node` and `@jest/create-cache-key-function` to 30.5.0. The React Native preset still asks for `^29.7.0`; the override is what removes the skew. 160 unit and 26 integration tests pass on the matched stack |
 | BL-23 | `normalizeText` was dead | Removed from `utils/format.ts` |
 | BL-25 | `ReadReceipt` was an orphan public type | Removed from `types/timeline.ts` before the first release of this API, so it never becomes a compatibility promise |
 | BL-26 | `summarizeReactionEvents` was exported for no one | Now internal to `timeline/reactions.ts`|
 | BL-24 | `buildReplyFallback` and `escapeHtml` were tested but never called | Both removed with their tests. Replies keep going out with `m.in_reply_to` and no plain-text fallback, which is now stated in [domain/timeline.md](domain/timeline.md#replies) rather than left implicit |
 | BL-27 | `DaySeparator` promised "Today" / "Yesterday" and rendered a bare date | Wired up. The two relative words are new keys on the public `labels` object, so they translate with everything else; the absolute date stays with `Intl` and the locale. `isYesterday` is finally called by something. Six tests cover it, including the month boundary and the late-evening case the 0.0.x elapsed-hours bug got wrong |
 
+## Closed by the 0.1.0 version work
+
+| ID | Item | Outcome |
+|-|-|-|
+| BL-12 | The documentation described FT-001 as unfinished | [product/roadmap.md](product/roadmap.md) listed stages 6 to 11 as `planned` while all were built; they now read `done`, and stage 11 reads `in_progress` because only the npm release is left. `delivery_status: in_progress` on [feature.md](features/FT-001-typescript-rewrite/feature.md) and in [features/README.md](features/README.md) stays, and is no longer a contradiction: the 0.1.0 release is in the feature's scope and has not happened. Both now say so in one line, so it is not re-raised |
+
 ## Release blockers
+
+Only BL-1 is inside the published package. BL-5 and BL-6 live in `example/`,
+which the `files` field keeps out of the tarball, so they block the example
+being a reference worth copying rather than the publish itself.
 
 | ID | Item | Evidence |
 |-|-|-|
@@ -67,8 +78,8 @@ Native 0.87 upgrade.
 |-|-|-|
 | BL-7 | Add `src/timeline/__tests__/roomSummary.test.ts`. The file is at **0%** unit coverage, and it holds `sortRoomSummaries` — the boolean-comparator defect from the audit. [The implementation plan](features/FT-001-typescript-rewrite/implementation-plan.md) claims step 7 is verified by unit tests and [feature.md](features/FT-001-typescript-rewrite/feature.md) promises a regression test per audit defect; for this one neither exists, in unit or integration | Coverage report; no such test file |
 | BL-8 | Close the environment-parity hole. `jest.setup.ts` installs a `crypto` global Hermes lacks, and Node's `URL` is spec-compliant where React Native's was not. Both release blockers of the first device pass lived in that gap. Either assert the host contract in a test or make a device smoke run part of [the release checklist](ops/release.md) | `jest.setup.ts` |
-| BL-9 | Set `coverageThreshold` in `jest.config.js`. Unit coverage is 54.4% statements / 50.1% branches / 48.4% functions with nothing to stop it falling further | — |
-| BL-11 | Decide what else deserves unit tests. Zero-coverage modules beyond BL-7: `react/useRooms.ts`, `react/useRoom.ts`, `react/useReceipts.ts`, `react/useMatrix.ts`, `crypto/useRoomEncryption.ts`, `components/RoomList.tsx`, `components/ChatScreen.tsx`, `components/TypingIndicator.tsx`. Thin: `core/errors.ts` at 29%, `utils/format.ts` at 48%. `core/MatrixSession.ts` sits at 0.86% and is covered by the integration suite instead, which is a deliberate split worth stating in [the testing policy](engineering/testing-policy.md) rather than leaving to be rediscovered | Coverage report |
+| BL-9 | Set `coverageThreshold` in `jest.config.js`. Unit coverage is 55.0% statements / 51.2% branches / 49.0% functions with nothing to stop it falling further | — |
+| BL-11 | Decide what else deserves unit tests. Zero-coverage modules beyond BL-7: `react/useRooms.ts`, `react/useRoom.ts`, `react/useReceipts.ts`, `react/useMatrix.ts`, `crypto/useRoomEncryption.ts`, `components/RoomList.tsx`, `components/ChatScreen.tsx`, `components/TypingIndicator.tsx`. Thin: `core/errors.ts` at 29%, `utils/format.ts` at 57%. `core/MatrixSession.ts` sits at 0.86% and is covered by the integration suite instead, which is a deliberate split worth stating in [the testing policy](engineering/testing-policy.md) rather than leaving to be rediscovered | Coverage report |
 | BL-14 | Test against the declared floor, or raise it. `peerDependencies` still promises React 18.2+ and React Native 0.74+, but everything is built and tested against React 19.2 and 0.87 only, and the components are typed against `@types/react` 19. The `matrix-js-sdk` half of this is closed — its floor was raised to the tested 42 — but React and React Native need either a floor job or a narrower range | `package.json` |
 
 ## Toolchain holds
@@ -82,12 +93,6 @@ Re-check when the named blocker clears.
 | BL-19 | Babel stays on 7; 8.0.1 is out | Installing `@babel/core@8` does not move the toolchain: every consumer of Babel here — the React Native preset, the jest preset, Metro, `babel-jest` — depends on `@babel/core@^7`, so npm nests a 7 under each and the 8 at the top is loaded by nothing. Measured: 20 copies of `@babel/core` in the tree with 8 declared, 1 with 7. Forcing it with `overrides` is not an option either: `@react-native/babel-preset` depends on `@babel/plugin-syntax-dynamic-import`, which **has no 8.x release** — Babel 8 dropped it because the syntax is standard now. This moves when React Native's preset moves |
 | BL-20 | `example/` stays on ESLint 9; 10.9.1 is out | Blocked behind BL-19, not behind the eslintrc format — `FlatCompat` handles that. Measured on ESLint 10: `TypeError: scopeManager.addGlobals is not a function`, because `@babel/eslint-parser` 7 (pulled in by `@react-native/eslint-config`) returns a scope manager from `eslint-scope` 5, which ESLint 10 no longer accepts. `@babel/eslint-parser` 8 supports ESLint 10, but requires `@babel/core@^8`. The library itself is on ESLint 10 |
 | BL-21 | `@types/node` tracks 22, not 26 | Not a hold but a decision, kept here so it is not re-raised: `engines.node` is `>=22.13.0`, and types newer than the supported floor would typecheck against APIs absent on it. This moves only if `engines` moves |
-
-## Documentation consistency
-
-| ID | Item |
-|-|-|
-| BL-12 | [product/roadmap.md](product/roadmap.md) still lists stages 6 to 11 as `planned`. All are built, and the roadmap is `canonical_for: delivery_order`, so it currently contradicts the implementation plan |
 
 ## After 0.1.0
 

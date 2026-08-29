@@ -13,6 +13,12 @@ delivery_status: in_progress
 
 Delivery steps and their verification: [implementation-plan.md](implementation-plan.md).
 
+## Delivery
+
+All eleven stages of [the roadmap](../../product/roadmap.md) are built, verified, and merged to `master`. `delivery_status` stays `in_progress` for one reason: the 0.1.0 release is in scope above, and it has not happened. The version in the repository is `0.1.0`, but there is no tag and npm still serves `0.0.12`. This moves to `done` when [../../ops/release.md](../../ops/release.md) has been worked through, not before.
+
+Every acceptance criterion is met except SC-9, which cannot be exercised on a device: no React Native engine available today has WebAssembly. It is verified against Node only, and tracked as BL-13 in [../../backlog.md](../../backlog.md).
+
 ## Problem
 
 Version 0.0.12, published in 2022, cannot be installed into a current React Native project and cannot serve a modern Matrix homeserver.
