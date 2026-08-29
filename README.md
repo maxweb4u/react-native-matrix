@@ -6,13 +6,15 @@ Typed React Native components and hooks for [Matrix](https://matrix.org) chat.
 `node_modules`. Camera, file picking, audio, share, and clipboard arrive as
 adapters you implement with whatever your app already uses.
 
-> **Status: 1.0.0 release candidate.** Everything below is implemented, with
-> 157 unit tests and 26 integration tests against a real Synapse, and the
-> example app has been run on a physical Android device and an iOS simulator on
-> React Native 0.87 with React 19. What remains before the tag is in
-> [`memory_bank/backlog.md`](memory_bank/backlog.md). The published 0.0.12
-> release is unrelated to this API and no longer installable; see
-> [Migrating from 0.0.x](#migrating-from-00x).
+> **Status: 0.1.0.** Everything below is implemented, with 160 unit tests and
+> 26 integration tests against a real Synapse, and the example app has been run
+> on a physical Android device and an iOS simulator on React Native 0.87 with
+> React 19. The version is below 1.0.0 because no application other than
+> `example/` has used this API yet; what is still open is in
+> [`memory_bank/backlog.md`](memory_bank/backlog.md). Note that under semantic
+> versioning a `0.x` minor may break the API, so `^0.1.0` allows patch releases
+> only. The published 0.0.12 release is unrelated to this API and no longer
+> installable; see [Migrating from 0.0.x](#migrating-from-00x).
 
 ## Requirements
 
@@ -336,9 +338,9 @@ await session.sendText(roomId, 'hello');
 
 ## Migrating from 0.0.x
 
-1.0.0 is a complete rewrite and shares no API with the 0.0.x line.
+0.1.0 is a complete rewrite and shares no API with the 0.0.x line.
 
-| 0.0.x | 1.0.0 |
+| 0.0.x | 0.1.0 |
 |-|-|
 | `Matrix.getInstance()` singleton | `new MatrixSession(...)` via `<MatrixProvider>` |
 | `<MatrixChats />` | `useRooms()` plus your own list |
@@ -364,7 +366,7 @@ npm run synapse:up     # local homeserver in Docker, with seeded accounts
 cd example && npm install && npm run ios   # or: npm run android
 ```
 
-## Not in 1.0.0
+## Not in 0.1.0
 
 Deliberately out of scope, with the seam left in place:
 

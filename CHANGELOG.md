@@ -5,10 +5,18 @@ All notable changes to this project are documented here. The format follows
 [semantic versioning](https://semver.org) against the public API defined in
 `memory_bank/engineering/architecture.md`.
 
-## [Unreleased] — 1.0.0
+## [0.1.0] — 2026-08-29
 
 Complete rewrite. Shares no API with the 0.0.x line; see the migration table in
 `README.md`.
+
+Released below 1.0.0 deliberately. The rewrite is finished and verified, but
+the public API has not yet been exercised by an application other than
+`example/`, and the items in `memory_bank/backlog.md` are still open. Under
+semantic versioning a `0.x` minor may break the API, so a breaking change here
+arrives as `0.2.0` rather than as `2.0.0`. Pin the minor if that matters:
+`^0.1.0` allows patches only. 1.0.0 is the same API once it has been used in
+anger.
 
 ### Added
 
@@ -76,7 +84,7 @@ Complete rewrite. Shares no API with the 0.0.x line; see the migration table in
 - **Unread counts come from the SDK's push rules** instead of being recounted
   locally.
 
-- **Memory bank** (`memory_bank/`): 48 governed documents covering product
+- **Memory bank** (`memory_bank/`): 49 governed documents covering product
   context, domain rules, engineering policy, ops, and five ADRs, with an
   automated index audit wired into `npm run verify`.
 
@@ -158,8 +166,8 @@ Found by the integration suite and the example app, before release:
 - The sixteen PNG icons under `src/assets/`. The default components draw no
   bundled images, so they were dead weight in every consumer's tarball.
 - The optional peer dependency on `@matrix-org/matrix-sdk-crypto-wasm`. It was
-  redundant and wrong: `matrix-js-sdk` 37 depends on the package directly, and
-  on a different major than this declaration required. See the status note in
+  redundant and wrong: `matrix-js-sdk` depends on the package directly, and on
+  a different major than this declaration required. See the status note in
   ADR-003.
 
 ### Known requirements

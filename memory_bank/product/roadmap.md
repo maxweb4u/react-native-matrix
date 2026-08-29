@@ -11,7 +11,7 @@ canonical_for:
 
 # Roadmap
 
-## 1.0.0 — TypeScript rewrite
+## 0.1.0 — TypeScript rewrite
 
 Tracked as [FT-001](../features/FT-001-typescript-rewrite/feature.md).
 
@@ -29,7 +29,7 @@ Tracked as [FT-001](../features/FT-001-typescript-rewrite/feature.md).
 | 10 | `example/` application | planned |
 | 11 | Documentation, changelog, npm release | planned |
 
-## After 1.0.0
+## After 0.1.0
 
 - Threads as a first-class UI, not just a timeline relation.
 - Local persistence of the sync token so cold start is not a full initial sync.

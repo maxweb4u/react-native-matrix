@@ -36,10 +36,10 @@ In scope:
 - New capability: E2EE, edits, redactions, full reactions, typing, read receipts, video, location, thread relations.
 - Unit suite plus an integration suite against a local Synapse.
 - `example/` application.
-- Documentation, migration guide, and the 1.0.0 release.
+- Documentation, migration guide, and the 0.1.0 release.
 
 Out of scope:
-- Backwards compatibility with the 0.0.x API. 1.0.0 is a deliberate break; a compatibility shim would preserve the architecture that caused the defects.
+- Backwards compatibility with the 0.0.x API. 0.1.0 is a deliberate break; a compatibility shim would preserve the architecture that caused the defects.
 - Login, registration, and SSO UI, which stay with the host application.
 - Thread and space UI, key backup UI, VoIP. See [../../product/roadmap.md](../../product/roadmap.md).
 

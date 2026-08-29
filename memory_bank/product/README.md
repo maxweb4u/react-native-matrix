@@ -11,4 +11,4 @@ status: active
 
 - [Context](context.md) — who uses the library, which problem it solves, and what it deliberately does not do.
 - [Vision](vision.md) — the shape the library is aiming for and the principles behind it.
-- [Roadmap](roadmap.md) — ordered delivery plan for the 1.0.0 rewrite and beyond.
+- [Roadmap](roadmap.md) — ordered delivery plan for the TypeScript rewrite and beyond.

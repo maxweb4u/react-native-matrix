@@ -67,7 +67,7 @@ Any key is supported. 0.0.x hard-coded a single `liked` key, kept its state in c
 
 ## Threads
 
-An `m.thread` relation is exposed as `TimelineItem.thread`, and threaded replies stay in the main timeline. A dedicated thread view is post-1.0.0 work; see [../product/roadmap.md](../product/roadmap.md).
+An `m.thread` relation is exposed as `TimelineItem.thread`, and threaded replies stay in the main timeline. A dedicated thread view is post-0.1.0 work; see [../product/roadmap.md](../product/roadmap.md).
 
 ## Ordering and local echo
 

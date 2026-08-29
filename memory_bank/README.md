@@ -34,7 +34,7 @@ audience: humans_and_agents
   Read when you need the delivery packages that track substantial changes.
 
 - [`backlog.md`](backlog.md)
-  Read when you need what is still open: the blockers holding 1.0.0, the gaps in
+  Read when you need what is still open: the release blockers, the gaps in
   the test suite, and the work parked behind the release.
 
 - [`flows/README.md`](flows/README.md)

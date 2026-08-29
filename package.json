@@ -1,6 +1,6 @@
 {
   "name": "react-native-matrix",
-  "version": "1.0.0",
+  "version": "0.1.0",
   "description": "Typed React Native components and hooks for Matrix chat. Zero runtime dependencies.",
   "main": "lib/commonjs/index.js",
   "module": "lib/module/index.js",
