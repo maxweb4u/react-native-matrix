@@ -21,7 +21,13 @@ const config = {
     // resolve and takes the whole bundle with it.
 
     extraNodeModules: {
-      'react-native-matrix': path.resolve(root, 'src'),
+      // The package root, not `<root>/src`: Metro resolves the root through
+      // the package's own `exports`, which publishes `.` and `./crypto` and
+      // no `./src` subpath. Pointing at `src` made every bundle print three
+      // "not listed in the exports" warnings and fall back to file-based
+      // resolution. The `react-native` condition in `exports` maps both
+      // entry points back to source, so the app still runs from source.
+      'react-native-matrix': root,
       react: path.resolve(__dirname, 'node_modules/react'),
       'react-native': path.resolve(__dirname, 'node_modules/react-native'),
       'matrix-js-sdk': path.resolve(__dirname, 'node_modules/matrix-js-sdk'),

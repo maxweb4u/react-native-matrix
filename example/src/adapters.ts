@@ -63,8 +63,11 @@ const share: ShareAdapter = {
 const imagePicker: ImagePickerAdapter = {
   async pickFromLibrary() {
     return {
-      // `sendFile` reads this with `fetch`, which handles data URIs as well as
-      // the `file://` and `content://` URIs a real picker returns.
+      // `sendFile` decodes data URIs itself. It used to `fetch` them, which
+      // works on iOS and fails on Android with "Network request failed"
+      // before any request leaves the device — so this stand-in uploaded on
+      // one platform only. A real picker returns `file://` or `content://`,
+      // which still go through `fetch`.
       uri: `data:image/png;base64,${SAMPLE_PNG_BASE64}`,
       name: 'sample.png',
       mimeType: 'image/png',

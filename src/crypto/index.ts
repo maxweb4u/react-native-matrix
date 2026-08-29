@@ -6,7 +6,7 @@
  * messages. This module holds what a host needs *around* encryption: checking
  * the environment before offering the feature, turning a room on, and reaching
  * the SDK's crypto API to build verification or key-backup UI, which stay
- * host-owned for 0.1.0.
+ * host-owned before 1.0.0.
  *
  * Keeping it behind a separate entry point means an application with no
  * encrypted rooms never pulls it into its bundle.
@@ -15,7 +15,12 @@
  * memory_bank/adr/ADR-003-optional-e2ee-backend.md.
  */
 
-export { assertCryptoSupport, isCryptoSupported } from './assertCryptoSupport';
+export {
+  assertCryptoSupport,
+  cryptoUnavailableReason,
+  engineCryptoLimitation,
+  isCryptoSupported,
+} from './assertCryptoSupport';
 export { type CryptoApi, getCryptoApi } from './cryptoApi';
 export { enableRoomEncryption } from './roomEncryption';
 export { useRoomEncryption, type UseRoomEncryptionResult } from './useRoomEncryption';

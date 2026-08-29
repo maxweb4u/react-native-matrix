@@ -43,8 +43,52 @@ export interface CryptoOptions {
   useIndexedDB?: boolean;
 }
 
+/**
+ * Key/value storage the session persists its sync state to.
+ *
+ * Deliberately the smallest interface that does the job, because the library
+ * has no runtime dependencies and cannot pick a storage package for the host.
+ * `@react-native-async-storage/async-storage` satisfies it as-is; MMKV and
+ * `expo-secure-store` need a three-line wrapper.
+ *
+ * ```ts
+ * import AsyncStorage from '@react-native-async-storage/async-storage';
+ * new MatrixSession({ credentials, syncStorage: AsyncStorage });
+ * ```
+ */
+export interface SyncStorage {
+  getItem(key: string): Promise<string | null>;
+  setItem(key: string, value: string): Promise<void>;
+  removeItem(key: string): Promise<void>;
+}
+
+export interface SyncPersistenceOptions {
+  /** Storage key. Defaults to `react-native-matrix:sync`. */
+  key?: string;
+  /**
+   * Minimum interval between writes, in milliseconds. Defaults to 300000.
+   *
+   * The whole accumulated sync is serialised on each write, so lowering this
+   * trades a longer pause on the JS thread for less to catch up on after a
+   * relaunch.
+   */
+  writeDelayMs?: number;
+}
+
 export interface SessionOptions {
   credentials: SessionCredentials;
+  /**
+   * Persists the sync token and accumulated room state, so a relaunch resumes
+   * from where the last run stopped instead of running a full initial sync.
+   *
+   * Omit it and the session keeps everything in memory, which is the default:
+   * correct, but every cold start pays for a full `/sync`.
+   *
+   * See memory_bank/domain/sync.md#persistence.
+   */
+  syncStorage?: SyncStorage;
+  /** Tuning for `syncStorage`. Ignored when no storage is supplied. */
+  syncPersistence?: SyncPersistenceOptions;
   /** Number of events fetched per room on the first sync. Defaults to 20. */
   initialSyncLimit?: number;
   /** Long-poll timeout in milliseconds passed to `/sync`. Defaults to 30000. */

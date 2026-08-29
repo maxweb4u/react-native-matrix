@@ -29,9 +29,13 @@ const PIXEL_PNG_BASE64 =
 const PNG_MAGIC = [0x89, 0x50, 0x4e, 0x47];
 
 const attachment: LocalFile = {
-  // `sendFile` reads the URI with `fetch`, which handles `data:` here and
-  // `file://` / `content://` / `ph://` on a device. No file-system dependency
-  // is involved, which is what lets the library ship without one.
+  // `sendFile` decodes `data:` itself and reaches for `fetch` only for the
+  // `file://` / `content://` / `ph://` a real picker returns. That split is
+  // why this case works on Android, where `fetch` rejects data URIs — and
+  // why this test could not have caught the Android failure before: Node's
+  // `fetch` reads them, so it passed either way. See src/utils/dataUri.ts.
+  // No file-system dependency is involved, which is what lets the library
+  // ship without one.
   uri: `data:image/png;base64,${PIXEL_PNG_BASE64}`,
   name: 'pixel.png',
   mimeType: 'image/png',

@@ -6,13 +6,13 @@ Typed React Native components and hooks for [Matrix](https://matrix.org) chat.
 `node_modules`. Camera, file picking, audio, share, and clipboard arrive as
 adapters you implement with whatever your app already uses.
 
-> **Status: 0.1.0.** Everything below is implemented, with 160 unit tests and
-> 26 integration tests against a real Synapse, and the example app has been run
+> **Status: 0.2.0.** Everything below is implemented, with 225 unit tests and
+> 30 integration tests against a real Synapse, and the example app has been run
 > on a physical Android device and an iOS simulator on React Native 0.87 with
 > React 19. The version is below 1.0.0 because no application other than
 > `example/` has used this API yet; what is still open is in
 > [`memory_bank/backlog.md`](memory_bank/backlog.md). Note that under semantic
-> versioning a `0.x` minor may break the API, so `^0.1.0` allows patch releases
+> versioning a `0.x` minor may break the API, so `^0.2.0` allows patch releases
 > only. The published 0.0.12 release is unrelated to this API and no longer
 > installable; see [Migrating from 0.0.x](#migrating-from-00x).
 
@@ -20,8 +20,8 @@ adapters you implement with whatever your app already uses.
 
 | | Version |
 |-|-|
-| React Native | 0.74+ (developed and verified against 0.87) |
-| React | 18.2+ (developed and verified against 19.2) |
+| React Native | 0.81+ (developed and verified against 0.87) |
+| React | 19.0+ (developed and verified against 19.2) |
 | `matrix-js-sdk` | 42+ (peer dependency, you install it) |
 | End-to-end encryption | A JavaScript engine with WebAssembly — see [End-to-end encryption](#end-to-end-encryption) |
 
@@ -79,29 +79,12 @@ Measured on React Native 0.87 with `matrix-js-sdk` 42.2.0.
 Unlike the polyfill above, this one fails loudly and at build time, so you
 cannot ship without noticing.
 
-### Metro, on React Native below 0.81
-
-```js
-// metro.config.js
-const config = {
-  resolver: {
-    unstable_enablePackageExports: true,
-  },
-};
-```
-
-`matrix-js-sdk` imports `@matrix-org/matrix-sdk-crypto-wasm`, which declares
-only an `exports` map and no `main`, so without package exports the bundle
-fails to resolve it — whether or not your app uses encryption. Metro enables
-package exports by default from React Native 0.81 on, so on a current version
-this setting is unnecessary.
-
 ### `URL`, on React Native below 0.87
 
 Older React Native appended a trailing slash to every URL it constructed, and
 `matrix-js-sdk` builds every request through `new URL()`, so `/filter` became
-`/filter/` and the homeserver answered `405 M_UNRECOGNIZED`. If you are below
-0.87, install `react-native-url-polyfill` and import
+`/filter/` and the homeserver answered `405 M_UNRECOGNIZED`. If you are between the
+0.81 floor and 0.87, install `react-native-url-polyfill` and import
 `react-native-url-polyfill/auto` alongside the polyfill above. React Native
 0.87 no longer needs it.
 
@@ -149,6 +132,37 @@ export function App() {
 `ChatScreen` is the conversation, the typing indicator, the composer, and the
 keyboard handling. `RoomList` is the chat list with invites pinned to the top
 and acceptable inline.
+
+## Faster cold starts
+
+By default the session keeps everything in memory, so every launch runs a full
+initial sync: the homeserver builds the last `initialSyncLimit` events of every
+room and the user waits for it. Give the session somewhere to write and it
+resumes from the saved token instead.
+
+```tsx
+import AsyncStorage from '@react-native-async-storage/async-storage';
+
+<MatrixProvider credentials={credentials} syncStorage={AsyncStorage}>
+```
+
+`syncStorage` is three methods — `getItem`, `setItem`, `removeItem`, all
+returning promises — so `AsyncStorage` fits as-is and MMKV or
+`expo-secure-store` need a three-line wrapper. The library does not depend on
+any of them; picking the storage is yours.
+
+Two things to know:
+
+- **Clear it on sign-out.** The saved sync holds room state and message bodies
+  for the account that wrote it. Call `session.clearPersistedSync()` before a
+  different user signs in on the same device.
+- **Flush before backgrounding** if you want the next launch to be cheap:
+  `session.flush()` writes immediately. The store otherwise writes at most
+  every five minutes, because each write serialises the whole accumulated
+  sync and that is a pause on the JS thread.
+
+Tune the interval with `syncPersistence={{ writeDelayMs }}`, and the storage
+key with `syncPersistence={{ key }}`.
 
 ## Building your own UI
 
@@ -214,6 +228,7 @@ content.
 | `useTimeline(roomId)` | `items`, `loadMore`, `sendText`, `sendFile`, `editText`, `deleteMessage`, `toggleReaction`, `markRead`, `retry` |
 | `useTyping(roomId)` | `typingUserIds`, `setTyping` |
 | `useReceipts(roomId)` | `readUpTo`, `readersOf` |
+| `useRoomNotifications(roomId)` | `level`, `isLoading`, `error`, `setLevel` |
 | `useAdapters()` | `has`, `require` |
 | `useMxcImage(mxcUri, options?)` | An `<Image>` source with the auth header attached |
 
@@ -250,6 +265,46 @@ Interpolated labels are functions, not templates with placeholders. A missing
 argument is a compile error rather than an `[object Object]` on screen — which
 is precisely what 0.0.x rendered in its Android action sheet.
 
+## Push notifications
+
+Delivery is yours — FCM, APNs and showing the banner are native work and this
+library ships none. Everything between your device token and the homeserver is
+here.
+
+```tsx
+// Registering. The token comes from the `pushToken` adapter.
+await session.registerPusher({
+  appId: 'com.example.app.ios',
+  gatewayUrl: 'https://push.example.org/_matrix/push/v1/notify', // Sygnal, not your homeserver
+  appDisplayName: 'Example',
+  deviceDisplayName: 'iPhone',
+});
+
+// Sign-out must do this, and must pass appId: a pusher written on an earlier
+// launch is unknown to a fresh session, and leaving it registered keeps the
+// device waking up for an account the user has left.
+await session.unregisterPusher({ appId: 'com.example.app.ios' });
+```
+
+A push carries a room ID and an event ID and no message content, so your
+background handler fetches the rest. `resolvePushEvent` needs no session,
+because a task woken by a push has none:
+
+```tsx
+const notification = await resolvePushEvent(credentials, { roomId, eventId });
+if (notification.kind === PushEventKind.Encrypted) {
+  show(notification.roomName, 'New message'); // cannot be decrypted here
+} else if (notification.kind === PushEventKind.Message) {
+  show(notification.senderDisplayName, notification.body);
+}
+```
+
+Per-room settings are `all`, `mentions` or `mute`, through
+`useRoomNotifications(roomId)` or `session.setNotificationLevel`. The mapping
+onto Matrix push rules — and why `mute` cannot be written the way
+`matrix-js-sdk` writes it — is in
+[`memory_bank/domain/push.md`](memory_bank/domain/push.md).
+
 ## Adapters
 
 Anything needing a native module is an adapter you pass to the provider. All
@@ -258,6 +313,7 @@ are optional and independent — an app that only sends text passes none.
 ```tsx
 import { launchImageLibrary } from 'react-native-image-picker';
 import Clipboard from '@react-native-clipboard/clipboard';
+import messaging from '@react-native-firebase/messaging';
 
 <MatrixProvider
   credentials={credentials}
@@ -272,6 +328,12 @@ import Clipboard from '@react-native-clipboard/clipboard';
       },
     },
     clipboard: { setString: (value) => Clipboard.setString(value) },
+    pushToken: {
+      getToken: () => messaging().getToken(),
+      // Without this the pusher is never rewritten when the token rotates,
+      // and notifications stop with no error anywhere.
+      onTokenRefresh: (listener) => messaging().onTokenRefresh(listener),
+    },
   }}
 >
 ```
@@ -338,9 +400,9 @@ await session.sendText(roomId, 'hello');
 
 ## Migrating from 0.0.x
 
-0.1.0 is a complete rewrite and shares no API with the 0.0.x line.
+0.2.0 is a complete rewrite and shares no API with the 0.0.x line.
 
-| 0.0.x | 0.1.0 |
+| 0.0.x | 0.2.0 |
 |-|-|
 | `Matrix.getInstance()` singleton | `new MatrixSession(...)` via `<MatrixProvider>` |
 | `<MatrixChats />` | `useRooms()` plus your own list |
@@ -366,7 +428,7 @@ npm run synapse:up     # local homeserver in Docker, with seeded accounts
 cd example && npm install && npm run ios   # or: npm run android
 ```
 
-## Not in 0.1.0
+## Not in 0.2.0
 
 Deliberately out of scope, with the seam left in place:
 
@@ -374,6 +436,7 @@ Deliberately out of scope, with the seam left in place:
 |-|-|
 | Login, registration, SSO UI | Your app obtains credentials; the library takes them |
 | Device verification, cross-signing, key backup UI | `getCryptoApi()` from `react-native-matrix/crypto` |
+| Receiving pushes and showing notifications | Your messaging library; the pusher, rules and payload resolution are included |
 | Thread and space UI | `TimelineItem.thread` carries the relation |
 | VoIP | — |
 

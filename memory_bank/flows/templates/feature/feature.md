@@ -1,9 +1,9 @@
 ---
 doc_kind: feature
 doc_function: canonical
-purpose: <one sentence: what this delivery unit achieves>
+purpose: '<one sentence: what this delivery unit achieves>'
 derived_from:
-  - ../../product/context.md
+  - ../../../product/context.md
 status: draft
 delivery_status: planned
 ---

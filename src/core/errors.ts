@@ -1,4 +1,5 @@
 import type { AdapterName } from '../types/adapters';
+import type { HostRequirement } from './hostSupport';
 
 /** Base class for every error this library throws deliberately. */
 export class MatrixLibError extends Error {
@@ -59,6 +60,34 @@ export class CryptoUnavailableError extends MatrixLibError {
       'CryptoUnavailableError',
     );
     this.cause = cause;
+  }
+}
+
+/**
+ * Thrown when the JavaScript engine is missing a global the library needs.
+ *
+ * This exists because the failure is otherwise illegible. Without
+ * `crypto.getRandomValues` the host used to get a bare `TypeError` from inside
+ * `matrix-js-sdk`, on its first request rather than at startup, naming neither
+ * the missing global nor the package that supplies it.
+ *
+ * No test environment reproduces it: Node provides the global natively and
+ * `jest.setup.ts` installs it where the react-native preset does not. The
+ * regression test therefore removes the global on purpose.
+ */
+export class HostRequirementError extends MatrixLibError {
+  /** The missing global, e.g. `crypto.getRandomValues`. */
+  public readonly global: string;
+
+  public constructor(requirement: HostRequirement) {
+    super(
+      `This JavaScript engine has no ${requirement.global}, which ` +
+        `react-native-matrix requires: ${requirement.reason}. ` +
+        `To fix: ${requirement.fix} ` +
+        `See https://github.com/maxweb4u/react-native-matrix#requirements`,
+      'HostRequirementError',
+    );
+    this.global = requirement.global;
   }
 }
 

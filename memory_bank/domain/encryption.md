@@ -30,7 +30,7 @@ If any is missing, `MatrixSession.start()` throws `CryptoUnavailableError` namin
 
 The Rust crypto store defaults to IndexedDB. **React Native has no IndexedDB**, and the WebAssembly module aborts rather than degrading, so `MatrixSession` selects the store by probing for an `indexedDB` global and passes `useIndexedDB: false` when there is none. `crypto.useIndexedDB` overrides the probe once a host installs a polyfill.
 
-The consequence of an in-memory store is not cosmetic and must be stated to users: room keys do not survive a relaunch. Messages received during the previous run become permanently undecryptable on this device unless the keys are re-shared or restored from key backup, which is host-owned for 0.1.0. An application that needs durable history has to supply an IndexedDB polyfill and set `crypto.useIndexedDB` to `true`.
+The consequence of an in-memory store is not cosmetic and must be stated to users: room keys do not survive a relaunch. Messages received during the previous run become permanently undecryptable on this device unless the keys are re-shared or restored from key backup, which is host-owned before 1.0.0. An application that needs durable history has to supply an IndexedDB polyfill and set `crypto.useIndexedDB` to `true`.
 
 ## Degraded states
 
@@ -47,4 +47,4 @@ The `undecryptable` kind exists so the host can render an honest state. 0.0.x fi
 
 In scope: encrypted room messages and attachments, key sharing between the user's own devices through the SDK, and reporting decryption failures.
 
-Out of scope for 0.1.0: interactive device-verification UI, key backup and recovery UI, and cross-signing management. The `CryptoApi` from the SDK is exposed so a host application can build these itself.
+Out of scope before 1.0.0: interactive device-verification UI, key backup and recovery UI, and cross-signing management. The `CryptoApi` from the SDK is exposed so a host application can build these itself.

@@ -14,11 +14,20 @@ export { MatrixSession, type SessionEvents } from './core/MatrixSession';
 export {
   AdapterMissingError,
   CryptoUnavailableError,
+  HostRequirementError,
   MatrixLibError,
   MatrixRequestError,
   RoomNotFoundError,
   SessionNotReadyError,
 } from './core/errors';
+
+// Host environment: checked automatically by `start()`, exported so an
+// application can check before it builds a session.
+export {
+  type HostRequirement,
+  isHostSupported,
+  missingHostRequirement,
+} from './core/hostSupport';
 
 // Media helpers
 export {
@@ -49,4 +58,5 @@ export {
 export { formatBytes, initials, truncateFileName } from './utils/format';
 
 // Types
+export * from './push';
 export * from './types';

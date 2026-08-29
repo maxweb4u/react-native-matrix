@@ -55,4 +55,19 @@ module.exports = {
     '!src/**/testing/**',
     '!src/**/index.ts',
   ],
+  // A floor, not a target: scenario coverage is what the testing policy asks
+  // for. This exists so the number cannot quietly fall, which it did while
+  // modules were added faster than tests. Set just under the measured value
+  // so ordinary work does not trip it; raise it when a run clears the next
+  // step. `core` sits low on purpose — MatrixSession is covered by the
+  // integration suite, which does not report here.
+  // See memory_bank/engineering/testing-policy.md#required-coverage.
+  coverageThreshold: {
+    global: {
+      statements: 70,
+      branches: 63,
+      functions: 67,
+      lines: 69,
+    },
+  },
 };

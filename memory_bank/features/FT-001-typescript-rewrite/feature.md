@@ -15,7 +15,7 @@ Delivery steps and their verification: [implementation-plan.md](implementation-p
 
 ## Delivery
 
-All eleven stages of [the roadmap](../../product/roadmap.md) are built, verified, and merged to `master`. `delivery_status` stays `in_progress` for one reason: the 0.1.0 release is in scope above, and it has not happened. The version in the repository is `0.1.0`, but there is no tag and npm still serves `0.0.12`. This moves to `done` when [../../ops/release.md](../../ops/release.md) has been worked through, not before.
+All eleven stages of [the roadmap](../../product/roadmap.md) are built, verified, and merged to `master`. `delivery_status` stays `in_progress` for one reason: the release is in scope above, and it has not happened. The version in the repository is `0.2.0`, but there is no tag and npm still serves `0.0.12`. This moves to `done` when [../../ops/release.md](../../ops/release.md) has been worked through, not before.
 
 Every acceptance criterion is met except SC-9, which cannot be exercised on a device: no React Native engine available today has WebAssembly. It is verified against Node only, and tracked as BL-13 in [../../backlog.md](../../backlog.md).
 
@@ -42,10 +42,10 @@ In scope:
 - New capability: E2EE, edits, redactions, full reactions, typing, read receipts, video, location, thread relations.
 - Unit suite plus an integration suite against a local Synapse.
 - `example/` application.
-- Documentation, migration guide, and the 0.1.0 release.
+- Documentation, migration guide, and the first npm release of the new API.
 
 Out of scope:
-- Backwards compatibility with the 0.0.x API. 0.1.0 is a deliberate break; a compatibility shim would preserve the architecture that caused the defects.
+- Backwards compatibility with the 0.0.x API. The rewrite is a deliberate break; a compatibility shim would preserve the architecture that caused the defects.
 - Login, registration, and SSO UI, which stay with the host application.
 - Thread and space UI, key backup UI, VoIP. See [../../product/roadmap.md](../../product/roadmap.md).
 

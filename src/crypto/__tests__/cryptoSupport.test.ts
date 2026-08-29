@@ -1,6 +1,11 @@
 import { describeCryptoFailure, missingCryptoRequirement } from '../../core/cryptoSupport';
 import { CryptoUnavailableError } from '../../core/errors';
-import { assertCryptoSupport, isCryptoSupported } from '../assertCryptoSupport';
+import {
+  assertCryptoSupport,
+  cryptoUnavailableReason,
+  engineCryptoLimitation,
+  isCryptoSupported,
+} from '../assertCryptoSupport';
 
 /** Removes WebAssembly for one test, the way an old Hermes build presents. */
 function withoutWebAssembly(body: () => void): void {
@@ -78,5 +83,36 @@ describe('describeCryptoFailure', () => {
 
   it('survives a non-Error throw', () => {
     expect(describeCryptoFailure('something odd')).toContain('something odd');
+  });
+});
+
+describe('cryptoUnavailableReason', () => {
+  it('is null when encryption can start', () => {
+    expect(cryptoUnavailableReason({ deviceId: 'DEVICEID' })).toBeNull();
+  });
+
+  it('gives a reason a UI can display, not just false', () => {
+    // The point of BL-6: a control that silently does nothing is the defect
+    // FM-1 forbids. The host needs the words, not a boolean.
+    expect(cryptoUnavailableReason({ deviceId: undefined })).toMatch(/deviceId/);
+  });
+});
+
+describe('engineCryptoLimitation', () => {
+  it('is null on an engine with WebAssembly, with no credentials needed', () => {
+    expect(engineCryptoLimitation()).toBeNull();
+  });
+
+  it('names WebAssembly when the engine cannot run crypto at all', () => {
+    withoutWebAssembly(() => {
+      expect(engineCryptoLimitation()).toMatch(/WebAssembly/);
+    });
+  });
+
+  it('ignores the device ID, so a sign-in screen can call it before login', () => {
+    // missingCryptoRequirement(undefined) reports the device ID; this must
+    // not, or every pre-login screen would show the wrong reason.
+    expect(engineCryptoLimitation()).toBeNull();
+    expect(cryptoUnavailableReason({ deviceId: undefined })).not.toBeNull();
   });
 });
