@@ -1,0 +1,22 @@
+# Local homeserver for the integration suite and the example app.
+# Managed through ../../scripts/synapse.sh; see memory_bank/ops/synapse.md.
+services:
+  synapse:
+    image: matrixdotorg/synapse:latest
+    container_name: rnm-synapse
+    environment:
+      SYNAPSE_SERVER_NAME: localhost
+      SYNAPSE_REPORT_STATS: "no"
+      UID: "0"
+      GID: "0"
+    volumes:
+      - ./data:/data
+    ports:
+      - "8008:8008"
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS http://localhost:8008/health || exit 1"]
+      interval: 3s
+      timeout: 3s
+      retries: 30
+      start_period: 5s
+    restart: "no"

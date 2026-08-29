@@ -1,0 +1,14 @@
+{
+  "extends": "@react-native/typescript-config",
+  "compilerOptions": {
+    // No `baseUrl`: deprecated in TypeScript 6, removed in 7. Without one the
+    // mappings below resolve relative to this file, which is what they meant.
+
+    "paths": {
+      "react-native-matrix": ["../src/index.ts"],
+      "react-native-matrix/crypto": ["../src/crypto/index.ts"]
+    }
+  },
+  "include": ["App.tsx", "src", "index.js"],
+  "exclude": ["**/node_modules", "**/Pods"]
+}

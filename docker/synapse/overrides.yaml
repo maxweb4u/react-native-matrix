@@ -1,0 +1,75 @@
+# Appended to the generated homeserver.yaml by scripts/synapse.sh.
+#
+# These settings exist to make tests deterministic and fast. Several of them
+# would be unsafe on a public server and are marked accordingly.
+
+# Test users are created through the admin API. UNSAFE outside a test server.
+enable_registration: true
+enable_registration_without_verification: true
+registration_shared_secret: "rnm-integration-secret"
+
+# Rate limiting off: the suite logs in and sends bursts of events.
+rc_message:
+  per_second: 1000
+  burst_count: 1000
+rc_registration:
+  per_second: 1000
+  burst_count: 1000
+rc_login:
+  address:
+    per_second: 1000
+    burst_count: 1000
+  account:
+    per_second: 1000
+    burst_count: 1000
+  failed_attempts:
+    per_second: 1000
+    burst_count: 1000
+rc_joins:
+  local:
+    per_second: 1000
+    burst_count: 1000
+  remote:
+    per_second: 1000
+    burst_count: 1000
+rc_invites:
+  per_room:
+    per_second: 1000
+    burst_count: 1000
+  per_user:
+    per_second: 1000
+    burst_count: 1000
+  per_issuer:
+    per_second: 1000
+    burst_count: 1000
+# Room creation has its own limiter, and its default is strict: four rooms and
+# then a 50-second wait. Each suite makes its own room, so the default alone
+# fails the run.
+rc_room_creation:
+  per_second: 1000
+  burst_count: 1000
+rc_joins_per_room:
+  per_second: 1000
+  burst_count: 1000
+rc_key_requests:
+  per_second: 1000
+  burst_count: 1000
+rc_media_create:
+  per_second: 1000
+  burst_count: 1000
+rc_third_party_invite:
+  per_second: 1000
+  burst_count: 1000
+
+# Media limits large enough for attachment tests.
+max_upload_size: 50M
+
+# Presence adds sync noise the tests do not assert on.
+presence:
+  enabled: false
+
+# No federation: the suite is single-homeserver.
+federation_domain_whitelist: []
+
+# Keeps startup quick; the default background updates delay the first sync.
+run_background_tasks_on: synapse

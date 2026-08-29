@@ -1,0 +1,25 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    // `rootDir` must be explicit from TypeScript 6 on; inferring it from the
+    // common source directory is an error rather than a warning now.
+    "rootDir": "./src",
+    // No `moduleResolution` override: the base config's `bundler` also works
+    // for the CommonJS emit, and `node` (node10) is deprecated in 6 and gone
+    // in 7. Resolution mode only affects how the three peer imports are found
+    // at compile time — the library ships no runtime dependencies of its own.
+    "declaration": false,
+    "sourceMap": true,
+    "types": []
+  },
+  "include": ["src"],
+  "exclude": [
+    "node_modules",
+    "lib",
+    "example",
+    "src/**/__tests__/**",
+    "src/**/*.test.ts",
+    "src/**/*.test.tsx",
+    "src/**/testing/**"
+  ]
+}

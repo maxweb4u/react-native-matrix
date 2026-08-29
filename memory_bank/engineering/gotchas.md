@@ -1,0 +1,46 @@
+---
+doc_kind: engineering
+doc_function: canonical
+purpose: Traps in matrix-js-sdk and React Native that are easy to hit more than once.
+derived_from:
+  - architecture.md
+status: active
+canonical_for:
+  - known_traps
+---
+
+# Gotchas
+
+## matrix-js-sdk
+
+- **Local echo mutates in place.** A sent event keeps its object identity and changes its ID when the server confirms it. Keying a list by event ID without handling `LocalEchoUpdated` renders the message twice. See `TimelineStore.replaceId`.
+- **A pending event's ID is not its transaction ID.** The SDK keys a local echo as `~<roomId>:<txnId>`, and `LocalEchoUpdated` reports the previous ID as its third argument. Re-keying by `getTxnId()` alone silently fails and the message is rendered twice; the unit suite missed this because the fake modelled the two as equal. Proved by `integration/messaging.test.ts`.
+- **`mxcUrlToHttp` switches to the thumbnail endpoint when *any* of width, height or resize method is set.** Passing a default method for a plain download quietly returns a cropped thumbnail instead of the original file. See `src/core/mxc.ts`.
+- **`m.direct` is client-maintained.** The homeserver does not write it. `is_direct` on an invite is a hint to the invited client only, so both the creator and the accepter have to record the room themselves or it renders as a group room forever. See `MatrixSession.recordDirectRoom`.
+- **An edit is applied out of band.** The `RoomEvent.Timeline` event for an `m.replace` can arrive before the SDK has attached it to its target, so `replacingEvent()` is still null. The reliable signal is `MatrixEventEvent.Replaced`, which the client re-emits for the event that was edited.
+- **`initRustCrypto()` defaults to an IndexedDB store.** React Native has no IndexedDB and the WebAssembly module aborts with `RuntimeError: unreachable` rather than falling back, so encryption fails on every device the library targets unless `useIndexedDB: false` is passed. `MatrixSession` probes for the global; see [../domain/encryption.md](../domain/encryption.md#key-persistence).
+- **The Rust backend is loaded with a dynamic `import()`.** Jest evaluates modules in a CommonJS VM where that throws `ERR_VM_DYNAMIC_IMPORT_CALLBACK_MISSING_FLAG`, and `@matrix-org/matrix-sdk-crypto-wasm` resolves to a browser ESM build that Jest cannot load either. Both are handled in `babel.config.js` (test env) and `jest.config.js` (`moduleNameMapper`); Metro needs neither.
+- **42's entry point re-exports namespaces.** `lib/matrix.js` uses `export * as ContentHelpers` (and `export * as SecretStorage`). That is standard ES2020, but the React Native Babel preset ships no plugin that lowers it, so **both** Metro and Jest fail the file with *Export namespace should be first transformed by `@babel/plugin-transform-export-namespace-from`* — a build error, not a runtime one, and one every consuming application hits. Both `babel.config.js` here and `example/babel.config.js` add that plugin, and the README lists it as a required setup step. 37 did not need it.
+- **A redacted relation loses the pointer to its target.** Redaction strips content, so the `m.relates_to` of a removed reaction is gone by the time the redaction is handled and the affected row cannot be derived from the redaction alone. See `RoomTimeline.rebuildRowsWithReactions`.
+- **`getAvatarUrl` returns `string | null`.** 0.0.x called `.indexOf` on the result unguarded.
+- **`getUnreadNotificationCount` can be `undefined`** before the first sync completes; treat any falsy value as zero.
+- **`sendMessage` takes a thread ID in its second position.** Passing content there is a silent type mismatch at runtime.
+- **Redacted events keep their original type.** Check `isRedacted()` before parsing content; the content object is empty.
+- **Edits arrive as separate events.** `replacingEvent()` returns the replacement, and the original stays in the timeline. Rendering both is a common duplicate-message bug.
+
+## React Native
+
+- **Hermes has no Web Crypto.** `globalThis.crypto` is undefined, and `matrix-js-sdk` calls `getRandomValues` for every transaction ID (`src/randomstring.ts:91`), so the session throws `TypeError: Cannot read property 'getRandomValues' of undefined` before the first sync completes. The host must install `react-native-get-random-values` and import it before anything else. The unit and integration suites cannot see this: `jest.setup.ts` installs Node's `webcrypto` on the global, which is exactly the piece a device lacks.
+- **React Native's `URL` appended a trailing slash to everything, below 0.87.** `Libraries/Blob/URL.js:84` added `/` to any URL that did not already end in one, and its `URLSearchParams` was a stub. `matrix-js-sdk` builds every request through `new URL()` (`src/http-api/fetch.ts:381`), so `/filter` became `/filter/` and the homeserver answered `405 M_UNRECOGNIZED`, `/versions` answered 404, and query strings came out as `?&_=`. Fixed in 0.87 for the single-argument absolute form the SDK uses — measured on device, and the app runs there with no URL polyfill. Below 0.87 the host still needs `react-native-url-polyfill/auto`. The two-argument relative form still throws on a base with a port, which the SDK happens not to use. Node's `URL` is spec-compliant either way, so no test run can catch any of it.
+- **Edge-to-edge stops `adjustResize` from moving the composer.** React Native 0.87's template sets `edgeToEdgeEnabled=true` in `gradle.properties`, and an edge-to-edge window is not resized for the keyboard, so a screen that relied on `android:windowSoftInputMode="adjustResize"` alone puts its input back underneath the keyboard — the exact defect SC-12 exists to prevent, reintroduced by an upgrade. `ChatScreen` therefore passes `behavior="padding"` to `KeyboardAvoidingView` on both platforms: where the window does resize, the measured keyboard height collapses to zero and the padding costs nothing.
+- **`keyboardWillShow` never fires on Android.** Only `keyboardDidShow` and `keyboardDidHide` exist there. 0.0.x subscribed only to the `Will` variants, so the composer never resized on Android — with the `Did` handlers sitting commented out one line below.
+- **Style spread order beats animation.** `{ ...animatedStyle, ...props.style }` silently discards the animated value when the incoming style sets the same property. 0.0.x killed an entire slide-in animation this way.
+- **`Clipboard` from `react-native` was removed in 0.72.** It is an adapter here for exactly this reason.
+- **Inverted `FlatList` needs newest-first data**, which is why `TimelineStore` caches a reversed view rather than reversing at render time.
+
+## Packaging
+
+- **Metro needs `unstable_enablePackageExports` below React Native 0.81.** `@matrix-org/matrix-sdk-crypto-wasm` declares only an `exports` map with no `main`, and `matrix-js-sdk` imports it unconditionally. React Native 0.76 ships Metro with package exports **off**, so the bundle fails to resolve it — for every consumer, not only those using encryption. Metro 0.87 defaults the flag to `true`, so on a current React Native the setting is unnecessary. Found by bundling `example/`; a typecheck and a test run both pass without it.
+- **`@react-native/eslint-config` 0.87 is not ESLint 9-ready, whatever its peers say.** It declares `eslint: ^8.0.0 || ^9.0.0`, but the `eslint-plugin-ft-flow` it bundles calls `context.getAllComments()`, removed in ESLint 9, and throws as soon as one of its rules is instantiated. `example/eslint.config.js` turns the two Flow rules off — the app is TypeScript and has nothing for them to check — which keeps them from loading at all.
+- **A missing config file makes ESLint climb out of the package.** `example/` had an `.eslintrc.js`, but the repository root has a flat `eslint.config.mjs`; ESLint finds the ancestor flat config first, switches to flat mode, and applies its `ignores: ['example/**']`, reporting that every file in the app is ignored. `root: true` does not help, because it is an eslintrc field and eslintrc is no longer the mode in force. The app needs its own flat config, not merely its own rules.
+- **`postinstall` scripts that patch other packages break installs.** 0.0.x rewrote files inside `react-native` and `matrix-js-sdk` from a `postinstall` with no error handling and a hard-coded `../` path; by 2026 the target files no longer existed, so `npm install` failed outright. If a dependency must be patched, that is `patch-package`'s job, not a hand-rolled `readFileSync`.

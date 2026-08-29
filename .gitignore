@@ -39,6 +39,8 @@ android.iml
 # Cocoapods
 #
 example/ios/Pods
+example/vendor/bundle
+example/.bundle/vendor
 
 # node.js
 #
@@ -55,3 +57,10 @@ android/keystores/debug.keystore
 
 # Expo
 .expo/*
+
+# Build output (TypeScript rewrite)
+lib/
+coverage/
+
+# Local Synapse state: database, media, signing keys
+docker/synapse/data/
