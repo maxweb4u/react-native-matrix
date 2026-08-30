@@ -6,7 +6,7 @@ derived_from:
   - ../../product/context.md
   - ../../product/roadmap.md
 status: active
-delivery_status: in_progress
+delivery_status: done
 ---
 
 # FT-001 — TypeScript rewrite
@@ -15,7 +15,7 @@ Delivery steps and their verification: [implementation-plan.md](implementation-p
 
 ## Delivery
 
-All eleven stages of [the roadmap](../../product/roadmap.md) are built, verified, and merged to `master`. `delivery_status` stays `in_progress` for one reason: the release is in scope above, and it has not happened. The version in the repository is `0.2.0`, but there is no tag and npm still serves `0.0.12`. This moves to `done` when [../../ops/release.md](../../ops/release.md) has been worked through, not before.
+All eleven stages of [the roadmap](../../product/roadmap.md) are built, verified, and merged to `master`, and the release that was the last of them has happened: `0.2.0` went to npm on 2026-08-30, tagged `v0.2.0`. `delivery_status` is `done` because [../../ops/release.md](../../ops/release.md) has been worked through end to end, which is the condition this document set for itself.
 
 Every acceptance criterion is met except SC-9, which cannot be exercised on a device: no React Native engine available today has WebAssembly. It is verified against Node only, and tracked as BL-13 in [../../backlog.md](../../backlog.md).
 

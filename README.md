@@ -6,15 +6,16 @@ Typed React Native components and hooks for [Matrix](https://matrix.org) chat.
 `node_modules`. Camera, file picking, audio, share, and clipboard arrive as
 adapters you implement with whatever your app already uses.
 
-> **Status: 0.2.0.** Everything below is implemented, with 225 unit tests and
-> 30 integration tests against a real Synapse, and the example app has been run
-> on a physical Android device and an iOS simulator on React Native 0.87 with
-> React 19. The version is below 1.0.0 because no application other than
+> **Status: 0.2.0**, published to npm on 2026-08-30. Everything below is
+> implemented, with 332 unit tests and 47 integration tests against a real
+> Synapse, and the example app has been run on a physical Android device and an
+> iOS simulator on React Native 0.87 with React 19. The version is below 1.0.0 because no application other than
 > `example/` has used this API yet; what is still open is in
 > [`memory_bank/backlog.md`](memory_bank/backlog.md). Note that under semantic
 > versioning a `0.x` minor may break the API, so `^0.2.0` allows patch releases
-> only. The published 0.0.12 release is unrelated to this API and no longer
-> installable; see [Migrating from 0.0.x](#migrating-from-00x).
+> only. The 0.0.12 release, which npm served until 0.2.0 replaced it, is
+> unrelated to this API and no longer installable; see
+> [Migrating from 0.0.x](#migrating-from-00x).
 
 ## Requirements
 

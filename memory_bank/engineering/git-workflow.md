@@ -15,7 +15,7 @@ canonical_for:
 
 ## Branches
 
-`main` is releasable. Work happens on `feat/…`, `fix/…`, `docs/…`, or `chore/…` branches and merges back through a pull request.
+`master` is releasable. Work happens on `feat/…`, `fix/…`, `docs/…`, or `chore/…` branches and merges back through a pull request.
 
 ## Commits
 

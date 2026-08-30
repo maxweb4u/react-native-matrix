@@ -5,7 +5,7 @@ All notable changes to this project are documented here. The format follows
 [semantic versioning](https://semver.org) against the public API defined in
 `memory_bank/engineering/architecture.md`.
 
-## [0.2.0] — 2026-08-29
+## [0.2.0] — 2026-08-30
 
 The first release of this API to reach npm. 0.1.0 below was only ever a
 version number in the repository — never tagged, never published — so its
