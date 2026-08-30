@@ -3,7 +3,7 @@ doc_kind: adr
 doc_function: canonical
 purpose: Record the decision to <decision in one line>.
 derived_from:
-  - ../../engineering/architecture.md
+  - ../../../engineering/architecture.md
 status: draft
 decision_status: proposed
 date: <YYYY-MM-DD>

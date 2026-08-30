@@ -114,6 +114,25 @@ export interface EmojiCategory {
   emojis: string[];
 }
 
+/**
+ * Supplies the device's push token.
+ *
+ * Receiving a push is native work — FCM on Android, APNs on iOS — and this
+ * library ships no native code, so the host owns the messaging library it
+ * already uses and hands the token over here. What the library owns is
+ * everything between that token and the homeserver.
+ */
+export interface PushTokenAdapter {
+  /** Resolves null when the user has not granted notification permission. */
+  getToken(): Promise<string | null>;
+  /**
+   * Notifies when the messaging service rotates the token. Registering the
+   * adapter without this leaves the pusher pointing at a dead token after a
+   * rotation, and pushes stop arriving with no error anywhere.
+   */
+  onTokenRefresh?(listener: (token: string) => void): () => void;
+}
+
 export interface MatrixAdapters {
   imagePicker?: ImagePickerAdapter;
   documentPicker?: DocumentPickerAdapter;
@@ -123,6 +142,7 @@ export interface MatrixAdapters {
   clipboard?: ClipboardAdapter;
   fileSystem?: FileSystemAdapter;
   emojiSource?: EmojiSourceAdapter;
+  pushToken?: PushTokenAdapter;
 }
 
 export type AdapterName = keyof MatrixAdapters;

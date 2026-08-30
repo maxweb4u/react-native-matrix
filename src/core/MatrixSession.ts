@@ -15,9 +15,16 @@ import {
 } from 'matrix-js-sdk';
 
 import { describeCryptoFailure, hasIndexedDB, missingCryptoRequirement } from './cryptoSupport';
+import { applyNotificationLevel, readNotificationLevel } from '../push/notificationLevel';
+import { buildPusherRemoval, buildPusherRequest, parsePusher } from '../push/pusher';
+import { missingHostRequirement } from './hostSupport';
+import { decodeDataUri, isDataUri } from '../utils/dataUri';
+import { PersistentSyncStore } from './PersistentSyncStore';
 import { Emitter } from './Emitter';
 import {
+  AdapterMissingError,
   CryptoUnavailableError,
+  HostRequirementError,
   MatrixRequestError,
   RoomNotFoundError,
   SessionNotReadyError,
@@ -26,6 +33,9 @@ import type {
   CryptoOptions,
   LocalFile,
   MatrixAdapters,
+  NotificationLevel,
+  Pusher,
+  PusherOptions,
   SessionOptions,
   SessionStatus,
   SyncState,
@@ -103,7 +113,14 @@ export class MatrixSession {
 
   private detachers: Unsubscribe[] = [];
 
+  private syncStore: PersistentSyncStore | null = null;
+
   private stopped = false;
+
+  /** What `registerPusher` last wrote, so rotation and removal know the key. */
+  private pusher: { options: PusherOptions; pushkey: string } | null = null;
+
+  private tokenRefreshUnsubscribe: Unsubscribe | null = null;
 
   public constructor(options: SessionOptions) {
     this.options = options;
@@ -116,6 +133,10 @@ export class MatrixSession {
    * Creates the underlying client, initialises crypto when requested and waits
    * for the first sync to complete.
    *
+   * @throws HostRequirementError when the engine is missing a global the
+   * library needs. Checked before anything else, so a missing polyfill is
+   * named at startup instead of surfacing as a `TypeError` from inside the SDK
+   * on the first request.
    * @throws CryptoUnavailableError when `crypto.enabled` is set but the
    * WebAssembly backend is missing. The session is left stopped in that case
    * rather than silently running without encryption.
@@ -124,7 +145,23 @@ export class MatrixSession {
     if (this.client) {
       return;
     }
-    const { credentials, initialSyncLimit, pollTimeoutMs, crypto } = this.options;
+
+    const missingHost = missingHostRequirement();
+    if (missingHost) {
+      throw new HostRequirementError(missingHost);
+    }
+
+    const { credentials, initialSyncLimit, pollTimeoutMs, crypto, syncStorage } = this.options;
+
+    // Built before the client, because the SDK reads the saved sync during
+    // startClient() and a store handed over later would be ignored.
+    this.syncStore = syncStorage
+      ? new PersistentSyncStore({
+          storage: syncStorage,
+          ...(this.options.syncPersistence ?? {}),
+          onError: (error) => this.reportError(error),
+        })
+      : null;
 
     this.client = createClient({
       baseUrl: credentials.baseUrl,
@@ -134,6 +171,7 @@ export class MatrixSession {
       // The access token travels in the Authorization header. 0.0.x appended
       // it to the query string of every request, where proxies log it.
       useAuthorizationHeader: true,
+      ...(this.syncStore ? { store: this.syncStore } : {}),
     });
 
     if (crypto?.enabled) {
@@ -150,16 +188,221 @@ export class MatrixSession {
     await this.waitForInitialSync();
   }
 
-  /** Stops syncing and releases every listener. Safe to call more than once. */
+  /**
+   * Stops syncing and releases every listener. Safe to call more than once.
+   *
+   * When `syncStorage` is configured the final write is started here and not
+   * awaited: `stop()` is called from effect cleanups, which cannot await, and
+   * a failed write costs a full sync next launch rather than any data.
+   * Await `flush()` first where the result matters.
+   */
   public stop(): void {
     this.stopped = true;
+    this.stopTokenRefresh();
     for (const detach of this.detachers) {
       detach();
     }
     this.detachers = [];
     this.client?.stopClient();
+    void this.flush();
     this.emitter.removeAll();
     this.setStatus({ syncState: 'stopped', isReady: false });
+  }
+
+  /**
+   * Writes the current sync state to `syncStorage` immediately.
+   *
+   * The store writes on its own schedule; call this when the application is
+   * about to be backgrounded and the next launch should resume cheaply.
+   * A no-op when no storage is configured.
+   */
+  public async flush(): Promise<void> {
+    await this.syncStore?.save(true);
+  }
+
+  /**
+   * Discards the persisted sync state.
+   *
+   * Call this on sign-out: the saved sync holds room state and message bodies
+   * for the account that wrote it, and a different user signing in on the same
+   * device must not resume from it.
+   */
+  public async clearPersistedSync(): Promise<void> {
+    await this.syncStore?.deleteAllData();
+  }
+
+  // ------------------------------------------------------------------- push
+
+  /**
+   * Registers this device with the homeserver so it receives pushes.
+   *
+   * The token comes from the `pushToken` adapter unless `pushkey` is passed
+   * explicitly. When the adapter reports a rotation the pusher is rewritten
+   * automatically: without that, a rotation silently ends notifications and
+   * nothing anywhere reports an error.
+   *
+   * @returns the pushkey registered, or null when the adapter has no token —
+   * the normal state before the user grants permission, not a failure.
+   */
+  public async registerPusher(options: PusherOptions): Promise<string | null> {
+    const client = this.requireClient('register a pusher');
+    const adapter = this.adapters.pushToken;
+    // No adapter at all is a configuration mistake, and the project's rule is
+    // that a missing adapter is never a silent no-op — see
+    // memory_bank/engineering/adapters.md#absence-behaviour. An adapter that
+    // has no token *yet* is a different thing entirely, handled below.
+    if (!options.pushkey && !adapter) {
+      throw new AdapterMissingError('pushToken', 'Registering a pusher');
+    }
+
+    const pushkey = options.pushkey ?? (await adapter?.getToken()) ?? null;
+    if (!pushkey) {
+      // No token yet is the normal first launch: permission has not been
+      // granted. Watch anyway — the token arrives through the refresh
+      // callback the moment it is granted, and returning without watching
+      // would mean this device never registers at all.
+      this.watchTokenRefresh(options);
+      return null;
+    }
+
+    const previous = this.pusher;
+    await this.writePusher(client, options, pushkey);
+    this.pusher = { options, pushkey };
+
+    // `append: false` does not do this. The specification has it remove
+    // pushers with the same app ID *and pushkey* belonging to other users; a
+    // rotated token is a different pushkey, so the old one survives and the
+    // homeserver keeps pushing to a key nothing reads. Removed after writing
+    // the new one, so a failure in between leaves notifications working
+    // rather than silenced.
+    if (previous && previous.pushkey !== pushkey) {
+      await this.removePusher(client, previous.options.appId, previous.pushkey);
+    }
+
+    this.watchTokenRefresh(options);
+    return pushkey;
+  }
+
+  /**
+   * Removes this device's pusher.
+   *
+   * **Sign-out must call this.** A pusher outlives the access token that
+   * created it, so a device that signs out without removing it keeps waking
+   * up for an account the user has left.
+   *
+   * With no argument this removes what `registerPusher` wrote in *this*
+   * session. That is not enough on its own: a pusher registered on a previous
+   * launch is unknown to a fresh session, so signing out after a restart —
+   * the ordinary case — would remove nothing. Pass `appId` for that, and the
+   * pushkey is taken from the `pushToken` adapter unless given.
+   *
+   * @returns the pushkey removed, or null when there was nothing to remove.
+   */
+  public async unregisterPusher(options?: {
+    appId: string;
+    pushkey?: string;
+  }): Promise<string | null> {
+    const client = this.requireClient('remove a pusher');
+    this.stopTokenRefresh();
+
+    const registered = this.pusher;
+    const appId = options?.appId ?? registered?.options.appId ?? null;
+    const pushkey =
+      options?.pushkey ??
+      registered?.pushkey ??
+      (await this.adapters.pushToken?.getToken()) ??
+      null;
+
+    if (!appId || !pushkey) {
+      return null;
+    }
+
+    // Cleared after the call, not before: a failed removal that had already
+    // forgotten the pusher leaves the device receiving pushes for a signed-out
+    // account with no way to retry, because the retry sees nothing to remove.
+    await this.removePusher(client, appId, pushkey);
+    this.pusher = null;
+    return pushkey;
+  }
+
+  private async removePusher(
+    client: MatrixClient,
+    appId: string,
+    pushkey: string,
+  ): Promise<void> {
+    try {
+      await client.setPusher(buildPusherRemoval(appId, pushkey) as never);
+    } catch (error) {
+      throw MatrixRequestError.from(error);
+    }
+  }
+
+  /** Every pusher on the account, across devices. */
+  public async getPushers(): Promise<Pusher[]> {
+    const client = this.requireClient('list pushers');
+    try {
+      const response = await client.getPushers();
+      return (response.pushers ?? []).map(parsePusher);
+    } catch (error) {
+      throw MatrixRequestError.from(error);
+    }
+  }
+
+  /** What this room notifies for, derived from the account's push rules. */
+  public async getNotificationLevel(roomId: string): Promise<NotificationLevel> {
+    const client = this.requireClient('read notification settings');
+    try {
+      return readNotificationLevel(await client.getPushRules(), roomId);
+    } catch (error) {
+      throw MatrixRequestError.from(error);
+    }
+  }
+
+  /** Sets what this room notifies for, clearing whatever the last level left. */
+  public async setNotificationLevel(roomId: string, level: NotificationLevel): Promise<void> {
+    const client = this.requireClient('change notification settings');
+    try {
+      await applyNotificationLevel(client, roomId, level);
+    } catch (error) {
+      throw MatrixRequestError.from(error);
+    }
+  }
+
+  private async writePusher(
+    client: MatrixClient,
+    options: PusherOptions,
+    pushkey: string,
+  ): Promise<void> {
+    try {
+      await client.setPusher(buildPusherRequest(options, pushkey) as never);
+    } catch (error) {
+      throw MatrixRequestError.from(error);
+    }
+  }
+
+  private watchTokenRefresh(options: PusherOptions): void {
+    this.stopTokenRefresh();
+    const adapter = this.adapters.pushToken;
+    if (!adapter?.onTokenRefresh) {
+      return;
+    }
+    this.tokenRefreshUnsubscribe = adapter.onTokenRefresh((token: string) => {
+      if (this.stopped || !this.client || this.pusher?.pushkey === token) {
+        return;
+      }
+      // Fire and forget: this runs inside the messaging library's callback,
+      // where a rejection has nowhere to go but the session's error reporter.
+      // Routed through registerPusher so the old pushkey is removed, which is
+      // the whole point of reacting to a rotation.
+      void this.registerPusher({ ...options, pushkey: token }).catch((error: unknown) =>
+        this.reportError(error as Error),
+      );
+    });
+  }
+
+  private stopTokenRefresh(): void {
+    this.tokenRefreshUnsubscribe?.();
+    this.tokenRefreshUnsubscribe = null;
   }
 
   private async initCrypto(crypto: CryptoOptions): Promise<void> {
@@ -470,12 +713,29 @@ export class MatrixSession {
    * the common case; the `fileSystem` adapter exists only for pickers that
    * cannot hand back a fetchable URI.
    */
-  public async sendFile(
-    roomId: string,
-    file: LocalFile,
-    options: { replyToEventId?: string; threadRootId?: string } = {},
-  ): Promise<string> {
-    const client = this.requireClient('send a file');
+  /**
+   * Reads a local file into something uploadable.
+   *
+   * `data:` URIs are decoded here rather than fetched. React Native's `fetch`
+   * reads them on iOS and rejects them on Android with "Network request
+   * failed" before any request leaves the device, so an adapter returning
+   * in-memory bytes — a signature pad, a cropped canvas — worked on one
+   * platform only.
+   */
+  private async readLocalFile(file: LocalFile): Promise<{ body: unknown; byteLength: number }> {
+    if (isDataUri(file.uri)) {
+      try {
+        const { bytes } = decodeDataUri(file.uri);
+        return { body: bytes, byteLength: bytes.byteLength };
+      } catch (error) {
+        throw new MatrixRequestError(
+          `Could not decode the data URI passed as ${file.name}: ` +
+            `${error instanceof Error ? error.message : String(error)}`,
+          null,
+          null,
+        );
+      }
+    }
 
     const response = await fetch(file.uri);
     if (!response.ok) {
@@ -486,13 +746,24 @@ export class MatrixSession {
       );
     }
     const blob = await response.blob();
+    return { body: blob, byteLength: blob.size };
+  }
 
-    const upload = await client.uploadContent(blob as never, {
+  public async sendFile(
+    roomId: string,
+    file: LocalFile,
+    options: { replyToEventId?: string; threadRootId?: string } = {},
+  ): Promise<string> {
+    const client = this.requireClient('send a file');
+
+    const { body, byteLength } = await this.readLocalFile(file);
+
+    const upload = await client.uploadContent(body as never, {
       name: file.name,
       type: file.mimeType,
     });
 
-    const info: Record<string, unknown> = { mimetype: file.mimeType, size: file.size ?? blob.size };
+    const info: Record<string, unknown> = { mimetype: file.mimeType, size: file.size ?? byteLength };
     if (file.width !== undefined) {
       info.w = file.width;
     }

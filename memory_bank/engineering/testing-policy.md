@@ -34,9 +34,27 @@ The split is enforced by Jest projects, so `npm test` never needs a network or D
 - Hostile input is tested explicitly wherever remote data is parsed. See [../domain/timeline.md](../domain/timeline.md#content-parsing).
 - Percentage coverage is not a target. Scenario coverage is.
 
+`jest.config.js` sets a `coverageThreshold` anyway. It is a floor, not a goal: it exists because the percentage fell twice while modules were added faster than tests, and nothing objected. Keep it just under the measured value, and raise it when a run clears the next step.
+
+It may also move **down**, but only with the reason written next to it. The push work lowered the global figure from 71.9% to 70.2% while adding tests, because most of what it added is `MatrixSession` and the fetching half of `resolvePushEvent` — both covered by `integration/`, neither countable here. A floor that forbade this would push work into unit tests against a fake of the SDK, which is the thing this policy exists to prevent. What the floor catches is an *unexplained* fall.
+
+## What is deliberately not unit tested
+
+Left uncovered on purpose, so it is not repeatedly re-raised:
+
+| Module | Covered by | Why not a unit test |
+|-|-|-|
+| `core/MatrixSession.ts` | `integration/` | It is the SDK boundary. A unit test would assert against a fake of `matrix-js-sdk`, which proves the fake behaves, not the session. The local-echo re-keying defect is exactly this: the unit fake modelled the two event IDs as equal, the suite passed, and every sent message rendered twice against a real homeserver |
+| `components/ChatScreen.tsx`, `components/RoomList.tsx` | Manual, in `example/` | Compositions of tested parts whose remaining behaviour is keyboard and scroll handling. SC-12 is manual for the same reason: it depends on device, OS version, and window softInput mode |
+
+
+Anything else at zero coverage is a gap, not a policy. The hooks used to sit
+in this table with the note that they were a gap rather than a decision; they
+are covered now, at 100%, and the row is gone rather than reworded.
+
 ## What integration tests own
 
-Behaviour that only a real homeserver can prove: login and sync, send and receive across two users, media upload and authenticated download, edits, redactions, reactions, receipts, and an encrypted room round-trip. Everything else belongs in unit tests, which are two orders of magnitude faster.
+Behaviour that only a real homeserver can prove: login and sync, send and receive across two users, media upload and authenticated download, edits, redactions, reactions, receipts, an encrypted room round-trip, and resuming a session from a persisted sync token — the unit suite can prove the store writes a token, only a homeserver can prove the token is accepted. Everything else belongs in unit tests, which are two orders of magnitude faster.
 
 ## Before handing work over
 

@@ -1,4 +1,4 @@
-import React, {useState} from 'react';
+import React, {useMemo, useState} from 'react';
 import {
   ActivityIndicator,
   Pressable,
@@ -10,7 +10,7 @@ import {
 } from 'react-native';
 import {SafeAreaView} from 'react-native-safe-area-context';
 import type {SessionCredentials} from 'react-native-matrix';
-import {isCryptoSupported} from 'react-native-matrix/crypto';
+import {engineCryptoLimitation} from 'react-native-matrix/crypto';
 
 import {DEFAULT_HOMESERVER_URL, SEEDED_ACCOUNTS} from './config';
 import {login} from './login';
@@ -26,6 +26,11 @@ export function LoginScreen({onSignedIn}: LoginScreenProps) {
   const [user, setUser] = useState<string>(SEEDED_ACCOUNTS[0].user);
   const [password, setPassword] = useState<string>(SEEDED_ACCOUNTS[0].password);
   const [encrypted, setEncrypted] = useState(false);
+  // Asked once, before the toggle is drawn. Stock React Native has no
+  // WebAssembly, so on most devices this returns a reason and the control is
+  // disabled rather than accepted and quietly ignored. A switch that turns on
+  // and changes nothing is the silent no-op FM-1 exists to forbid.
+  const cryptoLimitation = useMemo(() => engineCryptoLimitation(), []);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -38,9 +43,9 @@ export function LoginScreen({onSignedIn}: LoginScreenProps) {
         user.trim(),
         password,
       );
-      // Asking before the session is built lets the toggle be disabled rather
-      // than the start throw. Same check, better moment.
-      onSignedIn(credentials, encrypted && isCryptoSupported(credentials));
+      // `encrypted` cannot be true when the engine is incapable: the toggle is
+      // disabled in that case, so there is nothing to silently downgrade here.
+      onSignedIn(credentials, encrypted);
     } catch (caught) {
       setError(caught instanceof Error ? caught.message : String(caught));
     } finally {
@@ -83,13 +88,26 @@ export function LoginScreen({onSignedIn}: LoginScreenProps) {
         />
 
         <View style={styles.row}>
-          <Text style={styles.rowLabel}>End-to-end encryption</Text>
-          <Switch value={encrypted} onValueChange={setEncrypted} />
+          <Text
+            style={[styles.rowLabel, cryptoLimitation && styles.rowLabelDisabled]}>
+            End-to-end encryption
+          </Text>
+          <Switch
+            value={encrypted && !cryptoLimitation}
+            onValueChange={setEncrypted}
+            disabled={Boolean(cryptoLimitation)}
+          />
         </View>
-        <Text style={styles.hint}>
-          Without an IndexedDB polyfill the crypto store is in memory, so room
-          keys are lost when the app restarts.
-        </Text>
+        {cryptoLimitation ? (
+          <Text style={styles.unavailable}>
+            Unavailable on this device: {cryptoLimitation}.
+          </Text>
+        ) : (
+          <Text style={styles.hint}>
+            Without an IndexedDB polyfill the crypto store is in memory, so room
+            keys are lost when the app restarts.
+          </Text>
+        )}
 
         {error ? <Text style={styles.error}>{error}</Text> : null}
 
@@ -132,6 +150,8 @@ const styles = StyleSheet.create({
   },
   row: {flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between'},
   rowLabel: {fontSize: 15, color: '#11161c'},
+  rowLabelDisabled: {color: '#9aa4b0'},
+  unavailable: {fontSize: 12, color: '#a8620f'},
   hint: {fontSize: 12, color: '#6b7683'},
   code: {fontFamily: 'Courier', color: '#11161c'},
   error: {color: '#d1394a', fontSize: 13},

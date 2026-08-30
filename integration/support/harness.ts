@@ -10,8 +10,8 @@ import type { Room } from 'matrix-js-sdk';
 
 import { MatrixSession, type SessionEvents } from '../../src/core/MatrixSession';
 import { RoomTimeline } from '../../src/timeline/RoomTimeline';
-import type { TimelineItem, Unsubscribe } from '../../src/types';
-import { login, type TestAccount } from './homeserver';
+import type { MatrixAdapters, SyncStorage, TimelineItem, Unsubscribe } from '../../src/types';
+import { login, type TestAccount, type TestCredentials } from './homeserver';
 
 const DEFAULT_TIMEOUT_MS = 20_000;
 const POLL_INTERVAL_MS = 100;
@@ -29,6 +29,12 @@ export interface StartSessionOptions {
   initialSyncLimit?: number;
   /** Initialises the crypto backend. Each login is a distinct device. */
   encrypted?: boolean;
+  /** Persists the sync so a later session can resume from it. */
+  syncStorage?: SyncStorage;
+  /** Reuses credentials instead of logging in again, which issues a new device. */
+  credentials?: TestCredentials;
+  /** Platform adapters, for the paths that read one. */
+  adapters?: MatrixAdapters;
 }
 
 /** Logs in and starts a session that has completed its first sync. */
@@ -36,11 +42,13 @@ export async function startSession(
   account: TestAccount,
   options: StartSessionOptions = {},
 ): Promise<MatrixSession> {
-  const credentials = await login(account);
+  const credentials = options.credentials ?? (await login(account));
   const session = new MatrixSession({
     credentials,
     initialSyncLimit: options.initialSyncLimit ?? 30,
     crypto: options.encrypted ? { enabled: true } : undefined,
+    ...(options.syncStorage ? { syncStorage: options.syncStorage } : {}),
+    ...(options.adapters ? { adapters: options.adapters } : {}),
     // Background errors are collected instead of thrown: they surface on a
     // sync worker, so a test would otherwise fail as an unexplained timeout.
     onError: (error) => {

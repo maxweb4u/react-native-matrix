@@ -21,9 +21,9 @@ Semantic versioning against the public API defined in [../engineering/architectu
 - **Minor** — new exports, new optional adapter members, new optional options.
 - **Patch** — fixes that keep every signature intact.
 
-While the package is below 1.0.0 the leading zero absorbs one level: what the table calls **major** ships as a minor bump — `0.1.0` to `0.2.0` — and what it calls **minor** and **patch** both ship as a patch. That is what semantic versioning means by `0.x`, and it is why `README.md` tells consumers that `^0.1.0` allows patch releases only. The table applies literally from 1.0.0 onward.
+While the package is below 1.0.0 the leading zero absorbs one level: what the table calls **major** ships as a minor bump — `0.1.0` to `0.2.0` — and what it calls **minor** and **patch** both ship as a patch. That is what semantic versioning means by `0.x`, and it is why `README.md` tells consumers that `^0.2.0` allows patch releases only. The table applies literally from 1.0.0 onward.
 
-0.1.0 is a deliberate break from the 0.0.x line: different API, different module system, different dependency model. The migration guide in `README.md` is part of that release, not an afterthought. It is released below 1.0.0 because no application other than `example/` has used the API yet; 1.0.0 is the same API once one has.
+The rewrite is a deliberate break from the 0.0.x line: different API, different module system, different dependency model. The migration guide in `README.md` is part of that release, not an afterthought. It is released below 1.0.0 because no application other than `example/` has used the API yet; 1.0.0 is the same API once one has.
 
 ## Checklist
 

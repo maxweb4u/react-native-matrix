@@ -46,4 +46,4 @@ Steps 3 to 6 are prerequisites for everything above them. Step 10 can proceed in
 
 ## Rollback
 
-The 0.0.x line stays published on npm under its existing version, so consumers are unaffected until they opt in. If 0.1.0 proves wrong in shape, the recovery is a 0.2.0 with a corrected API rather than a revert: the defects in 0.0.x make restoring it unacceptable.
+The 0.0.x line stays published on npm under its existing version, so consumers are unaffected until they opt in. If the new API proves wrong in shape, the recovery is a further minor with a corrected API rather than a revert: the defects in 0.0.x make restoring it unacceptable.

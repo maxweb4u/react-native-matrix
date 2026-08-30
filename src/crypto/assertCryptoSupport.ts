@@ -1,4 +1,4 @@
-import { missingCryptoRequirement } from '../core/cryptoSupport';
+import { missingCryptoRequirement, missingEngineRequirement } from '../core/cryptoSupport';
 import { CryptoUnavailableError } from '../core/errors';
 import type { SessionCredentials } from '../types';
 
@@ -22,4 +22,27 @@ export function assertCryptoSupport(credentials: Pick<SessionCredentials, 'devic
 /** The non-throwing form, for gating UI. */
 export function isCryptoSupported(credentials: Pick<SessionCredentials, 'deviceId'>): boolean {
   return missingCryptoRequirement(credentials.deviceId) === null;
+}
+
+/**
+ * The unmet requirement, or null when encryption can start.
+ *
+ * `isCryptoSupported` answers whether; this answers why, so an application can
+ * put the reason on screen instead of leaving a control that does nothing.
+ */
+export function cryptoUnavailableReason(
+  credentials: Pick<SessionCredentials, 'deviceId'>,
+): string | null {
+  return missingCryptoRequirement(credentials.deviceId);
+}
+
+/**
+ * Whether the engine can run encryption at all, independent of credentials.
+ *
+ * For UI shown before sign-in, where no device ID exists yet and the engine is
+ * the only thing that can be checked. Returns the reason, or null when the
+ * engine is capable.
+ */
+export function engineCryptoLimitation(): string | null {
+  return missingEngineRequirement();
 }

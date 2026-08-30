@@ -27,8 +27,18 @@ An adapter is an object the host passes to `MatrixProvider` implementing a capab
 | `clipboard` | Clipboard write | Copying a message |
 | `fileSystem` | Base64 read and cache write | Adapters that cannot return a fetchable URI |
 | `emojiSource` | Emoji catalogue | The reaction picker |
+| `pushToken` | The device's FCM or APNs token | Registering a pusher — see [../domain/push.md](../domain/push.md) |
 
 Every adapter is optional and independent. An application that only sends text passes none.
+
+`pushToken` is the one adapter whose *absence of a value* is a normal state
+rather than a missing capability: on first launch the user has not granted
+notification permission, so `getToken()` resolves null. `registerPusher`
+returns null and keeps watching, because the token arrives through
+`onTokenRefresh` the moment permission is granted. An adapter that implements
+`getToken` and omits `onTokenRefresh` therefore works, but registers nothing on
+the launch where permission is first granted, and stops receiving notifications
+the first time the messaging service rotates the token.
 
 ## Absence behaviour
 

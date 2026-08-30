@@ -27,13 +27,28 @@ function globalExists(name: string): boolean {
   return (globalThis as Record<string, unknown>)[name] !== undefined;
 }
 
-export function missingCryptoRequirement(deviceId: string | undefined): string | null {
+/**
+ * The engine half of the check, which needs no credentials.
+ *
+ * Split out because it is the half a sign-in screen can run: there is no
+ * device ID before login, and an engine without WebAssembly makes the feature
+ * unavailable to every user regardless of what they type.
+ */
+export function missingEngineRequirement(): string | null {
   if (!globalExists('WebAssembly')) {
     return (
       'this JavaScript engine has no WebAssembly support. ' +
       'Stock React Native does not provide it: measured undefined on 0.87 with ' +
       'Hermes enabled. A WebAssembly-capable engine or polyfill is required'
     );
+  }
+  return null;
+}
+
+export function missingCryptoRequirement(deviceId: string | undefined): string | null {
+  const engine = missingEngineRequirement();
+  if (engine) {
+    return engine;
   }
   if (!deviceId) {
     return (

@@ -16,7 +16,7 @@ export type CryptoApi = NonNullable<ReturnType<MatrixClient['getCrypto']>>;
  * The crypto API of a session that was started with `crypto.enabled`.
  *
  * Device verification, cross-signing, and key backup are deliberately not
- * wrapped: their UI is host-owned for 0.1.0, and a thin wrapper over a large,
+ * wrapped: their UI is host-owned before 1.0.0, and a thin wrapper over a large,
  * fast-moving API would age worse than the API itself. This is the seam that
  * lets a host build them.
  *
