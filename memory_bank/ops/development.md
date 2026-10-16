@@ -46,12 +46,29 @@ npm run synapse:up   # from the repository root; the app has nothing to talk to 
 
 cd example
 npm install
-npm run ios          # or: npm run android
+
+# iOS
+bundle install            # once
+bundle exec pod install   # once, and after any native dependency change
+npm run ios
+
+# Android
+npm run android
 ```
+
+The iOS toolchain needs Ruby 3.1 or newer: `example/Gemfile` requires it, and `example/.ruby-version` selects 3.1.2 for rbenv. Why the gem constraints look the way they do is in [dependency-alerts.md](dependency-alerts.md#rubygems-examplegemfile).
 
 The app points at the local Synapse by default; see [synapse.md](synapse.md) for the seeded accounts and [example/README.md](../../example/README.md) for what to look at while it is running.
 
 There is deliberately no `react-native-matrix` entry in the example's `package.json`. `example/metro.config.js` watches the repository root, resolves the package to `../src`, and pins `react`, `react-native`, and `matrix-js-sdk` to the app's own copies. A second copy of React reached through the root `node_modules` produces hook errors that look like application bugs and are not.
+
+### Metro cannot resolve react-native after reinstalling
+
+Because `watchFolders` includes the repository root, watchman watches the whole repository. After `npm ci` (or any delete-and-recreate of `example/node_modules`), watchman's view goes stale. Metro then reports that react-native's `main` module field "could not be resolved", although `example/node_modules/react-native/index.js` exists. `--reset-cache` does not help; drop the watch and bundle again:
+
+```sh
+watchman watch-del "$(git rev-parse --show-toplevel)"
+```
 
 ### Android manifest requirement
 

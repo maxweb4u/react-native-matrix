@@ -1,0 +1,11 @@
+{
+  "mcpServers": {
+    "memorybank": {
+      "command": "mcp-memorybank",
+      "args": [
+        "--root",
+        "./memory_bank"
+      ]
+    }
+  }
+}
