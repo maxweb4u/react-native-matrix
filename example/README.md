@@ -19,7 +19,7 @@ Then:
 cd example
 npm install
 
-# iOS
+# iOS (Ruby 3.1 or newer, see Gemfile)
 bundle install          # once
 bundle exec pod install # once, and after any native dependency change
 npm run ios
